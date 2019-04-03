@@ -21,7 +21,9 @@ where crib = 12
 
 Create View bvCribItems
 as
-	select	'"' + inv.itemnumber + '"' as "Item_No",
+	select	
+	--'"' + itemnumber + '"' as "Item_No",
+	itemnumber as "Item_No",
 	Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
 	Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
 	Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
@@ -31,8 +33,6 @@ as
 	Cube_Unit			
 	from
 	(
-		select inv.* from
-		(
 			select 
 		--		row_number() OVER(ORDER BY vn.VendorName ASC) AS Row#,
 		--		'"' + inv.itemnumber + '"' as "Item_No",
@@ -99,8 +99,8 @@ as
 			--                          =15649     
 			-- inv.ItemNumber
 			-- count(*)
-			select 
-				vn.VendorName as Supplier_Code
+			--select 
+			--	vn.VendorName as Supplier_Code
 			from INVENTRY inv 
 			left outer join btRemoveItems2 ri
 				on inv.ItemNumber=ri.itemnumber
@@ -113,10 +113,7 @@ as
 				ON inv.AltVendorNo = av.RecNumber
 			left outer join VENDOR vn
 				on av.VendorNumber = vn.VendorNumber
-			where ri.ItemNumber is null --15709
-
-			left outer join btRemoveItems ri
-				on inv.ItemNumber=ri.itemnumber
+			--where ri.ItemNumber is null --15709
 			left outer join (
 				select item, max(OverrideOrderPoint) as Min_Quantity, max(Maximum) as Max_Quantity
 				from 
@@ -129,30 +126,68 @@ as
 			on inv.ItemNumber = mQty.Item
 			where inv.ItemNumber <> '' and left(inv.ItemNumber,1) <> ' ' 
 			and ri.itemnumber is null
-		)inv
-		left outer join btRemoveItems ri
-			on inv.ItemNumber='0' + ri.itemnumber
-		where ri.itemnumber is null
-		--15726
-	)inv
-	left outer join btRemoveItems ri
-		on inv.ItemNumber='00' + ri.itemnumber
-	where ri.itemnumber is null
-	--15706
-	order by Supplier_Code
+			and item='15977' --test avilla
+	)lv1
 
-select count(*) from btRemoveItems
+-- Supply Items in Plex
+--CREATE TABLE Cribmaster.dbo.btPlexItem (
+	Item_No varchar(50) NOT NULL,
+)
+Bulk insert btPlexItem
+from 'C:\PlexItemGT14000.csv'
+with
+(
+fieldterminator = ',',
+rowterminator = '\n'
+)
+--7000 
+--5000
+--2000
+--4237
+-- Items in plex but not it Cribmaster = 4423
+--0012785/plex - 12785/Crib
+--0007290
+--0013739
+--0011226
+--0007675
+--0009171/plex - 009171/Crib
+select pi.*
+from btPlexItem pi
+left outer join INVENTRY inv
+on pi.item_no=inv.ItemNumber
+where inv.ItemNumber is null
 
--- Drop table
- 
+select * from INVENTRY 
+where ItemNumber like '%7675%'
+where Description1 like '%05518-12.50%'
 
+-- Items in Cribmaster but not in Plex
+--select count(*) from (select distinct item_no from btPlexItem)lv1 where item_no = ''
+--delete from btPlexItem 
+where item_no like '%--%'
+--where LTRIM(RTRIM(item_no)) = ''
+select * from btPlexItem where item_no like '%011458%'
+select * from INVENTRY where itemnumber like '%011458%'	
+--Create map from Plex supplier_code to Crib vendorName	
+--Busche Albion,Busche 
 update btSupplyCode
-set VendorName = ''
-where Supplier_Code = ''
+set VendorName = 'BUSCHE ENTERPRISES'
+where Supplier_Code = 'Busche Albion'
+
+select top 10 *
+from STATION st
+where crib = 11
 
 
+select *
+from
+(
+select ROW_NUMBER() OVER(ORDER BY VendorName ASC) AS Row#, VendorName
+from (
 select 
-	distinct vn.VendorName as Supplier_Code
+--top 100 inv.ItemNumber,inv.Description1,vn.VendorName,sc.supplier_code
+distinct vn.VendorName  --159
+-- done 3/159
 from INVENTRY inv 
 left outer join btRemoveItems2 ri
 	on inv.ItemNumber=ri.itemnumber
@@ -165,9 +200,39 @@ left outer join AltVendor av
 	ON inv.AltVendorNo = av.RecNumber
 left outer join VENDOR vn
 	on av.VendorNumber = vn.VendorNumber
+left outer join btSupplyCode sc
+	on vn.VendorName=sc.VendorName
+left outer join STATION st 
+	on inv.ItemNumber=st.Item
 where ri.ItemNumber is null --15709
-order by vn.VendorName
+--and item='15977'
+--and sc.vendorname is not null
+--order by vn.VendorName
+)lv1
+)lv2
+where row# > 25
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Cant find these in plex
+-- 2L INC
 select * from btSupplyCode where supplier_code like '%3D Scan IT%'
 --Bulk insert btRemoveItems
 --from 'C:\itemsremove2.csv'
