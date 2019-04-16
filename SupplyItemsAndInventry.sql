@@ -1,30 +1,11 @@
---inventory location
---Location,Building Code,Location Type,Note,Location Group
-select 
-'"' + CribBin + '"'  as location,
-'BPG Central Stores' as building_code,
-'Supply Crib' as location_type,
-'' as note,
-'MRO Crib' as location_group
-from station
-where crib = 12
-
--- Supply Item Locations
-select 
-'"' + item + '"' as item_no,
-'"' + CribBin + '"' as location,
-BinQuantity as quantity,
-'N' as Building_Default,
-'' Transaction_Type
-from station
-where crib = 12
 
 Create View bvCribItems
 as
-	select	
-	--'"' + itemnumber + '"' as "Item_No",
-	itemnumber as "Item_No",
-	Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+select item_no
+from
+(
+	select 	
+	Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
 	Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
 	Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
 	Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
@@ -34,9 +15,10 @@ as
 	from
 	(
 			select 
-		--		row_number() OVER(ORDER BY vn.VendorName ASC) AS Row#,
-		--		'"' + inv.itemnumber + '"' as "Item_No",
-				inv.ItemNumber,
+				row_number() OVER(ORDER BY inv.ItemNumber ASC) AS Row#,
+				inv.itemnumber as "Item_No",
+				--'"' + inv.itemnumber + '"' as "Item_No",
+				--inv.ItemNumber as Item_No,
 				Description1 as "Brief_Description", 
 				ISNULL(Description2, Description1) as Description, 
 				case 
@@ -66,8 +48,8 @@ as
 				av.Cost as Customer_Unit_Price,
 				'' as Average_Cost,
 				'Ea' as Inventory_Unit,
-				mQty.Min_Quantity,
-				mQty.Max_Quantity,
+				minQty.Min_Quantity,
+				maxQty.Max_Quantity,
 				'' as Tax_Code,
 				'' as Account_No,
 				'' as Manufacturer,
@@ -75,7 +57,7 @@ as
 				'' as Drawing_No,
 				'' as Item_Quantity,
 				'' as Location,
-				vn.VendorName as Supplier_Code,
+				sc.Supplier_Code,
 				Description1 as Supplier_Part_No,
 				'' as Supplier_Std_Purch_Qty,
 				'USD' as Currency,
@@ -97,10 +79,6 @@ as
 			-- distinct inv.ItemNumber --16631
 			-- btRemoveItems count	    -  982
 			--                          =15649     
-			-- inv.ItemNumber
-			-- count(*)
-			--select 
-			--	vn.VendorName as Supplier_Code
 			from INVENTRY inv 
 			left outer join btRemoveItems2 ri
 				on inv.ItemNumber=ri.itemnumber
@@ -113,72 +91,191 @@ as
 				ON inv.AltVendorNo = av.RecNumber
 			left outer join VENDOR vn
 				on av.VendorNumber = vn.VendorNumber
-			--where ri.ItemNumber is null --15709
+			left outer join btSupplyCode sc
+				on vn.VendorName=sc.VendorName
 			left outer join (
-				select item, max(OverrideOrderPoint) as Min_Quantity, max(Maximum) as Max_Quantity
+				select item, max(OverrideOrderPoint) as Min_Quantity
 				from 
 				(
-					select item, OverrideOrderPoint, Maximum from STATION
-					where OverrideOrderPoint is not null and Maximum is not null and CHARINDEX('R',right(item,1)) = 0 
+					select item, OverrideOrderPoint from STATION
+					where OverrideOrderPoint is not null and CHARINDEX('R',right(item,1)) = 0 
 				)lv1
 				group by item
-			) mQty
-			on inv.ItemNumber = mQty.Item
-			where inv.ItemNumber <> '' and left(inv.ItemNumber,1) <> ' ' 
+			) minQty
+			on inv.ItemNumber = minQty.Item
+			left outer join (
+				select item,  max(Maximum) as Max_Quantity
+				from 
+				(
+					select item, Maximum from STATION
+					where Maximum is not null and CHARINDEX('R',right(item,1)) = 0 
+				)lv1
+				group by item
+			) maxQty
+			on inv.ItemNumber = maxQty.Item
+			--left outer join btPlexItem pi
+			--on inv.ItemNumber=pi.item_no
+			where inv.ItemNumber <> '' 
+			and left(inv.ItemNumber,1) <> ' ' 
+			and inv.ItemNumber <> ' 00729'
 			and ri.itemnumber is null
-			and item='15977' --test avilla
+			--and pi.item_no is null
+			and inv.ItemNumber not in (
+			' 00729',
+			'0000001',
+			'0005348'
+			)
+			--2122
 	)lv1
+	where item_no in (
+	'0002008',
+	'0003625',
+	'009152',
+	'008604R',
+	'0002005',
+	'004910',
+	'0003054',
+	'0004480'
+	)
+)lv2
+select * from INVENTRY where itemnumber = '0002008'
+select * from btRemoveItems2 where itemnumber = '0002008'
+--
 
 -- Supply Items in Plex
 --CREATE TABLE Cribmaster.dbo.btPlexItem (
 	Item_No varchar(50) NOT NULL,
 )
-Bulk insert btPlexItem
-from 'C:\PlexItemGT14000.csv'
+
+-- Drop table 
+
+-- DROP TABLE Cribmaster.dbo.btPlexItem
+
+CREATE TABLE Cribmaster.dbo.btPlexItem (
+	Item_No varchar(50) NOT NULL,
+	active int
+)
+
+
+--Bulk insert btPlexItem
+from 'C:\PlexItemGT15000.csv'
 with
 (
 fieldterminator = ',',
 rowterminator = '\n'
 )
---7000 
+--5000 
 --5000
---2000
---4237
--- Items in plex but not it Cribmaster = 4423
---0012785/plex - 12785/Crib
---0007290
---0013739
---0011226
---0007675
---0009171/plex - 009171/Crib
-select pi.*
+--5000
+--3237
+--=18237
+
+-- Inactive Items in plex but not it Cribmaster = 4418.
+-- Mostly because of Extra zeros
+select 
+count(*)
+--pi.*
 from btPlexItem pi
 left outer join INVENTRY inv
 on pi.item_no=inv.ItemNumber
 where inv.ItemNumber is null
+and pi.active=0
 
+-- Active Items in plex but not it Cribmaster.
+select 
+--count(*)
+pi.*
+from btPlexItem pi
+left outer join INVENTRY inv
+on pi.item_no=inv.ItemNumber
+where inv.ItemNumber is null
+and pi.active=1
+--delete from btPlexItem where Item_No like 'n++%'
 select * from INVENTRY 
 where ItemNumber like '%7675%'
 where Description1 like '%05518-12.50%'
 
--- Items in Cribmaster but not in Plex
---select count(*) from (select distinct item_no from btPlexItem)lv1 where item_no = ''
---delete from btPlexItem 
-where item_no like '%--%'
---where LTRIM(RTRIM(item_no)) = ''
-select * from btPlexItem where item_no like '%011458%'
-select * from INVENTRY where itemnumber like '%011458%'	
+-- Items in Cribmaster but not in Plex = 2122 Supply items
+-- 00729 this has a space in front of it
+--0000001  This is IN PLEX? 
+--0001611R Crib / 00001611R Plex
+--0003345  Crib / only has 0003345R Plex
+--005715R  Crib / 0005715 and 005715 Plex
+--005717  Crib / Nothing in plex
+--005945 
+-- Items in Cribmaster but not in Plex = 2122 Supply items
+select 
+distinct(cat.itemclass)
+--count(*)
+--top 1000 inv.itemnumber,item_no,description1 S
+from INVENTRY inv --16631
+left outer join btItemClassCatKey cat 
+	on upper(cat.itemclass) = inv.ItemClass
+left outer join btRemoveItems2 ri
+	on inv.ItemNumber=ri.itemnumber
+--where ri.itemnumber is null --15709
+left outer join btPlexItem pi
+on inv.ItemNumber=pi.item_no
+where 
+ri.itemnumber is null
+and pi.item_no is null
+--and inv.ItemNumber <> ' 00729'
+
+-- Is all the needed item classes in plex?
+select DISTINCT ItemClass
+from
+(
+	select inv.ItemClass, cat.itemclass class 
+	from INVENTRY inv 
+	left outer join btItemClassCatKey cat 
+	on upper(cat.itemclass) = inv.ItemClass
+	where cat.ItemClass is null
+)lv1
+
+
+--and inv.ItemNumber in ('005863',
+--'005946','009740R','009737',
+--'009719','009730','009731',
+--'009535','009540','009541'
+--)
+--2122
+select * from INVENTRY 
+where ItemNumber in ('005863',
+'005946','009740R','009737',
+'009719','009730','009731',
+'009535','009540','009541'
+)-- Items in Cribmaster but inactive Plex = 
+select 
+--count(*)
+top 100 inv.itemnumber,item_no,description1 
+from INVENTRY inv --16631
+left outer join btRemoveItems2 ri
+	on inv.ItemNumber=ri.itemnumber
+--where ri.itemnumber is null --15709
+left outer join btPlexItem pi
+on inv.ItemNumber=pi.item_no
+where 
+ri.itemnumber is null
+and pi.item_no is null
+and inv.ItemNumber <> ' 00729'
+
+select * from btPlexItem
+select * from INVENTRY where ItemNumber = ' 00729'
+select * from btPlexItem where Item_No like '%00729%'
 --Create map from Plex supplier_code to Crib vendorName	
 --Busche Albion,Busche 
+-- Cant find these in plex
+-- CUSTOMER SUPPLIED
+--Busches Enterprises maps to Busche Albion?
+-- delete from btsupplycode where supplier_code like '%n++%'
+--select * from btSupplyCode where supplier_code like '%2l%'
+select * 
+from btSupplyCode
+where vendorname = 'BUSCHE ENTERPRISES'
 update btSupplyCode
 set VendorName = 'BUSCHE ENTERPRISES'
 where Supplier_Code = 'Busche Albion'
-
-select top 10 *
-from STATION st
-where crib = 11
-
-
+-- SP3 Cutting Tools, and Tri-Star Engineering,Whittet-Higgins (Pending)
 select *
 from
 (
@@ -205,35 +302,17 @@ left outer join btSupplyCode sc
 left outer join STATION st 
 	on inv.ItemNumber=st.Item
 where ri.ItemNumber is null --15709
+
 --and item='15977'
 --and sc.vendorname is not null
 --order by vn.VendorName
 )lv1
 )lv2
-where row# > 25
+where row# > 154
+--******************START AT ROW 53
+-- What items are not in plex?
+-- Are all the items in plex marked inactive that are not supposed to be in there.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- Cant find these in plex
--- 2L INC
-select * from btSupplyCode where supplier_code like '%3D Scan IT%'
 --Bulk insert btRemoveItems
 --from 'C:\itemsremove2.csv'
 Bulk insert btSupplyCode
@@ -243,6 +322,7 @@ with
 fieldterminator = ',',
 rowterminator = '\n'
 )
+
 
 
 -- btRemoveItems csv import file was saved in excel so some leading zeros got deleted.
@@ -289,4 +369,21 @@ left outer join INVENTRY inv
 on upper(cat.itemclass) = inv.ItemClass
 where inv.ItemClass is null
 ) rm
+
+
+-- DROP TABLE Cribmaster.dbo.btPlexItem
+
+CREATE TABLE Cribmaster.dbo.btPlexItem (
+	Item_No varchar(50) NOT NULL,
+	active int
+)
+
+
+--Bulk insert btPlexItem
+from 'C:\PlexItemGT15000.csv'
+with
+(
+fieldterminator = ',',
+rowterminator = '\n'
+)
 
