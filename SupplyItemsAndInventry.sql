@@ -1,7 +1,24 @@
-
+select * 
+into btInventry0423
+from INVENTRY 
+where itemnumber in (
+--	'0000105'
+'008614', 
+'0001447',
+'13934'
+)
+our 2 fields our varchar(50)
+plex Description is varchar(800)
+update btInventry0423 set Description1 = Description1 + ', ' + SUBSTRING(Description2,1, 5) where Description2 is not null
+select * from btInventry0423
+select itemnumber,st.cribbin,st.BinQuantity 
+from INVENTRY inv
+left outer join STATION st
+on inv.ItemNumber=st.item
+where itemnumber = '16957'
 Create View bvCribItems
 as
-select item_no
+select item
 from
 (
 	select 	
@@ -15,12 +32,17 @@ from
 	from
 	(
 			select 
+				--top 100
 				row_number() OVER(ORDER BY inv.ItemNumber ASC) AS Row#,
 				inv.itemnumber as "Item_No",
 				--'"' + inv.itemnumber + '"' as "Item_No",
 				--inv.ItemNumber as Item_No,
 				Description1 as "Brief_Description", 
-				ISNULL(Description2, Description1) as Description, 
+--				isnull(Description2,Description1) as Description,
+				case 
+					when Description2 is null then Description1
+					else Description1 + ', ' + Description2
+				end as Description,
 				case 
 					when inv.Comments is null then ' '
 					else inv.Comments
@@ -128,17 +150,13 @@ from
 			--2122
 	)lv1
 	where item_no in (
-	'0002008',
-	'0003625',
-	'009152',
-	'008604R',
-	'0002005',
-	'004910',
-	'0003054',
-	'0004480'
+	'17038','17039','17040','17041','17042','17043',
+	'17038R','17039R','17040R','17041R','17042R','17043R'
+--'17005','16957','17031','16296'
 	)
+	or ((item_no >= '17044') and (item_no <= '17064'))
 )lv2
-select * from INVENTRY where itemnumber = '0002008'
+select * from INVENTRY where itemnumber = '30729'
 select * from btRemoveItems2 where itemnumber = '0002008'
 --
 
@@ -150,6 +168,8 @@ select * from btRemoveItems2 where itemnumber = '0002008'
 -- Drop table 
 
 -- DROP TABLE Cribmaster.dbo.btPlexItem
+select itemnumber from INVENTRY order by itemnumber 
+
 
 CREATE TABLE Cribmaster.dbo.btPlexItem (
 	Item_No varchar(50) NOT NULL,

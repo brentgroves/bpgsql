@@ -1,22 +1,152 @@
+-- Determine what item locations are not in the Crib 
+select item,CribBin
+FROM
+STATION st
+where item in
+(
+'16155','16156','16527'
+)
+
+-- Used for Plex Location List Upload screen
+select 
+Location,Building_Code,Location_Type,Note,Location_Group
+--count(*)
+from
+(
+	select Row#,Location,Building_Code,Location_Type,Note,Location_Group
+	from
+	(
+		select 
+		ROW_NUMBER() over(order by CribBin asc) as row#,
+		CribBin  as location,
+		'BPG Central Stores' as building_code,
+		'Supply Crib' as location_type,
+		'' as note,
+		'MRO Crib' as location_group
+		from station
+		where 
+		item in (
+		'17005','16957','17031','16296'
+		)
+		--and CribBin in ('12-AA3B03','12-AA3A03','12-AA1C02')
+	)lv1
+--	where row# > 500 -- and row# <= 1000
+--	order by location
+)lv2
+
+-- Used for Plex Supply Item Locations upload screen
+select 
+item as item_no,
+CribBin as location,
+BinQuantity as quantity,
+'N' as Building_Default,
+'' Transaction_Type
+from station
+where item in
+(
+		'17005','16957','17031','16296'
+)
+--and CribBin not in ('01-N202A02','01-R03B03','01-C212A04')
+
+
+-- Remove previous days backup of station and PlxSupplyItemLocation tables
+-- drop table PlxSupplyItemLocation0430
+-- drop table  station0430
 -- Make backup of station quantities table before changing it in Cribmaster. 
-select * into station0416
+select * 
+into station0501
 from STATION
--- Upload the item_location table into Cribmaster.PlxSupplyItemLocation0416 table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0416 (
+--12624
+--verify backup of station
+select count(*) from station0501
+--12614
+-- Upload the item_location table into PlxSupplyItemLocation table.
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0501 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
-select count(*) from PlxSupplyItemLocation0416 --0
+--update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
+-- Verify table was created and has zero records
+select count(*) from PlxSupplyItemLocation0501
 -- truncate table PlxSupplyItemLocation0416
-Bulk insert PlxSupplyItemLocation0416
---from 'c:\il0416GE12500.csv'
-from 'c:\il0416DiffsOnly.csv'
+-- Insert Plex item_location data into CM
+Bulk insert PlxSupplyItemLocation0501
+from 'c:\il0501GE12500.csv'
 with
 (
 	fieldterminator = ',',
 	rowterminator = '\n'
 )
+
+select
+	count(*) 
+	from PlxSupplyItemLocation0501 --0
+
+select count(*)
+from
+(
+	select
+		distinct item_no,location,quantity
+	--count(*) 
+	--*
+	from PlxSupplyItemLocation0429 --0
+)lv1
+--12997
+--12822
+
+--Join these 2 tables on item number and location.
+--Set the station table’s quantity equal to PlxItemLocation.quantity value. 
+--update station
+--update STATION 
+set BinQuantity = il.quantity,
+Quantity = il.quantity
+select 
+count(*) --236	
+--il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
+from (
+	select --distinct incase I inserted items more than once
+		distinct item_no,location,quantity
+	from PlxSupplyItemLocation0501 
+) il
+inner join STATION st --12614
+on il.location=st.CribBin
+and il.item_no=st.Item
+inner join INVENTRY inv
+on il.item_no=inv.ItemNumber
+--12605
+where il.quantity <> st.BinQuantity	
+and inv.InactiveItem = 1  
+--61
+--213
+--124
+--98
+--90
+-- 4 inactive items changed quantities in plex and 
+-- would like to know why
+--0001377
+--15313  
+--15762  
+--16711  
+
+--81
+--233
+
+--Update the items Nancy told me to
+--16520,006944,14396,009259
+select *
+--from station st
+from PlxSupplyItemLocation0422 il 
+where item_no in
+('16520','006944','14396','009259')
+--update station
+set BinQuantity = 9,
+Quantity = 9 
+from station st
+where item = '009259'
+--How many of these 
+
+
 --Why is there 86 more item locations in Plex than Cribmaster
 --Are there any item locations in cribmaster that are not in plex?
 select 
@@ -48,7 +178,7 @@ where st.CribBin is null
 select 
 --count(*) --236	
 inv.InactiveItem,il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
-from PlxSupplyItemLocation0416 il 
+from PlxSupplyItemLocation0411 il 
 inner join STATION st --12614
 on il.location=st.CribBin
 and il.item_no=st.Item
@@ -56,99 +186,16 @@ inner join INVENTRY inv
 on il.item_no=inv.ItemNumber
 --12597
 where il.quantity <> st.BinQuantity	
-and inv.InactiveItem = 0
+and inv.InactiveItem = 1
 --233
 select *
 from 
 STATION where item = '005825R'
 
-select 
---	count(*) 
-*
-from PlxSupplyItemLocation0416 --0
-
-
---Join these 2 tables on item number and location.
---Set the station table’s quantity equal to PlxItemLocation.quantity value. 
---update station
---update STATION 
-set BinQuantity = il.quantity,
-Quantity = il.quantity
-select 
---count(*) --236	
-il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
-from PlxSupplyItemLocation0416 il 
-inner join STATION st --12614
-on il.location=st.CribBin
-and il.item_no=st.Item
-inner join INVENTRY inv
-on il.item_no=inv.ItemNumber
---12597
---where il.quantity <> st.BinQuantity	
---and inv.InactiveItem = 0
---233
-
---Update the items Nancy told me to
---16520,006944,14396,009259
-select *
---from station st
-from PlxSupplyItemLocation0416 il 
-where item_no in
-('16520','006944','14396','009259')
---update station
-set BinQuantity = 9,
-Quantity = 9 
-from station st
-where item = '009259'
---How many of these 
-
--- Determine what item locations are not in the Crib 
-select item
-FROM
-STATION st
-where item in
-(
-'0004735R',
-'0004516R',
-'000290'
-)
---0004735R  |01-002A01 
---0004516R  |01-002A01 
---000290    |01-B03B04 60
-
-select top 100 * from station0416
 
 --Plex screen location list
 --Location,Building Code,Location Type,Note,Location Group
 
-select 
-Location,Building_Code,Location_Type,Note,Location_Group
---count(*)
-from
-(
-	select Row#,Location,Building_Code,Location_Type,Note,Location_Group
-	from
-	(
-		select 
-		ROW_NUMBER() over(order by CribBin asc) as row#,
-		CribBin  as location,
-		'BPG Central Stores' as building_code,
-		'Supply Crib' as location_type,
-		'' as note,
-		'MRO Crib' as location_group
-		from station
-		where 
-		item in (
-		'0003876',
-		'16211R', 
-		'15442R'
-		)
-		or crib = 11
-		or crib = 12
-	)lv1
-	where row# > 500 -- and row# <= 1000
---	order by location
-)lv2
 
 --Are there any Plex locations which are not in the Cribmaster
 -- No There are no locations 'Supply Crib','MRO Crib','BPG Central Stores'
@@ -206,21 +253,9 @@ left outer join STATION st
 on st.cribbin = sil.location
 --where st.CribBin = sil.location
 where st.BinQuantity<>sil.qty
---7
---9
---13
---17
---23
---31
---39
---50
---54
---60
-select top 100 * from STATION
 
 -- Used to Supply Item Location upload
 --truncate TABLE Cribmaster.dbo.PlxSupplyItemLocation
-
 CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation (
 	item_no varchar(50),
 	location varchar(50),
@@ -261,24 +296,6 @@ rowterminator = '\n'
 
 select distinct cribbin from STATION order by cribbin where cribbin like '09%'
 
--- Supply Item Locations
-select 
-item as item_no,
-CribBin as location,
-BinQuantity as quantity,
-'N' as Building_Default,
-'' Transaction_Type
-from station
-where item in
-(
-'0004735R',
-'0004516R',
-'000290'
-)
-
-where item not in (
-'0000677','0000007'
-)
 
 --This table contain
 
