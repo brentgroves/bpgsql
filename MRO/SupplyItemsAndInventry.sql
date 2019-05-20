@@ -16,6 +16,7 @@ from INVENTRY inv
 left outer join STATION st
 on inv.ItemNumber=st.item
 where itemnumber = '16957'
+--5/
 Create View bvCribItems
 as
 select item
@@ -72,7 +73,7 @@ from
 				'Ea' as Inventory_Unit,
 				minQty.Min_Quantity,
 				maxQty.Max_Quantity,
-				'' as Tax_Code,
+				70 as Tax_Code,
 				'' as Account_No,
 				'' as Manufacturer,
 				Description1 as Manf_Item_No,
@@ -149,6 +150,7 @@ from
 			)
 			--2122
 	)lv1
+	where Supplier_Std_Unit_Price is null
 	where item_no in (
 	'17038','17039','17040','17041','17042','17043',
 	'17038R','17039R','17040R','17041R','17042R','17043R'
@@ -159,7 +161,7 @@ from
 select * from INVENTRY where itemnumber = '30729'
 select * from btRemoveItems2 where itemnumber = '0002008'
 --
-
+select distinct ItemClass from INVENTRY
 -- Supply Items in Plex
 --CREATE TABLE Cribmaster.dbo.btPlexItem (
 	Item_No varchar(50) NOT NULL,

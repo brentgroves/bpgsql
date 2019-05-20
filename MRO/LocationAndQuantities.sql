@@ -1,11 +1,11 @@
 -- Determine what item locations are not in the Crib 
-select item,CribBin
+select top 10 item,CribBin
 FROM
 STATION st
-where item in
-(
-'16155','16156','16527'
-)
+for xml path
+for xml raw
+for xml auto
+
 
 -- Used for Plex Location List Upload screen
 select 
@@ -50,29 +50,29 @@ where item in
 
 
 -- Remove previous days backup of station and PlxSupplyItemLocation tables
--- drop table PlxSupplyItemLocation0430
--- drop table  station0430
+-- drop table PlxSupplyItemLocation0502
+-- drop table  station0502
 -- Make backup of station quantities table before changing it in Cribmaster. 
 select * 
-into station0501
+into station0503
 from STATION
 --12624
 --verify backup of station
-select count(*) from station0501
+select count(*) from station0503
 --12614
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0501 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0503 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation0501
+select count(*) from PlxSupplyItemLocation0503
 -- truncate table PlxSupplyItemLocation0416
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0501
-from 'c:\il0501GE12500.csv'
+Bulk insert PlxSupplyItemLocation0503
+from 'c:\il0503GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -81,8 +81,11 @@ with
 
 select
 	count(*) 
-	from PlxSupplyItemLocation0501 --0
+	from PlxSupplyItemLocation0503 --0
 
+	
+	
+	
 select count(*)
 from
 (
@@ -90,8 +93,9 @@ from
 		distinct item_no,location,quantity
 	--count(*) 
 	--*
-	from PlxSupplyItemLocation0429 --0
+	from PlxSupplyItemLocation0501 --0
 )lv1
+--12998
 --12997
 --12822
 
@@ -107,7 +111,7 @@ count(*) --236
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0501 
+	from PlxSupplyItemLocation0503 
 ) il
 inner join STATION st --12614
 on il.location=st.CribBin
@@ -117,6 +121,8 @@ on il.item_no=inv.ItemNumber
 --12605
 where il.quantity <> st.BinQuantity	
 and inv.InactiveItem = 1  
+--145
+--130
 --61
 --213
 --124
@@ -335,12 +341,10 @@ from
 		from station
 		where 
 		item in (
-		'0003876',
-		'16211R', 
-		'15442R'
+		'16947'
 		)
-		or crib = 11
-		or crib = 12
+		--or crib = 11
+		--or crib = 12
 	)lv1
 	where row# > 500 -- and row# <= 1000
 --	order by location
