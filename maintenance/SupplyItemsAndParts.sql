@@ -335,6 +335,48 @@ having COUNT(*) = 4
 )fin
 
 --There are appox 80 parts with multiple records and some have different locations.
+--drop table #dups
+CREATE TABLE #dups (
+	Numbered varchar(50),
+	Shelf varchar(25)
+)
+
+insert into #dups (Numbered,shelf)
+(
+	select Numbered,shelf
+	from dbo.Parts
+	where Numbered in (
+		select Numbered 
+		from parts 
+		group by Numbered
+		HAVING COUNT(*) > 1
+	)
+)
+
+select * 
+from #dups
+where numbered = '701063'
+order by numbered
+
+select 
+Numbered,
+(
+	stuff(
+			(
+				select cast(', ' + shelf as varchar(max)) 
+				from #dups d 
+				where (numbered = p.numbered)
+				FOR XML PATH ('')
+			), 1, 2, ''
+		)
+) as shelves 
+from #dups p 
+
+select numbered, categoryid, shelf
+from dbo.Parts
+where 
+Numbered = '701063'
+
 select p.RecordNumber, p.Numbered,shelf,QuantityOnHand,CategoryID,Description
 from
 (
