@@ -26,7 +26,7 @@ from
 		from station
 		where 
 		item in (
-		'17005','16957','17031','16296'
+	'17066','17066R','17067','17067R','17068','17069','17070','17070R'
 		)
 		--and CribBin in ('12-AA3B03','12-AA3A03','12-AA1C02')
 	)lv1
@@ -44,35 +44,35 @@ BinQuantity as quantity,
 from station
 where item in
 (
-		'17005','16957','17031','16296'
+	'17066','17066R','17067','17067R','17068','17069','17070','17070R'
 )
 --and CribBin not in ('01-N202A02','01-R03B03','01-C212A04')
 
 
 -- Remove previous days backup of station and PlxSupplyItemLocation tables
--- drop table PlxSupplyItemLocation0502
+-- drop table PlxSupplyItemLocation0503
 -- drop table  station0502
 -- Make backup of station quantities table before changing it in Cribmaster. 
 select * 
-into station0503
+into station0524
 from STATION
 --12624
 --verify backup of station
-select count(*) from station0503
---12614
+select count(*) from station0524
+--12637
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0503 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0524 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation0503
+select count(*) from PlxSupplyItemLocation0524
 -- truncate table PlxSupplyItemLocation0416
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0503
-from 'c:\il0503GE12500.csv'
+Bulk insert PlxSupplyItemLocation0524
+from 'c:\il0524GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -81,7 +81,7 @@ with
 
 select
 	count(*) 
-	from PlxSupplyItemLocation0503 --0
+	from PlxSupplyItemLocation0524 --0
 
 	
 	
@@ -93,7 +93,7 @@ from
 		distinct item_no,location,quantity
 	--count(*) 
 	--*
-	from PlxSupplyItemLocation0501 --0
+	from PlxSupplyItemLocation0524 --0
 )lv1
 --12998
 --12997
@@ -111,16 +111,20 @@ count(*) --236
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0503 
+	from PlxSupplyItemLocation0524 
 ) il
 inner join STATION st --12614
 on il.location=st.CribBin
 and il.item_no=st.Item
 inner join INVENTRY inv
 on il.item_no=inv.ItemNumber
---12605
+--12608
+--where il.quantity < st.BinQuantity	
+--and inv.InactiveItem = 0  
+--530
 where il.quantity <> st.BinQuantity	
-and inv.InactiveItem = 1  
+and inv.InactiveItem = 0  
+--1126
 --145
 --130
 --61

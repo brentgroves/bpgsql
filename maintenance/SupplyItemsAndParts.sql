@@ -126,24 +126,50 @@ on #set7.minRecordNumber=p.RecordNumber
 -- finally create set8 from #set7
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 select 
-	--top 10
+	top 10
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
 	p.Numbered,  -- Not in final set
 	'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
 	SUBSTRING(p.Description,1,50) as "Brief_Description",
 	CASE
-		WHEN ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		and ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-		then '#' + p.VendorNumber + ', ' + p.Description
-		WHEN ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		and ((p.VendorNumber is null) OR (p.VendorNumber = ''))
-		THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber
-		ELSE '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN p.Description --000
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		then '#' + p.VendorNumber + ', ' + p.Description -- 100
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --101
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer  --110
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
 	end as Description,
 	-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
 	-- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
 	-- all to upload it into varchar field.
 	--REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
+	-- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 	NotesText as Note, 
 	'Maintenance' as item_type,
 	CASE
@@ -158,7 +184,7 @@ select
 		else p.CurrentCost
 	end as Customer_Unit_Price,
 	'' as Average_Cost,
--- Standardize on units found in common_v_unit
+	-- Standardize on units found in common_v_unit
 -- Add units as needed and assign default
 	CASE 
 		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
@@ -183,13 +209,375 @@ select
 	-- check 0000007 and other items
  	MinimumOnHand as Min_Quantity,
 	CASE
-		when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then MaxOnHand = 0
+		when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
 		else MaxOnHand
-	end as Max_Quantity
+	end as Max_Quantity,
+	-- purchasing_v_tax_code / did not put this is for MRO supply items
+	-- but befor you update the item in plex it has to be filled with something
+	-- and accountant said I could use tax exempt.
+	-- Found that EM Parts are already marked as taxable 'Y' or 'N'
+	-- where taxable = 'N' --2044
+	-- where taxable = 'Y'--10619
+	'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
+	-- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
+	-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit.
+	'' as Account_No,
+	'' as Manufacturer,
+	p.ManufacturerNumber as Manf_Item_No,
+	'' as Drawing_No,
+	'' as Item_Quantity,
+	'' as Location,
+	sc.Supplier_Code,
 from #set7
 left join dbo.Parts p
-on #set7.minRecordNumber=p.RecordNumber	
+	on #set7.minRecordNumber=p.RecordNumber	
+left outer join btSupplyCode sc
+	on p.Vendor=sc.VendorName
+
 where NSItemNumber = '600005'
+
+-- Drop table
+
+-- DROP TABLE Cribmaster.dbo.btSupplyCode GO
+
+CREATE TABLE ExpressMaintenance.dbo.btSupplyCode2 (
+	Supplier_Code varchar(25),
+	Supplier_Status varchar(50), 
+	VendorName varchar(50) 
+) GO;
+
+--truncate table btSupplyCode
+Bulk insert btSupplyCode
+from 'C:\supply_codes.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+
+select COUNT(*)
+from dbo.Parts p
+left outer join btSupplyCode sc
+	on p.Vendor=sc.VendorName
+where (vendor is null) or (Vendor = '')	--501
+
+select COUNT(*)
+from
+(
+select DISTINCT vendor,vendorid,VendorNumber
+from 
+dbo.Parts
+where (vendor is not null) and (Vendor <> '')	
+--order by vendor
+)set1 --327
+
+select *
+from
+(
+	select row#,vendor
+	FROM
+	(
+		select 
+			row_number() OVER(ORDER BY vendor ASC) AS Row#,
+			vendor
+		from
+		(
+			select DISTINCT vendor
+			from 
+			dbo.Parts
+			where (vendor is not null) and (Vendor <> '')	
+		)set1
+	)set2
+	where row# <= 184
+)
+
+--1. Check Plex for vendor
+select * 
+from btSupplyCode
+where supplier_code like '%MARSHALL%'
+
+UPDATE dbo.btSupplyCode
+set vendorname = 'MARSHALL SAFETY'
+where Supplier_Code = ''
+
+--1.5  go through the items I did yesterday
+			row_number() OVER(ORDER BY vendor ASC) AS Row#,
+--vendors that are not in plex
+--of items that were ordered recently
+SELECT
+Row#,vendor,Supplier_Code
+from
+(
+	select 
+	row_number() OVER(ORDER BY vendor ASC) AS Row#,
+	vendor,sc.Supplier_Code
+	from
+	(
+		select row#,vendor
+		FROM
+		(
+			select 
+				row_number() OVER(ORDER BY vendor ASC) AS Row#,
+				vendor
+			from
+			(
+				select DISTINCT vendor
+				from 
+				dbo.Parts
+				where (vendor is not null) and (Vendor <> '')	
+			)set1
+		)set2
+		where row# <= 184
+		--Marshall safety
+	)set1
+	left outer JOIN
+	dbo.btSupplyCode sc
+	on set1.vendor=sc.VendorName
+	where
+	--Supplier_Code is not null --69
+	Supplier_Code is null --115
+)set1
+where row# = 6
+
+
+DECLARE @company as varchar(35)
+set @company = '%ALPHA%'
+--2. Check M2m to see if was ordered since 2013.
+select *
+from btm2mvendor
+where pomcompany like @company or avcompany like @company
+
+--3. If vendor needs added to Plex set addToPlex = 1
+update btm2mvendor
+set addToPlex = 1
+where fvendno = '000846'
+
+select * from dbo.btM2mVendor 
+WHERE addtoplex =1
+order by fvendno
+
+--3.a  If cant find then ask kristin
+insert into dbo.btAskKristin
+--VALUES (Vendor, Numbered,Description)
+select Vendor, Numbered,Description
+from 
+dbo.Parts
+where Vendor like 'ALPHA%'	
+
+select * from dbo.btAskKristin
+
+CREATE TABLE btAskKristin (
+	Vendor varchar(50),
+	numbered varchar(50), 
+	Description varchar(60)
+)
+
+
+
+
+--4. transfer btM2mVendor back to plex and link to apvend
+-- write report to pull vendor info so they can be added to plex.
+
+CREATE TABLE btAskKristin (
+	Vendor varchar(50),
+	numbered varchar(50), 
+	Description varchar(60)
+)
+
+
+-- drop TABLE btM2mVendor GO
+CREATE TABLE btM2mVendor (
+	fvendno char(6),
+	pomCompany varchar(35), 
+	avCompany varchar(35)
+--	addToPlex bit
+)
+alter table ExpressMaintenance.dbo.btM2mVendor
+add addToPlex bit
+
+select * from btm2mvendor
+
+--truncate table btSupplyCode
+Bulk insert btM2mVendor
+from 'C:\M2mVendors0524b.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+
+--vendors that are not in plex
+--of items that were ordered recently
+select vendor,sc.Supplier_Code
+from
+(
+	select row#,vendor
+	FROM
+	(
+		select 
+			row_number() OVER(ORDER BY vendor ASC) AS Row#,
+			vendor
+		from
+		(
+			select DISTINCT vendor
+			from 
+			dbo.Parts
+			where (vendor is not null) and (Vendor <> '')	
+		)set1
+	)set2
+	where row# <= 184
+)set1
+left outer JOIN
+dbo.btSupplyCode sc
+on set1.vendor=sc.VendorName
+where
+--Supplier_Code is not null --69
+Supplier_Code is null --115
+
+
+--set2 when was the last time the part was ordered
+--select top 100 po.numbered,dateordered, vendorname 
+select po.Numbered,max(dateordered) 
+from dbo.Porders po
+left outer join dbo.Parts p
+on po.Numbered= po.Numbered
+group by po.Numbered
+
+select addressline1,city,state from companyaddress
+where vendor like '%Fluid Systems%'
+
+select max(dateordered)
+from 
+dbo.Porders2
+group by DateOrdered
+
+--insert INTO
+--dbo.btSupplyCode2
+--select * from dbo.btSupplyCode
+
+select * 
+from btSupplyCode
+where Supplier_Code = 'Doc''s Hardware'
+where VendorName is not null and VendorName <> ''
+order by vendor
+
+select count(*) 
+from dbo.Parts
+where taxable = 'N' --2044
+where taxable = 'Y'--10619
+
+
+
+where vendorname is null
+
+update btSupplyCode
+set VendorName = 'BUSCHE ENTERPRISES'
+where Supplier_Code = 'Busche Albion'
+
+
+select COUNT(*)
+from
+(
+select DISTINCT vendor from dbo.Parts
+)set1
+--329
+
+SELECT * from dbo.btSupplyCode
+where supplier_code like '%@%'
+varchar (25)	
+	
+select 
+top 100
+numbered, 
+p.Manufacturer,
+p.ManufacturerNumber,
+p.VendorNumber,
+CASE
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN p.Description --000
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	then '#' + p.VendorNumber + ', ' + p.Description -- 100
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --101
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer  --110
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
+end as Description
+from dbo.Parts p 
+where numbered = '200703'
+where numbered = '000008' --200703
+
+
+
+select
+CASE
+	when ManufacturerNumber is null then '2'
+	when ManufacturerNumber = '' then '1'
+end as mfg_no,
+CASE
+	when VendorNumber is null then '4'
+	when VendorNumber = '' then '3'
+end as Vendor_no
+from dbo.Parts p 
+where numbered = '000008'
+
+
+-- Drop table
+
+-- DROP TABLE Cribmaster.dbo.btSupplyCode GO
+
+CREATE TABLE Cribmaster.dbo.btSupplyCode (
+	Supplier_Code varchar(25) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	VendorName varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL
+) GO;
+
+select vendor, vendorNumber,vendorid from dbo.Parts
+
+Bulk insert btSupplyCode
+from 'C:\supplier_code.csv'
+with
+(
+fieldterminator = ',',
+rowterminator = '\n'
+)
+
+
+
+select * 
+from btSupplyCode
+where vendorname = 'BUSCHE ENTERPRISES'
+update btSupplyCode
+set VendorName = 'BUSCHE ENTERPRISES'
+where Supplier_Code = 'Busche Albion'
+
+
+-- Do you purchase the item from the vendor contain the supplier you buy the item from?
+select distinct vendor from dbo.Parts
+
+select distinct manufacturer from dbo.Parts
 
 -- Electronics, Pumps, Covers
 -- How to group 
@@ -353,81 +741,55 @@ insert into #dups (Numbered,shelf)
 	)
 )
 
+select DISTINCT numbered,shelves
+from
+(
+	select 
+	Numbered,
+	(
+		stuff(
+				(
+					select cast(', ' + shelf as varchar(max)) 
+					from #dups d 
+					where (numbered = p.numbered)
+					FOR XML PATH ('')
+				), 1, 2, ''
+			)
+	) as shelves 
+	from #dups p 
+)set1
+order by numbered
+
 select * 
 from #dups
 where numbered = '701063'
 order by numbered
 
-select 
-Numbered,
+select DISTINCT numbered,shelves
+from
 (
-	stuff(
-			(
-				select cast(', ' + shelf as varchar(max)) 
-				from #dups d 
-				where (numbered = p.numbered)
-				FOR XML PATH ('')
-			), 1, 2, ''
-		)
-) as shelves 
-from #dups p 
+	select 
+	Numbered,
+	(
+		stuff(
+				(
+					select cast(', ' + shelf as varchar(max)) 
+					from #dups d 
+					where (numbered = p.numbered)
+					FOR XML PATH ('')
+				), 1, 2, ''
+			)
+	) as shelves 
+	from #dups p 
+)set1
+order by numbered
 
 select numbered, categoryid, shelf
 from dbo.Parts
 where 
 Numbered = '701063'
 
-select p.RecordNumber, p.Numbered,shelf,QuantityOnHand,CategoryID,Description
-from
-(
-	select max(RecordNumber) maxRecordNumber, Numbered
-	from dbo.Parts
-	where Numbered in (
-		select Numbered 
-		from parts 
-		group by Numbered
-		HAVING COUNT(*) > 1
-	)
-	group by Numbered
 
-)lv1
-left join dbo.Parts p
-on lv1.maxRecordNumber = p.RecordNumber
-
-order by Numbered
-
-select *
-FROM
-(
-	select 
-		--top 10
-		row_number() OVER(ORDER BY p.Numbered ASC) AS Row#,
-		'BE' + RTRIM(LTRIM(p.Numbered)) as "Item_No",
-		SUBSTRING(p.Description,1,50) as "Brief_Description",
-		CASE
-			WHEN (p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '') then '#' + p.VendorNumber + ', ' + p.Description
-			ELSE '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber
-		end as Description,
-		REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, -- Thank you
-		'Maintenance' as item_type,
-		CASE
-			when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
-			when p.CategoryID = '-PLATE' then 'PLATE'
-			else LTRIM(RTRIM(CategoryID))
-		end as Item_Group,
-		'General' as Item_Category,
-		'Low' as Item_Priority,
-		CASE
-			when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
-			else p.CurrentCost
-		end as Customer_Unit_Price
-		
-	FROM
-	Parts as p
-)lv1
-where Item_Group = 'PLATE'
---where Item_Group = 'General'
-order by Item_No
 
 
 select Numbered from parts 

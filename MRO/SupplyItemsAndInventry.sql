@@ -73,7 +73,8 @@ from
 				'Ea' as Inventory_Unit,
 				minQty.Min_Quantity,
 				maxQty.Max_Quantity,
-				70 as Tax_Code,
+				--70 as Tax_Code, Plex says 70 does not exist
+				'' as Tax_Code,
 				'' as Account_No,
 				'' as Manufacturer,
 				Description1 as Manf_Item_No,
@@ -150,15 +151,20 @@ from
 			)
 			--2122
 	)lv1
-	where Supplier_Std_Unit_Price is null
+	--where supplier_code is null
+	
+	--where Supplier_Std_Unit_Price is null
 	where item_no in (
-	'17038','17039','17040','17041','17042','17043',
-	'17038R','17039R','17040R','17041R','17042R','17043R'
+	'17066','17066R','17067','17067R','17068','17069','17070','17070R'
+--	'17038','17039','17040','17041','17042','17043',
+--	'17038R','17039R','17040R','17041R','17042R','17043R'
 --'17005','16957','17031','16296'
 	)
 	or ((item_no >= '17044') and (item_no <= '17064'))
 )lv2
-select * from INVENTRY where itemnumber = '30729'
+
+
+select top 100 * from INVENTRY where itemnumber = '30729'
 select * from btRemoveItems2 where itemnumber = '0002008'
 --
 select distinct ItemClass from INVENTRY
@@ -337,6 +343,7 @@ where row# > 154
 
 --Bulk insert btRemoveItems
 --from 'C:\itemsremove2.csv'
+
 Bulk insert btSupplyCode
 from 'C:\supplier_code.csv'
 with
@@ -345,7 +352,10 @@ fieldterminator = ',',
 rowterminator = '\n'
 )
 
+select COUNT(*) from btSupplyCode
+--2213
 
+order by Supplier_Code
 
 -- btRemoveItems csv import file was saved in excel so some leading zeros got deleted.
 -- select top 10 * from btRemoveItems --982
