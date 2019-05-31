@@ -329,15 +329,24 @@ from
 	--Supplier_Code is not null --69
 --	Supplier_Code is null --115
 )set1
-where row# = 289
+where row# = 326 --done
 --where row# >= 252
 --and row# <= 262
 --//do 196 next 195 on.
 /*
+select count(*)
+from
+(
+						select DISTINCT vendor
+			from 
+			dbo.Parts
+			where (vendor is not null) and (Vendor <> '')	
+)set1
+
 select *
 from 
 dbo.Parts
-where vendor like '%spx%'
+where vendor like 'Wes-Tech'
 
 */
 -- Is the vendor in plex?
@@ -357,25 +366,26 @@ select *
 into btm2mvendor2
 from btm2mvendor
 **/
-
+--Wastewater Engineers
+--
 select * 
 from btSupplyCode
-where supplier_code like '%THK%'
+where supplier_code like '%YUKI%'
 --Okuma America Corporation
 --insert into dbo.btSupplyCode VALUES ('Hy-Tech','Active','HYTEC')
 	--YES 
-	Safety Kleen
+	WAUKESHA MACHINE & TOOL
 		UPDATE dbo.btSupplyCode
-		set vendorname = 'Tennant'
-		where Supplier_Code = 'Tennant Co.'
+		set vendorname = 'X-Y TOOL'
+		where Supplier_Code = 'XY Tool & Die'
 		J.O. Mory
 		-- vendor = Gosiger Indiana
 		-- sup code = Gosiger Indiana
-		-- insert into dbo.btSupplyCode VALUES ('DXP Enterprises','Active','PRECISION IND,')
+		-- insert into dbo.btSupplyCode VALUES ('Kendall','Active','Wabash Electric')
 	--NO
 		--Is this vendor in M2M?
 		DECLARE @company as varchar(35)
-		set @company = '%Tech%motive%'
+		set @company = '%YUKI%'
 		--2. Check M2m to see if vendor is there.
 		select 
 		--count(*) --2066
@@ -386,11 +396,11 @@ where supplier_code like '%THK%'
 		/*
 		 select * from parts where vendor like 'DIXON'
 		 */
---Sonic Air Systems
+--YAMAZAN
 		--YES
 			update btm2mvendor
 			set addToPlex = 1
-			where fvendno = '001720'
+			where fvendno = '002527'
 			
 			
 --	DR. Lubricants	
@@ -413,10 +423,10 @@ where supplier_code like '%THK%'
 			select Vendor, Numbered,Description
 			from 
 			dbo.Parts
-			where Vendor = 'Techmotive'	
-			--delete from dbo.btAskKristin where Vendor = 'Okuma America Corporation'	
+			where Vendor = 'Wes-Tech'	
+			--delete from dbo.btAskKristin where Vendor = 'Wes-Tech'	
 			select * from dbo.btAskKristin			
-			where Vendor = 'PENTAIR'	
+			where Vendor = 'UNI SOURCE'	
 			
 
 -- Check counts
@@ -441,14 +451,16 @@ COUNT(*)
 from dbo.btM2mVendor 
 WHERE addtoplex =1
 --and pomCompany like '%KITAGAWA%' or avCompany like '%KITAGAWA%'
-and pomCompany <= 'Sonic Air Systemsz'
+and pomCompany <= 'YUKIWA SEIKO USA INC'
 -- I used Randals as a carquest substitue since it had the work - carquest at end of pomCompany field
 -- I also use randals for Randalls Auto Value
 --for pomCompany RANDALS AUTO STORE, INC - CARQUEST and EM vendors 'CARQUEST' and 'Randalls Auto Value'
 --   Add + 2 but number of records is only 1
 --+1 because carquest and randalls auto value are both mapped to Randals auto store
 --+1 BOSCH-REXROTH and REXROTH both are mapped to btm2mvendors pomCompany BOSCH REXROTH CORPORATION
---87
+--+1 TPI Tork -- mapped to TPI TORK PRODUCTS INC both em vendors mapped to 1 m2m vendor
+--   TORK PRODUCTS, INC. -- mapped to TPI TORK PRODUCTS INC
+--100
 --UPDATE dbo.btM2mVendor set addtoplex='' where fvendno = '000647' and pomcompany = 'NORTHTECH WORKHOLDING'
 /*
 select fvendno
@@ -473,14 +485,15 @@ delete from btm2mvendor where pomcompany = 'ATS SYSTEMS' and fvendno = '001607'
 --164|KITAGAWA 
 --000647 |NORTHTECH WORKHOLDING              |KITAGAWA-NOTHTECH INC.
 select 
---count(*)
-*
+count(*)
+--*
 from 
 dbo.btSupplyCode
-where VendorName <= 'Tennant'
+--where VendorName = 'US SHOP TOOLS'
+where VendorName <= 'X-Y TOOL'
 and VendorName <> ''
 order by VendorName
---120
+--134
 select
 --*
 count(*)
@@ -489,9 +502,9 @@ from
 	select 
 	distinct Vendor
 	from dbo.btAskKristin
-	where Vendor <= 'Techmotive'	
+	where Vendor <= 'Wayne Electric'	
 )set1
---79
+--89
 /*
 REXROTH           
 SHAMROCK          
@@ -511,6 +524,58 @@ SHAMROCK
 	where Vendor > 'DR. Lubricants'	
 and Vendor <= 'MEREDITH MACHINERY'
 
+
+select 
+Vendor,
+(
+	stuff(
+			(
+				select cast(CHAR(10) + LTRIM(RTRIM(numbered)) + ' Descr: ' + Description as varchar(max)) 
+				from dbo.btAskKristin ak 
+				where (ak.vendor = set1.vendor)
+				FOR XML PATH ('')
+			), 1, 2, ''
+		)
+) as Parts 
+from 
+(
+	select 
+	DISTINCT Vendor
+	from dbo.btAskKristin
+)set1
+
+
+dbo.btAskKristin ak1 
+	
+
+select 
+Vendor,
+(
+	stuff(
+			(
+				select cast(', ' + numbered + ' Descr: ' + Description as varchar(max)) 
+				from dbo.btAskKristin ak2 
+				where (ak2.vendor = ak1.vendor)
+				FOR XML PATH ('')
+			), 1, 2, ''
+		)
+) as Parts 
+from dbo.btAskKristin ak1 
+
+
+select 
+Numbered,
+(
+	stuff(
+			(
+				select cast(', ' + shelf as varchar(max)) 
+				from #dups d 
+				where (numbered = p.numbered)
+				FOR XML PATH ('')
+			), 1, 2, ''
+		)
+) as shelves 
+from #dups p 
 	
 select *
 from

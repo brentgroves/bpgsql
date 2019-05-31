@@ -1,5 +1,27 @@
 --https://stackoverflow.com/questions/194852/how-to-concatenate-text-from-multiple-rows-into-a-single-text-string-in-sql-serv
 --https://stackoverflow.com/questions/6899/how-to-create-a-sql-server-function-to-join-multiple-rows-from-a-subquery-into
+
+
+	select 
+	Vendor,
+	(
+		stuff(
+				(
+					select top 5 cast(CHAR(10) + LTRIM(RTRIM(numbered)) + ' Descr: ' + Description  as varchar(max)) 
+					from dbo.btAskKristin ak 
+					where (ak.vendor = set1.vendor)
+					order by ak.numbered
+					FOR XML PATH ('')
+				), 1, 1, ''
+			)
+	) as Parts 
+	from 
+	(
+		select 
+		DISTINCT Vendor
+		from dbo.btAskKristin
+	)set1
+
 	select 
 	Numbered,
 	(
