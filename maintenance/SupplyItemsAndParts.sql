@@ -291,16 +291,8 @@ from
 	where row# <= 184
 )
 
---1. Check Plex for vendor
-select * 
-from btSupplyCode
-where supplier_code like '%MARSHALL%'
 
-UPDATE dbo.btSupplyCode
-set vendorname = 'MARSHALL SAFETY'
-where Supplier_Code = ''
-
---1.5  go through the items I did yesterday
+--1. go through each vendor in em
 			row_number() OVER(ORDER BY vendor ASC) AS Row#,
 --vendors that are not in plex
 --of items that were ordered recently
@@ -327,26 +319,213 @@ from
 				where (vendor is not null) and (Vendor <> '')	
 			)set1
 		)set2
-		where row# <= 184
+--		where row# <= 184
 		--Marshall safety
 	)set1
 	left outer JOIN
 	dbo.btSupplyCode sc
 	on set1.vendor=sc.VendorName
-	where
+--	where
 	--Supplier_Code is not null --69
-	Supplier_Code is null --115
+--	Supplier_Code is null --115
 )set1
-where row# = 6
-
-
-DECLARE @company as varchar(35)
-set @company = '%ALPHA%'
---2. Check M2m to see if was ordered since 2013.
+where row# = 289
+--where row# >= 252
+--and row# <= 262
+--//do 196 next 195 on.
+/*
 select *
-from btm2mvendor
-where pomcompany like @company or avcompany like @company
+from 
+dbo.Parts
+where vendor like '%spx%'
 
+*/
+-- Is the vendor in plex?
+/*
+--backup btsupplycode
+SELECT *
+INTO newtable [IN externaldb]
+FROM oldtable
+WHERE condition;
+select * from btsupplycode3
+select *
+into dbo.btSupplyCode3
+from btsupplycode;
+
+select * from btm2mvendor
+select *
+into btm2mvendor2
+from btm2mvendor
+**/
+
+select * 
+from btSupplyCode
+where supplier_code like '%THK%'
+--Okuma America Corporation
+--insert into dbo.btSupplyCode VALUES ('Hy-Tech','Active','HYTEC')
+	--YES 
+	Safety Kleen
+		UPDATE dbo.btSupplyCode
+		set vendorname = 'Tennant'
+		where Supplier_Code = 'Tennant Co.'
+		J.O. Mory
+		-- vendor = Gosiger Indiana
+		-- sup code = Gosiger Indiana
+		-- insert into dbo.btSupplyCode VALUES ('DXP Enterprises','Active','PRECISION IND,')
+	--NO
+		--Is this vendor in M2M?
+		DECLARE @company as varchar(35)
+		set @company = '%Tech%motive%'
+		--2. Check M2m to see if vendor is there.
+		select 
+		--count(*) --2066
+		*
+		from btm2mvendor
+		where pomcompany like @company or avcompany like @company
+		
+		/*
+		 select * from parts where vendor like 'DIXON'
+		 */
+--Sonic Air Systems
+		--YES
+			update btm2mvendor
+			set addToPlex = 1
+			where fvendno = '001720'
+			
+			
+--	DR. Lubricants	
+			/*
+			select * from btm2mvendor where fvendno = '002582'
+			update btm2mvendor set addtoplex = '' where pomcompany = 'ABRASIVE FINISHING INC.' and fvendno = '002274' 
+			delete from btm2mvendor where pomcompany = 'MORI SEIKI' and fvendno = '001648'
+			select * from dbo.btM2mVendor 
+			WHERE addtoplex =1
+			and fvendno <= 'AMETA SOLUTIONS'
+			order by fvendno
+			*/
+		--NO
+--164|KITAGAWA 
+--000647 |NORTHTECH WORKHOLDING              |KITAGAWA-NOTHTECH INC.
+		
+			--If cant find then ask kristin
+			insert into dbo.btAskKristin
+			--VALUES (Vendor, Numbered,Description)
+			select Vendor, Numbered,Description
+			from 
+			dbo.Parts
+			where Vendor = 'Techmotive'	
+			--delete from dbo.btAskKristin where Vendor = 'Okuma America Corporation'	
+			select * from dbo.btAskKristin			
+			where Vendor = 'PENTAIR'	
+			
+
+-- Check counts
+--total vendors
+select count(*)
+from
+(
+	select DISTINCT vendor
+	from 
+	dbo.Parts
+	where (vendor is not null) and (Vendor <> '')	
+)set1 --326
+
+
+NACHI             
+--164|KITAGAWA 
+--000647 |NORTHTECH WORKHOLDING              |KITAGAWA-NOTHTECH INC.
+
+select 
+COUNT(*) 
+--*
+from dbo.btM2mVendor 
+WHERE addtoplex =1
+--and pomCompany like '%KITAGAWA%' or avCompany like '%KITAGAWA%'
+and pomCompany <= 'Sonic Air Systemsz'
+-- I used Randals as a carquest substitue since it had the work - carquest at end of pomCompany field
+-- I also use randals for Randalls Auto Value
+--for pomCompany RANDALS AUTO STORE, INC - CARQUEST and EM vendors 'CARQUEST' and 'Randalls Auto Value'
+--   Add + 2 but number of records is only 1
+--+1 because carquest and randalls auto value are both mapped to Randals auto store
+--+1 BOSCH-REXROTH and REXROTH both are mapped to btm2mvendors pomCompany BOSCH REXROTH CORPORATION
+--87
+--UPDATE dbo.btM2mVendor set addtoplex='' where fvendno = '000647' and pomcompany = 'NORTHTECH WORKHOLDING'
+/*
+select fvendno
+from
+(
+	select 
+	--COUNT(*) 
+	*
+	from dbo.btM2mVendor 
+	WHERE addtoplex =1
+	and pomCompany <= 'Hosez'
+)set1
+group by fvendno
+HAVING COUNT(*) > 1
+select 
+*
+from dbo.btM2mVendor 
+WHERE fvendno = '001607'
+delete from btm2mvendor where pomcompany = 'ATS SYSTEMS' and fvendno = '001607'
+
+*/
+--164|KITAGAWA 
+--000647 |NORTHTECH WORKHOLDING              |KITAGAWA-NOTHTECH INC.
+select 
+--count(*)
+*
+from 
+dbo.btSupplyCode
+where VendorName <= 'Tennant'
+and VendorName <> ''
+order by VendorName
+--120
+select
+--*
+count(*)
+from
+(
+	select 
+	distinct Vendor
+	from dbo.btAskKristin
+	where Vendor <= 'Techmotive'	
+)set1
+--79
+/*
+REXROTH           
+SHAMROCK          
+*/
+
+
+---5/28  This was the first query I mailed to Kristen
+	select 
+	*
+	from dbo.btAskKristin
+	where Vendor <= 'DR. Lubricants'	
+-----------------------------------------
+--5/29 next query mailed to kristin
+	select 
+	*
+	from dbo.btAskKristin
+	where Vendor > 'DR. Lubricants'	
+and Vendor <= 'MEREDITH MACHINERY'
+
+	
+select *
+from
+(
+select 
+row_number() OVER(ORDER BY VendorName ASC) AS Row#,
+*
+from dbo.btSupplyCode
+where VendorName <> ''
+)set1
+where row# <=8
+
+
+
+--
 --3. If vendor needs added to Plex set addToPlex = 1
 update btm2mvendor
 set addToPlex = 1
@@ -366,45 +545,8 @@ where Vendor like 'ALPHA%'
 
 select * from dbo.btAskKristin
 
-CREATE TABLE btAskKristin (
-	Vendor varchar(50),
-	numbered varchar(50), 
-	Description varchar(60)
-)
-
-
-
-
 --4. transfer btM2mVendor back to plex and link to apvend
 -- write report to pull vendor info so they can be added to plex.
-
-CREATE TABLE btAskKristin (
-	Vendor varchar(50),
-	numbered varchar(50), 
-	Description varchar(60)
-)
-
-
--- drop TABLE btM2mVendor GO
-CREATE TABLE btM2mVendor (
-	fvendno char(6),
-	pomCompany varchar(35), 
-	avCompany varchar(35)
---	addToPlex bit
-)
-alter table ExpressMaintenance.dbo.btM2mVendor
-add addToPlex bit
-
-select * from btm2mvendor
-
---truncate table btSupplyCode
-Bulk insert btM2mVendor
-from 'C:\M2mVendors0524b.csv'
-with
-(
-fieldterminator = '|',
-rowterminator = '\n'
-)
 
 --vendors that are not in plex
 --of items that were ordered recently
@@ -425,7 +567,8 @@ from
 			where (vendor is not null) and (Vendor <> '')	
 		)set1
 	)set2
-	where row# <= 184
+	where row# <= 6 --added some of these to plex already
+	--where row# <= 184 --added some of these to plex already
 )set1
 left outer JOIN
 dbo.btSupplyCode sc
@@ -433,6 +576,33 @@ on set1.vendor=sc.VendorName
 where
 --Supplier_Code is not null --69
 Supplier_Code is null --115
+
+--truncate table btSupplyCode
+Bulk insert btM2mVendor
+from 'C:\M2mVendors0524b.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+CREATE TABLE btAskKristin (
+	Vendor varchar(50),
+	numbered varchar(50), 
+	Description varchar(60)
+)
+
+
+-- drop TABLE btM2mVendor GO
+CREATE TABLE btM2mVendor (
+	fvendno char(6),
+	pomCompany varchar(35), 
+	avCompany varchar(35)
+--	addToPlex bit
+)
+alter table ExpressMaintenance.dbo.btM2mVendor
+add addToPlex bit
+
+select * from btm2mvendor
 
 
 --set2 when was the last time the part was ordered

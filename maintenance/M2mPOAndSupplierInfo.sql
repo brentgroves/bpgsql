@@ -11,7 +11,7 @@ fpono = '140170'
 select fvendno,*
 FROM
  dbo.apvend av
-where fcompany like '%amera%'
+where fcompany like '%SILVENT%'
 AMERA/002676
 
 DECLARE @dateStart datetime;

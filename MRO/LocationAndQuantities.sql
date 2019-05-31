@@ -26,7 +26,7 @@ from
 		from station
 		where 
 		item in (
-	'17066','17066R','17067','17067R','17068','17069','17070','17070R'
+	'16705R','16707R'
 		)
 		--and CribBin in ('12-AA3B03','12-AA3A03','12-AA1C02')
 	)lv1
@@ -44,7 +44,7 @@ BinQuantity as quantity,
 from station
 where item in
 (
-	'17066','17066R','17067','17067R','17068','17069','17070','17070R'
+	'16705R','16707R'
 )
 --and CribBin not in ('01-N202A02','01-R03B03','01-C212A04')
 
