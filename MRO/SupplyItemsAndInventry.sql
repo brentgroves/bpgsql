@@ -17,6 +17,10 @@ left outer join STATION st
 on inv.ItemNumber=st.item
 where itemnumber = '16957'
 --5/
+select *
+from INVENTRY
+where itemnumber = '0000066'
+
 Create View bvCribItems
 as
 select item
@@ -39,11 +43,15 @@ from
 				--'"' + inv.itemnumber + '"' as "Item_No",
 				--inv.ItemNumber as Item_No,
 				Description1 as "Brief_Description", 
---				isnull(Description2,Description1) as Description,
+--				isnull(Description2,Description1) as Description, 
 				case 
 					when Description2 is null then Description1
 					else Description1 + ', ' + Description2
-				end as Description,
+				end as Description, 
+				-- this is the most important field because it shows up on the ordering screen
+				-- at first I did not put description1 in this field as on the line above I commented out
+				-- we had to pay plex to exchange the contents of brief_description and description field because initially description 
+				-- did not contain description1 which had the all important part number needed for ordering
 				case 
 					when inv.Comments is null then ' '
 					else inv.Comments

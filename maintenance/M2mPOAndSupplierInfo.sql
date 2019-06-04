@@ -11,8 +11,64 @@ fpono = '140170'
 select fvendno,*
 FROM
  dbo.apvend av
-where fcompany like '%SILVENT%'
+where fcompany like '%Wright Repair%'
 AMERA/002676
+
+-- Drop table
+
+-- DROP TABLE ExpressMaintenance.dbo.btM2mVendor GO
+
+CREATE TABLE btM2mVendorAskKara2 (
+	fvendno char(6),
+	pomCompany varchar(35),
+	avCompany varchar(35),
+	addToPlex bit,
+	EMVendor varchar(50)
+)
+-- Drop table
+
+-- DROP TABLE ExpressMaintenance.dbo.btm2mvendorAskKara2 GO
+
+
+select --top 100
+'Supplier_Code' Supplier_Code,pomCompany,fcompany avCompany,fmstreet Street,fcity City,fstate State,fzip Zip,fphone Phone,ffax Fax,'#' + pv.fvendno M2mVN#
+from 
+dbo.btM2mVendorAskKara2 pv
+left outer join dbo.apvend av
+on pv.fvendno=av.fvendno
+
+
+--Already being added to plex
+--After Kara adds to Plex Map original em vendors and also 
+--add the following from Kristen's answer
+--Banner -TO- C & E SALES
+--Brothers - Mills -TO- YAMAZEN
+
+--Screw Ups
+-- Told Kara to add 'Action Equipment' but I found it in plex
+-- later spelled as 'Action Eqp.' and then mapped all the vendors from EM in btSupplyCode
+-- Same with OHIO TRANSMISSION & PUMP COMPANY found it in Plex as OTP Industrial Solutions
+
+--UNKNOWN
+--Some vendors mapped to supplier UNKNOWN
+--Don't know what to do with them yet
+
+--Need more info from the internet to add to plex because not in M2m
+--Fryer
+--OVERTON'S (WE USUALLY BUY ONLINE)
+--DESTACO
+
+select * from btM2mVendorAskKara2
+--Bulk insert btM2mVendorAskKara2
+from 'C:\Vendors0603.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+
+
+select * from dbo.btM2mVendor
 
 DECLARE @dateStart datetime;
 set @dateStart = '20130101';
@@ -28,9 +84,9 @@ from
 	from dbo.pomast pom
 	left outer join dbo.apvend av
 	on pom.fvendno=av.fvendno
-	order by pom.fcompany
---	where pom.fbuyer ='KT'
---	and pom.fvendno='001980'
+--	order by pom.fcompany
+	where pom.fbuyer ='KT'
+	and pom.fvendno='002458'
 --	and pom.fcompany <> av.fcompany
 --	and fcreate >= @dateStart and fcreate <= @dateEnd
 --	and po

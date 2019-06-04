@@ -6,19 +6,18 @@
 -- Process
 -- Set 1 = {ActNumber, NoSuffixNumber}.
 
---There are appox 45 parts with multiple records and some have different locations.
-select COUNT(*)
+--There are appox 21 parts with multiple records and some have different locations.
+select *
 FROM
 (
-	select min(RecordNumber) minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber
+	select min(RecordNumber) minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber, COUNT(*) partCount
 	from dbo.Parts
 	group by ltrim(rtrim(Numbered))
-)lv1
---12619
-select COUNT(*)
-from dbo.Parts
---12665
+)set1
+where partCount > 1
+
 -- drop table #set8
+
 create table #set7
 (
 	minRecordNumber numeric(18,0),
@@ -33,6 +32,7 @@ create table #set1
 );
    
 --Set 1: {ItemNumber,minRecordNumber} => group by ItemNumber to delete duplicates, 
+--Duplicates are for items which have multiple location?
 --remove KendallVille records, and trim ItemNumbers. Store in temp table.
 
 insert into #set1 (minRecordNumber,ItemNumber)
@@ -43,8 +43,10 @@ insert into #set1 (minRecordNumber,ItemNumber)
 	-- do not include Kendallville numbers.
 	having RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'
 )
+
 select count(*) from #set1
 --11096
+--11157
 select count(*) from #set7
 --10266
 select COUNT(*)
@@ -69,8 +71,10 @@ on #set7.minRecordNumber=p.RecordNumber
 		select set7.NSItemNumber,#set1.minRecordNumber
 		FROM
 		(
+			--select COUNT(*) from ( --are there any dups
 			select DISTINCT ItemNumber,NSItemNumber
 			from
+			--select COUNT(*) from --are there any dups
 			(
 				select 
 				CASE
@@ -86,6 +90,7 @@ on #set7.minRecordNumber=p.RecordNumber
 					from
 					(
 						select 
+						--ItemNumber, --for testing suffix
 						NSItemNumber,
 						case 
 							when suffix = 'N' then NSItemNumber + '-1'
@@ -112,16 +117,44 @@ on #set7.minRecordNumber=p.RecordNumber
 							-- set2
 							
 						)set3
+						--order by nsitemnumber
 					)set4 --10266
 					group by NSItemNumber
 					--order by NSitemnumber
-				)set5 --10266
-				--where right(NSItemNumberPriority,1) = '4' 
-			)set6 --10266 no dups
-		)set7 --10266
+					--000003A -- 450
+					--000054 (AV) --9145
+					--000091 (E) --839
+				)set5 --10288
+				--where right(NSItemNumberPriority,1) = '4'
+			)set6 --
+			--)tst1 --10288 I don't think we need set#6 because there are no dups
+		)set7 --
 		left join #set1
 		on set7.ItemNumber=#set1.ItemNumber
-	) -- #set7 
+		/* test
+		select numbered,recordnumber
+		from dbo.Parts
+		where numbered LIKE '000003%'
+		or numbered LIKE '000054%'
+		or numbered LIKE '000091%'
+		--in ('000003A','000054','000091')
+		--000003A -- 450
+		--000054 (AV) --9145
+		--000091 (E) --839
+		*/		
+		--order by nsitemnumber
+	) -- #set7
+	--10288
+	select COUNT(*)
+	from
+	(
+		select 
+		--*
+		--COUNT(*)
+		nsitemnumber 
+		from #set7
+		group by nsitemnumber
+	)tst	
 
 -- finally create set8 from #set7
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
@@ -130,7 +163,7 @@ select
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
 	p.Numbered,  -- Not in final set
 	'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
-	SUBSTRING(p.Description,1,50) as "Brief_Description",
+	SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
 	CASE
 		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
 		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
@@ -164,7 +197,7 @@ select
 		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
 		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
 		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
-	end as Description,
+	end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
 	-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
 	-- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
 	-- all to upload it into varchar field.
@@ -174,9 +207,11 @@ select
 	'Maintenance' as item_type,
 	CASE
 		when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
-		when p.CategoryID = '-PLATE' then 'PLATE'
+		when p.CategoryID = '-PLATE' then 'PLATE'  -- Kristen did not change this in EM 06-04 
 		else LTRIM(RTRIM(CategoryID))
 	end as Item_Group,
+	--select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
+	--select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
 	'General' as Item_Category,
 	'Low' as Item_Priority,
 	CASE
@@ -207,27 +242,88 @@ select
 		else 'Ea'
 	end as Inventory_Unit,
 	-- check 0000007 and other items
- 	MinimumOnHand as Min_Quantity,
+ 	MinimumOnHand as Min_Quantity, -- if there are multiple parts,21 at last count, this will contain the value of the one chosen.
+ 	/*
+ 	select numbered,description,minimumonhand,maxonhand from dbo.Parts
+ 	where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
+ 	-- only 2 items where min > max
+ 	select count(*) notZero
+ 	from
+ 	(
+ 	select numbered,description,minimumonhand,maxonhand from dbo.Parts
+ 	where (minimumOnHand is not null) and (MaxOnHand is not null)
+	and (minimumOnHand <> 0) and (MaxOnHand <> 0) 
+	)tst --7875
+ 	*/
 	CASE
 		when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
 		else MaxOnHand
 	end as Max_Quantity,
-	-- purchasing_v_tax_code / did not put this is for MRO supply items
-	-- but befor you update the item in plex it has to be filled with something
+	-- purchasing_v_tax_code / did not put this in for MRO supply items
+	-- but before you update the item in plex it has to be filled with something
 	-- and accountant said I could use tax exempt.
 	-- Found that EM Parts are already marked as taxable 'Y' or 'N'
 	-- where taxable = 'N' --2044
 	-- where taxable = 'Y'--10619
+	-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
+	-- accountant also said this so I'm going to mark them all as Tax Exempt
 	'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
 	-- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
-	-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit.
+	-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
+	-- and leave it blank.
 	'' as Account_No,
-	'' as Manufacturer,
+	/* Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name 
+	 * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
+	 * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
+	 * */
+	'' as Manufacturer,  
 	p.ManufacturerNumber as Manf_Item_No,
+	/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
+	select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
+	*/
 	'' as Drawing_No,
 	'' as Item_Quantity,
 	'' as Location,
 	sc.Supplier_Code,
+	/* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
+	VendorNumber Supplier_Part_No, 
+	'' as Supplier_Std_Purch_Qty,
+	'USD' as Currency,
+	CASE
+		when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
+		else p.CurrentCost
+	end as Supplier_Std_Unit_Price,
+	CASE 
+		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
+		when LTRIM(RTRIM(Units)) = 'Case' then 'case'
+		when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
+		when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
+		when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
+		when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
+		when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
+		when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
+		when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
+		when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
+		when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
+		when LTRIM(RTRIM(Units)) = 'Set' then 'set'
+		else 'Ea'
+	end as Supplier_Purchase_Unit,
+	1 as Supplier_Unit_Conversion,
+	'' as Supplier_Lead_Time,
+	'Y' as Update_When_Received,
+	'' as Manufacturer_Item_Revision,
+	'' as Country_Of_Origin,
+	'' as Commodity_Code_Key,
+	'' as Harmonized_Tariff_Code,
+	'' as Cube_Length,
+	'' as Cube_Width,
+	'' as Cube_Height,
+	'' as Cube_Unit
 from #set7
 left join dbo.Parts p
 	on #set7.minRecordNumber=p.RecordNumber	
@@ -236,6 +332,10 @@ left outer join btSupplyCode sc
 
 where NSItemNumber = '600005'
 
+select DISTINCT Manufacturer
+--,vendor, numbered, description,categoryid  
+from parts
+order by Manufacturer
 -- Drop table
 
 -- DROP TABLE Cribmaster.dbo.btSupplyCode GO
@@ -358,47 +458,119 @@ FROM oldtable
 WHERE condition;
 select * from btsupplycode3
 select *
-into dbo.btSupplyCode3
+into dbo.btSupplyCode0603B
 from btsupplycode;
 
+
+
+--drop table btm2mVendorAskKara
 select * from btm2mvendor
 select *
-into btm2mvendor2
+into btm2mvendorAskKara2
 from btm2mvendor
 **/
 --Wastewater Engineers
 --
+select Numbered,Description,CategoryID,vendor
+from 
+dbo.Parts
+where vendor like '%OHIO%'
+
+select Numbered,Description,CategoryID,vendor
+from 
+dbo.Parts
+where vendor = 'Wayne Electric'
+
 select * 
 from btSupplyCode
-where supplier_code like '%YUKI%'
+--where supplier_code like '%UNKNOWN%'
+where supplier_code like '%Mcmaster%'
+
+--MOTION INDUSTRIES
 --Okuma America Corporation
---insert into dbo.btSupplyCode VALUES ('Hy-Tech','Active','HYTEC')
+--insert into dbo.btSupplyCode VALUES ('McMaster-Carr','Active','B & C Industrial')
+Motion Ind          
+DIXON   --            
+                    
+FESTO    --           
+GEMCO     --          
+GENERAL BEARING CORP --
+NORGREN      --       
+Sentenel     --   
+
+where Vendor = 'Applied Industrial'
+or Vendor = 'B & C Industrial'
+--insert into dbo.btSupplyCode VALUES ('UNKNOWN','Active','UNITRONICS')
 	--YES 
 	WAUKESHA MACHINE & TOOL
+	--delete from dbo.btSupplyCode where supplier_code like '%COMPLETE DRIVES%' 
 		UPDATE dbo.btSupplyCode
-		set vendorname = 'X-Y TOOL'
-		where Supplier_Code = 'XY Tool & Die'
+		set vendorname = ''
+		where Supplier_Code = 'Motion Ind., Inc'
+		
+		6 rows updated
 		J.O. Mory
 		-- vendor = Gosiger Indiana
 		-- sup code = Gosiger Indiana
-		-- insert into dbo.btSupplyCode VALUES ('Kendall','Active','Wabash Electric')
+		-- insert into dbo.btSupplyCode VALUES ('Roberts Ballscrew','Active','DONGAN')
+		
 	--NO
 		--Is this vendor in M2M?
 		DECLARE @company as varchar(35)
-		set @company = '%YUKI%'
+		set @company = '%UNIVERSAL SEPARATORS%'
 		--2. Check M2m to see if vendor is there.
 		select 
-		--count(*) --2066
 		*
-		from btm2mvendor
+		--count(*) --2066
+		--top 100 *
+		from btm2mvendorAskKara1
+		--WHERE addtoplex =1
 		where pomcompany like @company or avcompany like @company
-		
+--MATERIALS HANDLING EQUIPMENT
+
+update btM2mVendorAskKara2
+set emvendor = 'UNIVERSAL SEPERATORS, INC.',
+addToPlex=1
+where pomCompany = 'UNIVERSAL SEPARATORS, INC.'
+and fvendno ='003509'
+
+--Already being added to plex
+--After Kara adds to Plex Map original em vendors and also 
+--add the following from Kristen's answer
+--Banner -TO- C & E SALES
+--Brothers - Mills -TO- YAMAZEN
+--TECH SALES & MARKETING -TO- DEPATIE FLUID POWER
+
+--Screw Ups
+-- Told Kara to add 'Action Equipment' but I found it in plex
+-- later spelled as 'Action Eqp.' and then mapped all the vendors from EM in btSupplyCode
+-- Same with OHIO TRANSMISSION & PUMP COMPANY found it in Plex as OTP Industrial Solutions
+
+--UNKNOWN
+--Some vendors mapped to supplier UNKNOWN
+--Don't know what to do with them yet
+
+--Need more info from the internet to add to plex because not in M2m
+--Fryer
+--OVERTON'S (WE USUALLY BUY ONLINE)
+--DESTACO
+
+--Verify table updated correctly
+		select 
+		*
+		--count(*) --2066
+		--top 100 *
+		from btm2mvendorAskKara2
+		WHERE addtoplex =1
+		where fvendno ='003565'
+
+
 		/*
 		 select * from parts where vendor like 'DIXON'
 		 */
 --YAMAZAN
 		--YES
-			update btm2mvendor
+			update btm2mvendorAskKara2
 			set addToPlex = 1
 			where fvendno = '002527'
 			
@@ -427,6 +599,11 @@ where supplier_code like '%YUKI%'
 			--delete from dbo.btAskKristin where Vendor = 'Wes-Tech'	
 			select * from dbo.btAskKristin			
 			where Vendor = 'UNI SOURCE'	
+	
+select top 100 * 
+from btSupplyCode
+--where supplier_code like '%UNKNOWN%'
+where supplier_code like '%WAYNE%'
 			
 
 -- Check counts
@@ -480,10 +657,31 @@ select
 from dbo.btM2mVendor 
 WHERE fvendno = '001607'
 delete from btm2mvendor where pomcompany = 'ATS SYSTEMS' and fvendno = '001607'
+select 
+*
+from 
+dbo.btSupplyCode
+where VendorName = 'US SHOP TOOLS'
+where VendorName <= 'X-Y TOOL'
 
 */
 --164|KITAGAWA 
 --000647 |NORTHTECH WORKHOLDING              |KITAGAWA-NOTHTECH INC.
+select * from dbo.btAskKristin
+
+	select 
+	--COUNT(*) 
+	*
+	from dbo.btM2mVendor 
+	WHERE addtoplex =1
+
+	
+select *
+from btM2mVendor4
+	
+alter TABLE btM2mVendor
+add EMVendor varchar(50)
+
 select 
 count(*)
 --*
@@ -502,7 +700,7 @@ from
 	select 
 	distinct Vendor
 	from dbo.btAskKristin
-	where Vendor <= 'Wayne Electric'	
+	where Vendor <= 'z'	
 )set1
 --89
 /*
@@ -524,28 +722,210 @@ SHAMROCK
 	where Vendor > 'DR. Lubricants'	
 and Vendor <= 'MEREDITH MACHINERY'
 
+	select 
+	*
+	from dbo.btAskKristin
+	where Vendor = 'Toshiba Machinery'
+	order by numbered
+	and numbered like '%05833A'
+
+select 
+numbered,description,manufacturer,shelf
+FROM
+dbo.Parts
+where numbered in (
+'405750A',
+'705395A',
+'705666A',
+'705667A',
+'705668A'
+)
+
+405750A |PUMP, LOADER                |            |         |
+705395A |Plunger Shaft For Rebuild   |ALEMITE     |CAB M-1-1|
+705666A |Retaining Clip For Enerpac  |ALEMITE     |CAB E-2-5|
+705667A |REBUILD KIT FOR SLLD201&SLRD|ALEMITE     |CAB E-1-4|
+705668A |REBUILD KIT FOR SLLD201&SLRD|ALEMITE     |CAB E-1-4|
+/* Supplier Status */
+-- How many vendors are there 326
+-- How many vendors are mapped to suppliers or Unknown
+select 
+count(*)
+FROM
+(
+select * 
+from dbo.btSupplyCode
+where VendorName <> ''
+and Supplier_Status = 'Active' --214
+--and Supplier_Status = 'Inactive' --0
+)set1 
+order by Supplier_Code
+select * from 
+dbo.Parts
+where Vendor = 'Applied Industrial'
+or Vendor = 'B & C Industrial'
+
+/*--
+ * Process to map New Supplier_Code from Kara to btSupplyCode table
+*/		
+select *
+from
+(
+	select 
+	row_number() OVER(ORDER BY pomCompany ASC) AS Row#,
+	*
+	from dbo.btM2mVendor 
+	WHERE addtoplex =1
+)set1 
+where Row# = 2
+
+select DISTINCT vendor
+from parts
+where 
+vendor like '%ACTION EQUIPMENT%'
+
 
 select 
 Vendor,
 (
 	stuff(
 			(
-				select cast(CHAR(10) + LTRIM(RTRIM(numbered)) + ' Descr: ' + Description as varchar(max)) 
-				from dbo.btAskKristin ak 
+				select top 5  
+				CASE
+				when p.Shelf = '' then cast(CHAR(10) + LTRIM(RTRIM(ak.numbered)) + ' Descr: ' + ak.Description as varchar(max))
+				else cast(CHAR(10) + LTRIM(RTRIM(ak.numbered)) + ' Descr: ' + ak.Description + ', Shelf# ' + p.Shelf as varchar(max))
+				end 
+				from dbo.btAskKristin ak
+				left outer join dbo.Parts p
+				on ak.numbered = p.Numbered
 				where (ak.vendor = set1.vendor)
+				order by ak.numbered
 				FOR XML PATH ('')
-			), 1, 2, ''
+			), 1, 1, ''
 		)
 ) as Parts 
 from 
 (
 	select 
 	DISTINCT Vendor
-	from dbo.btAskKristin
+	from dbo.btAskKristin 
+	
+)set1
+	select 
+	Vendor,*
+	from dbo.btAskKristin 
+
+
+select 
+Vendor,
+(
+	stuff(
+			(
+				select top 5  
+				CASE
+				when p.Shelf = '' then cast(CHAR(10) + LTRIM(RTRIM(p.numbered)) + ' Descr: ' + p.Description as varchar(max))
+				else cast(CHAR(10) + LTRIM(RTRIM(p.numbered)) + ' Descr: ' + p.Description + ', Shelf# ' + p.Shelf as varchar(max))
+				end 
+				from dbo.Parts p
+				where (p.vendor = set1.vendor)
+				order by p.numbered
+				FOR XML PATH ('')
+			), 1, 1, ''
+		)
+) as Parts 
+from 
+(
+	select DISTINCT Vendor
+	from dbo.Parts
+	where Vendor = 'Applied Industrial'
+	or Vendor = 'B & C Industrial'
+	
 )set1
 
 
+/*
+ * Duplicate part numbers
+ * 
+ */
+
+
+select itemNumber,
+(
+	stuff(
+			(
+				select top 5  
+				CASE
+				when p.Shelf = '' then cast(CHAR(10) + LTRIM(RTRIM(p.numbered)) + ' Descr: ' + p.Description as varchar(max))
+				else cast(CHAR(10) + LTRIM(RTRIM(p.numbered)) + ' Descr: ' + p.Description + ', Shelf# ' + p.Shelf as varchar(max))
+				end 
+				from dbo.Parts p
+				where (p.Numbered = set1.ItemNumber)
+				order by p.numbered
+				FOR XML PATH ('')
+			), 1, 1, ''
+		)
+) as Parts 
+
+FROM
+(
+	select min(RecordNumber) minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber, COUNT(*) partCount
+	from dbo.Parts
+	group by ltrim(rtrim(Numbered))
+)set1
+where partCount > 1
+
+
+select *
+FROM
+(
+	select min(RecordNumber) minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber, COUNT(*) partCount
+	from dbo.Parts
+	group by ltrim(rtrim(Numbered))
+)set1
+where partCount > 1
+
+
+450448 Descr: OIL SEAL, Shelf# NO LOCATION YET
+450521 Descr: INDUSTRIAL FILTER LIGHT CURTAIN, Shelf# SHELF C
+700793K Descr: Hydraulic Oil Filter For B.E. 32, Shelf# D-10
+706127 Descr: HYDRAULIC CYLINDER, Shelf# B-FLOOR
+
+select numbered,description,shelf
+from dbo.Parts
+	where Vendor = 'Applied Industrial'
+order by numbered
+				', Mfr#' + p.Manufacturer + ', ' + shelf  as varchar(max)) 
+
 dbo.btAskKristin ak1 
+select 
+Vendor,
+(
+	stuff(
+			(
+				select top 5 cast(CHAR(10) + LTRIM(RTRIM(ak.numbered)) + ' Descr: ' + ak.Description + 
+				CASE
+				when p.Manufacturer = '' then ''
+				else ', Mfr#' + p.Manufacturer
+				end as mfg
+				as varchar(max)) 
+				from dbo.btAskKristin ak
+				left outer join dbo.Parts p
+				on ak.numbered = p.Numbered
+				where (ak.vendor = set1.vendor)
+				order by ak.numbered
+				FOR XML PATH ('')
+			), 1, 1, ''
+		)
+) as Parts 
+from 
+(
+	select 
+	DISTINCT Vendor
+	from dbo.btAskKristin 
+	
+)set1
+
+
 	
 
 select 
