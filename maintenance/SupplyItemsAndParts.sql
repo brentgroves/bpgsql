@@ -6,6 +6,112 @@
 -- Process
 -- Set 1 = {ActNumber, NoSuffixNumber}.
 
+--truncate table btSupplyCode
+--Manufacturers that Kristen asked me to upload, some dups 
+--and some that are already in plex
+--use btEMManufacturers to upload into plex.  Dups and 
+--Manufacturers already in plex have been removed.
+Bulk insert btManufacturer
+from 'C:\manufacturers.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+CREATE TABLE btManufacturer (
+	Vendor varchar(50)
+)
+
+--manufacturers in plex before uploading EM manufacturers
+CREATE TABLE btPlexManufacturer (
+	Vendor varchar(50)
+)
+
+Bulk insert btPlexManufacturer
+from 'C:\plexmanufacturers.csv'
+with
+(
+fieldterminator = '|',
+rowterminator = '\n'
+)
+
+CREATE TABLE btMfgMap (
+	emVendor varchar(50),
+	plexVendor varchar(50)
+)
+
+/*
+ * 
+insert into dbo.btMfgMap(emVendor,plexvendor)
+select vendor emVendor, vendor plexvendor from dbo.btManufacturer
+use btManufacturer for mapping
+use btEMManufacturer for uploading into plex 
+-- because dup vendors are deleted and vendors already in plex are removed
+
+*
+* pending/questions out
+*ARROW PNEUMATICS         
+ARROW/HART-COOPER WIRING 
+GEM  
+GEMCO
+gems
+HONEYWELL                         
+Honeywell International, Inc.     
+Honeywell Safety Products USA, Inc
+***/
+
+
+select * from dbo.btMfgMap
+select *
+from
+(
+	select 
+	row_number() OVER(ORDER BY vendor ASC) AS Row#,
+	*
+	from
+	(
+	select 'em' as orig,* from dbo.btManufacturer
+	UNION
+	select 'plex' as orig,* from dbo.btPlexManufacturer
+	)set1
+)set1
+where Row# >= 281
+and Row# <= 290
+
+update dbo.btMfgMap
+set plexVendor = ''
+where emvendor = ''
+
+select * from dbo.btMfgMap
+
+--Since there were no dups in EM and Plex
+-- I will use this table for the plex uploads
+
+select Manufacturer_Code,Manufacturer_Name,Note
+from
+(
+	select
+	row_number() OVER(ORDER BY emVendor ASC) AS Row#,
+	emVendor as Manufacturer_Code,
+	plexVendor as Manufacturer_Name,
+	'' Note 
+	from dbo.btMfgMap
+)set1
+where Row# >= 6
+and Row# <= 5
+--use btEMManufacturers to upload into plex.  Dups and 
+--Manufacturers already in plex have been removed.
+/*
+select *
+into btEMManufacturer
+from btManufacturer
+*/
+/*
+delete from dbo.btEMManufacturer
+where vendor = ''
+*/
+select * from dbo.btEMManufacturer
+
 --There are appox 21 parts with multiple records and some have different locations.
 select *
 FROM
@@ -72,7 +178,11 @@ on #set7.minRecordNumber=p.RecordNumber
 		FROM
 		(
 			--select COUNT(*) from ( --are there any dups
-			select DISTINCT ItemNumber,NSItemNumber
+			--select DISTINCT NSItemNumber -- TEST form dups nsitemnumber record
+			select DISTINCT ItemNumber,NSItemNumber --dups for multiple columns eliminated, distinct is not necessary 
+													--should not be any but do above TEST to be sure
+													--This set should not have any changes from previous set 
+													--except for the reduction of columns
 			from
 			--select COUNT(*) from --are there any dups
 			(
@@ -86,6 +196,7 @@ on #set7.minRecordNumber=p.RecordNumber
 				NSItemNumber
 				from
 				(
+					--select count(*) cnt from (
 					select MIN(NSItemNumberPriority) NSItemNumberPriority,NSItemNumber 
 					from
 					(
@@ -100,8 +211,13 @@ on #set7.minRecordNumber=p.RecordNumber
 						end as NSItemNumberPriority
 						from
 						(
+							--select count(*)
+							--from
+							--(
 							select 
 								ItemNumber, 
+								--minrecordnumber, --for testing 
+
 								case 
 									when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
 									when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
@@ -113,38 +229,98 @@ on #set7.minRecordNumber=p.RecordNumber
 									else 'N' --none
 								end as suffix
 							from #set1 
+							--)tst --11157
 							--order by itemnumber
 							-- set2
 							
 						)set3
-						--order by nsitemnumber
-					)set4 --10266
+						/*
+						where 
+						itemnumber like '000003%'
+						or itemnumber like '000054%'
+						or itemnumber like '000091%'
+						or itemnumber like '000547%'
+						or itemnumber like '200382%'
+						order by nsitemnumber
+						--000003A -- 450  
+						--000054 (AV) --9145 
+						--000091 (E) --839  
+						--000547AV --13043  
+						--200382E  --14322
+						--	when suffix = 'N' then NSItemNumber + '-1'
+						--	when suffix = 'AV' then NSItemNumber + '-2'
+						--	when suffix = 'E' then NSItemNumber + '-3'
+						--	when suffix = 'A' then NSItemNumber + '-4'
+						*/
+						
+					)set4 
 					group by NSItemNumber
-					--order by NSitemnumber
-					--000003A -- 450
-					--000054 (AV) --9145
-					--000091 (E) --839
-				)set5 --10288
+					--)tst  --10288
+					/*
+					having 
+					nsitemnumber like '000003%'
+					or nsitemnumber like '000054%'
+					or nsitemnumber like '000091%'
+					or nsitemnumber like '000547%'
+					or nsitemnumber like '200382%'
+					order by nsitemnumber
+					--000003A -- 450  
+					--000054 (AV) --9145 
+					--000091 (E) --839  
+					--000547AV --13043  
+					--200382E  --14322
+					--	when suffix = 'N' then NSItemNumber + '-1'
+					--	when suffix = 'AV' then NSItemNumber + '-2'
+					--	when suffix = 'E' then NSItemNumber + '-3'
+					--	when suffix = 'A' then NSItemNumber + '-4'
+					*/
+					
+				)set5 
+				/*
+				where 
+				nsitemnumber like '000003%'
+				or nsitemnumber like '000054%'
+				or nsitemnumber like '000091%'
+				or nsitemnumber like '000547%'
+				or nsitemnumber like '200382%'
+				order by nsitemnumber
+				--000003A -- 450  
+				--000054 (AV) --9145 
+				--000091 (E) --839  
+				--000547AV --13043  
+				--200382E  --14322
+				--	when suffix = 'N' then NSItemNumber + '-1'
+				--	when suffix = 'AV' then NSItemNumber + '-2'
+				--	when suffix = 'E' then NSItemNumber + '-3'
+				--	when suffix = 'A' then NSItemNumber + '-4'
+				*/
 				--where right(NSItemNumberPriority,1) = '4'
 			)set6 --
-			--)tst1 --10288 I don't think we need set#6 because there are no dups
+			--)tst1 --10288 check for multiple copies of same nsitemnumber
 		)set7 --
 		left join #set1
 		on set7.ItemNumber=#set1.ItemNumber
-		/* test
-		select numbered,recordnumber
-		from dbo.Parts
-		where numbered LIKE '000003%'
-		or numbered LIKE '000054%'
-		or numbered LIKE '000091%'
-		--in ('000003A','000054','000091')
-		--000003A -- 450
-		--000054 (AV) --9145
-		--000091 (E) --839
-		*/		
-		--order by nsitemnumber
+		/*
+		where 
+		nsitemnumber like '000003%'
+		or nsitemnumber like '000054%'
+		or nsitemnumber like '000091%'
+		or nsitemnumber like '000547%'
+		or nsitemnumber like '200382%'
+		order by nsitemnumber
+		--000003A -- 450  
+		--000054 (AV) --9145 
+		--000091 (E) --839  
+		--000547AV --13043  
+		--200382E  --14322
+		--	when suffix = 'N' then NSItemNumber + '-1'
+		--	when suffix = 'AV' then NSItemNumber + '-2'
+		--	when suffix = 'E' then NSItemNumber + '-3'
+		--	when suffix = 'A' then NSItemNumber + '-4'
+		*/
 	) -- #set7
 	--10288
+	--Check for dups
 	select COUNT(*)
 	from
 	(
@@ -158,8 +334,10 @@ on #set7.minRecordNumber=p.RecordNumber
 
 -- finally create set8 from #set7
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
+select count(*) cnt from (
+select * from (
 select 
-	top 10
+	--top 100
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
 	p.Numbered,  -- Not in final set
 	'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
@@ -276,7 +454,20 @@ select
 	 * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
 	 * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
 	 * */
-	'' as Manufacturer,  
+	--select distinct plexVendor from dbo.btMfgMap order by plexvendor --173
+	/*
+	case 
+		when mm.plexVendor is null then 'null' --many
+		when mm.plexVendor = '' then 'Empty'  --0
+		when LTRIM(RTRIM(mm.plexVendor)) = '' then 'WhiteSpace' --0
+		else mm.plexVendor
+	end as ManufacturerTest,
+	*/
+	case 
+		when mm.plexVendor is null then ''
+		else mm.plexVendor
+	end as Manufacturer,
+	--mm.plexVendor as Manufacturer,  
 	p.ManufacturerNumber as Manf_Item_No,
 	/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
 	select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
@@ -327,11 +518,79 @@ select
 from #set7
 left join dbo.Parts p
 	on #set7.minRecordNumber=p.RecordNumber	
-left outer join btSupplyCode sc
-	on p.Vendor=sc.VendorName
+left outer join (
+	select * from btSupplyCode sc
+	where VendorName <> ''
+) sc
+on p.Vendor=sc.VendorName
+left outer join btMfgMap mm
+	on p.Manufacturer=mm.plexVendor
+)tst
+--where manufacturer = ''  --8132
+where manufacturer is null  --8132
+)tst2  --10288
+--manufacturer is null  --0
+select count(*) from (
+select top 100 nsitemnumber,
+case 
+when p.Vendor is null then 'Null'
+when p.Vendor = '' then 'Empty'
+when LTRIM(RTRIM(p.Vendor)) = '' then 'Whitespace'
+else p.Vendor
+end as ven,
+--p.Vendor,
+case 
+when sc.VendorName is null then 'Null'
+when sc.VendorName = '' then 'Empty'
+when LTRIM(RTRIM(sc.VendorName)) = '' then 'Whitespace'
+else sc.VendorName
+end as venName
+from #set7
+left join dbo.Parts p
+	on #set7.minRecordNumber=p.RecordNumber	
+--)tst --10288
+left outer join (
+	select * from btSupplyCode sc
+	where VendorName <> ''
+) sc
+on p.Vendor=sc.VendorName
+)tst --10288
 
-where NSItemNumber = '600005'
+select *
+from 
+parts p
+left outer join dbo.btSupplyCode sc
+p.Vendor=sc.VendorName
 
+select * from dbo.btSupplyCode
+where VendorName <> ''
+order by 
+VendorName
+
+	left outer join btMfgMap mm
+	on p.Manufacturer=mm.plexVendor
+
+
+select top 10  * from  dbo.btSupplyCode
+/*
+nsitemnumber like '000003%'
+or nsitemnumber like '000054%'
+or nsitemnumber like '000091%'
+or nsitemnumber like '000547%'
+or nsitemnumber like '200382%'
+order by nsitemnumber
+--000003A -- 450  
+--000054 (AV) --9145 
+--000091 (E) --839  
+--000547AV --13043  
+--200382E  --14322
+--	when suffix = 'N' then NSItemNumber + '-1'
+--	when suffix = 'AV' then NSItemNumber + '-2'
+--	when suffix = 'E' then NSItemNumber + '-3'
+--	when suffix = 'A' then NSItemNumber + '-4'
+*/
+	
+select * from btMfgMap
 select DISTINCT Manufacturer
 --,vendor, numbered, description,categoryid  
 from parts
