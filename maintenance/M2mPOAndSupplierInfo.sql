@@ -33,10 +33,39 @@ CREATE TABLE btM2mVendorAskKara2 (
 select --top 100
 'Supplier_Code' Supplier_Code,pomCompany,fcompany avCompany,fmstreet Street,fcity City,fstate State,fzip Zip,fphone Phone,ffax Fax,'#' + pv.fvendno M2mVN#
 from 
-dbo.btM2mVendorAskKara2 pv
+dbo.btM2mVendor pv
+--dbo.btM2mVendorAskKara2 pv
 left outer join dbo.apvend av
 on pv.fvendno=av.fvendno
+--where pomCompany not like '%Action Equipment%'
 
+select --top 100
+'Supplier_Code' Supplier_Code,pomCompany,fcompany avCompany,fmstreet Street,fcity City,fstate State,fzip Zip,fphone Phone,ffax Fax,'#' + pv.fvendno M2mVN#
+from 
+(
+select 
+fvendno,pomCompany,avCompany
+--count(*) 
+from 
+dbo.btM2mVendor
+where pomCompany not in
+('OHIO TRANSMISSION & PUMP COMPANY','Action Equipment')
+UNION
+select 
+fvendno,pomCompany,avCompany
+--count(*) 
+from 
+dbo.btM2mVendorAskKara2 pv
+)pv
+left outer join dbo.apvend av
+on pv.fvendno=av.fvendno
+ORDER by pomCompany
+
+
+dbo.btM2mVendor
+('MATERIALS HANDLING EQUIPMENT',
+'MonTech . INC.',
+'UNIVERSAL SEPARATORS, INC.')
 
 --Already being added to plex
 --After Kara adds to Plex Map original em vendors and also 

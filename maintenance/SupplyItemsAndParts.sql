@@ -87,7 +87,17 @@ select * from dbo.btMfgMap
 --Since there were no dups in EM and Plex
 -- I will use this table for the plex uploads
 
-select Manufacturer_Code,Manufacturer_Name,Note
+	select *
+	into dbo.btMfgMap
+	from dbo.btMfgMap0506
+select * from dbo.btMfgMap
+
+
+--select Manufacturer_Code,Manufacturer_Name,Note
+select
+emVendor as emMfg,
+plexVendor as plexMfg
+--into btMfgMap0605
 from
 (
 	select
@@ -97,6 +107,7 @@ from
 	'' Note 
 	from dbo.btMfgMap
 )set1
+
 where Row# >= 6
 and Row# <= 5
 --use btEMManufacturers to upload into plex.  Dups and 
@@ -136,7 +147,9 @@ create table #set1
 	minRecordNumber numeric(18,0),
 	ItemNumber varchar(50)
 );
-   
+select * from #set1
+
+
 --Set 1: {ItemNumber,minRecordNumber} => group by ItemNumber to delete duplicates, 
 --Duplicates are for items which have multiple location?
 --remove KendallVille records, and trim ItemNumbers. Store in temp table.
@@ -153,6 +166,7 @@ insert into #set1 (minRecordNumber,ItemNumber)
 select count(*) from #set1
 --11096
 --11157
+--11163
 select count(*) from #set7
 --10266
 select COUNT(*)
@@ -184,7 +198,6 @@ on #set7.minRecordNumber=p.RecordNumber
 													--This set should not have any changes from previous set 
 													--except for the reduction of columns
 			from
-			--select COUNT(*) from --are there any dups
 			(
 				select 
 				CASE
@@ -201,7 +214,7 @@ on #set7.minRecordNumber=p.RecordNumber
 					from
 					(
 						select 
-						--ItemNumber, --for testing suffix
+						ItemNumber, --for testing suffix
 						NSItemNumber,
 						case 
 							when suffix = 'N' then NSItemNumber + '-1'
@@ -229,7 +242,7 @@ on #set7.minRecordNumber=p.RecordNumber
 									else 'N' --none
 								end as suffix
 							from #set1 
-							--)tst --11157
+							--)tst --11163
 							--order by itemnumber
 							-- set2
 							
@@ -255,7 +268,7 @@ on #set7.minRecordNumber=p.RecordNumber
 						
 					)set4 
 					group by NSItemNumber
-					--)tst  --10288
+					--)tst  --10294
 					/*
 					having 
 					nsitemnumber like '000003%'
@@ -296,7 +309,7 @@ on #set7.minRecordNumber=p.RecordNumber
 				*/
 				--where right(NSItemNumberPriority,1) = '4'
 			)set6 --
-			--)tst1 --10288 check for multiple copies of same nsitemnumber
+			--)tst1 --10294 check for multiple copies of same nsitemnumber
 		)set7 --
 		left join #set1
 		on set7.ItemNumber=#set1.ItemNumber
@@ -319,7 +332,7 @@ on #set7.minRecordNumber=p.RecordNumber
 		--	when suffix = 'A' then NSItemNumber + '-4'
 		*/
 	) -- #set7
-	--10288
+	--10294
 	--Check for dups
 	select COUNT(*)
 	from
@@ -335,7 +348,7 @@ on #set7.minRecordNumber=p.RecordNumber
 -- finally create set8 from #set7
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 select count(*) cnt from (
-select * from (
+select top 100 * from (
 select 
 	--top 100
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
@@ -366,15 +379,15 @@ select
 		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
 		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
 		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --101
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg#' + p.ManufacturerNumber --101
 		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
 		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
 		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer  --110
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer  --110
 		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
 		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
 		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
 	end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
 	-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
 	-- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
@@ -464,8 +477,8 @@ select
 	end as ManufacturerTest,
 	*/
 	case 
-		when mm.plexVendor is null then ''
-		else mm.plexVendor
+		when mm.plexMfg is null then ''
+		else mm.plexMfg
 	end as Manufacturer,
 	--mm.plexVendor as Manufacturer,  
 	p.ManufacturerNumber as Manf_Item_No,
@@ -524,11 +537,13 @@ left outer join (
 ) sc
 on p.Vendor=sc.VendorName
 left outer join btMfgMap mm
-	on p.Manufacturer=mm.plexVendor
+	on p.Manufacturer=mm.plexMfg
 )tst
 --where manufacturer = ''  --8132
-where manufacturer is null  --8132
+--where manufacturer is null  --0
+where manufacturer <> '' --2156
 )tst2  --10288
+
 --manufacturer is null  --0
 select count(*) from (
 select top 100 nsitemnumber,
@@ -717,7 +732,7 @@ FROM oldtable
 WHERE condition;
 select * from btsupplycode3
 select *
-into dbo.btSupplyCode0603B
+into dbo.btSupplyCode0607
 from btsupplycode;
 
 
@@ -743,7 +758,7 @@ where vendor = 'Wayne Electric'
 select * 
 from btSupplyCode
 --where supplier_code like '%UNKNOWN%'
-where supplier_code like '%Mcmaster%'
+where supplier_code like '%A&A MANUFACTURING CO%'
 
 --MOTION INDUSTRIES
 --Okuma America Corporation
@@ -757,8 +772,98 @@ GENERAL BEARING CORP --
 NORGREN      --       
 Sentenel     --   
 
-where Vendor = 'Applied Industrial'
-or Vendor = 'B & C Industrial'
+--What is the next supplier Code?
+select *
+FROM
+(
+select 
+ROW_NUMBER() OVER(ORDER BY pomCompany ASC) AS Row#,
+*
+from dbo.btM2mVendor
+where addToPlex = 1
+)set1
+where Row# = 54
+--STOPPED AT 53
+--STARTED AT 93
+/*
+--QUESTIONS: Can't find not in spreadsheet
+INFRARED SERVICES, INC.
+INTERCORE RESOURCES, INC.
+YAMAZEN INC.
+***/
+--What is the New plex supplier Code?
+
+
+--DEPEW PLUMBING, HEATING,							
+--1234567891234567891234567
+
+
+--Check Supply Code for previous mapping
+--The supply code should not be in this table because it was not added to plex yet
+select top 10 * from dbo.btSupplyCode
+where VendorName like '%haney%' 
+or Supplier_Code like '%American%Homes%'
+
+--What is the EM vendor name it should map to?
+select top 200 numbered,description,Vendor 
+from dbo.Parts
+where Vendor like '%haney%'
+
+
+--Create a new btSupplyCode record 
+insert into dbo.btSupplyCode VALUES ('American Elegance Homes','Active','Haney Glass')
+
+--Make sure btSupplyCode was inserted
+select top 10 * from dbo.btSupplyCode
+where VendorName like '%Haney Glass%' 
+--delete from btsupplycode where supplier_code = 'C & E SALES'
+--The number of parts not mapped to suppliers should be decreasing
+select count(*) VendorsNotMapped
+from
+(
+select numbered,description,Vendor 
+from dbo.Parts p
+left outer join btSupplyCode sc
+on p.Vendor=sc.VendorName
+where sc.VendorName is null
+)set1
+--300
+select COUNT(*) VendorNameCnt
+from
+(
+select 
+VendorName 
+--VendorName 
+from dbo.btSupplyCode
+group by VendorName --254
+having VendorName <> ''
+
+/*
+select 
+distinct VendorName --254
+--VendorName 
+from dbo.btSupplyCode
+where VendorName <> ''
+*/
+)tst
+/*
+select *
+into dbo.btSupplyCode060709
+FROM
+dbo.btSupplyCode
+*/
+
+--Sanity check for Vendors
+select *
+FROM
+(
+select 
+ROW_NUMBER() OVER(ORDER BY pomCompany ASC) AS Row#,
+*
+from dbo.btM2mVendor
+where addToPlex = 1
+)set1
+where Row# = 1
 --insert into dbo.btSupplyCode VALUES ('UNKNOWN','Active','UNITRONICS')
 	--YES 
 	WAUKESHA MACHINE & TOOL
