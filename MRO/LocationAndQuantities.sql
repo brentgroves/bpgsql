@@ -35,6 +35,7 @@ from
 )lv2
 
 -- Used for Plex Supply Item Locations upload screen
+select DISTINCT SUBSTRING(CribBin,1,3) site from STATION
 select 
 item as item_no,
 CribBin as location,
