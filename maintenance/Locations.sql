@@ -39,8 +39,70 @@ A-04-05
 */
 order by shelf
 
+	(
+		stuff(
+				(
+					select top 5 cast(CHAR(10) + LTRIM(RTRIM(numbered)) + ' Descr: ' + Description  as varchar(max)) 
+					from dbo.btAskKristin ak 
+					where (ak.vendor = set1.vendor)
+					order by ak.numbered
+					FOR XML PATH ('')
+				), 1, 1, ''
+			)
+	) as Parts 
+
+select site,
+(
+	stuff(
+			(
+			select top 10 cast(CHAR(10) + Shelf as varchar(max)) 
+			from dbo.Parts p
+			where (p.site=set1.site)
+			and p.shelf <> ''
+			order by p.site, p.shelf
+			FOR XML PATH ('')
+			), 1, 1, ''
+		)
+) as Parts 
+from
+(
 select distinct site from parts
+)set1
+
+select top 10 numbered,Description,CategoryID,site,'MV5-'+Shelf,QuantityOnHand from dbo.Parts
+where site = 'VPlant # 5'
+
+RACK B-1-3        
+ROLLING RACK C-1-5
+RACK E-2-1        
+ROLLING RACK G-2-4
+RACK B-2-4        
+WITH PIPES        
+C-1               
+RACK E-3-2        
+ROLLING RACK G-3-4
+D.C               
+
+where site in ( 
+'Plant # 4',
+'MRO Building',
+'Plant # 5 Offices',
+'POLE BARN E-2',
+'VPlant # 5'
+)
+where numbered ='450165'
 order by site
+
+-- How many records are there in each site.  Are some bogus?
+select site, count(*) partCnt from parts
+group by site
+order by site
+
+left outer join dbo.Parts p 
+on set1.site=p.Site
+
+
+
 /*
 <All>
 Distribution Center

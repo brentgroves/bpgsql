@@ -167,6 +167,7 @@ select count(*) from #set1
 --11096
 --11157
 --11163
+--11169
 select count(*) from #set7
 --10266
 select COUNT(*)
@@ -229,7 +230,7 @@ on #set7.minRecordNumber=p.RecordNumber
 							--(
 							select 
 								ItemNumber, 
-								--minrecordnumber, --for testing 
+								minrecordnumber, --for testing 
 
 								case 
 									when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
@@ -242,7 +243,7 @@ on #set7.minRecordNumber=p.RecordNumber
 									else 'N' --none
 								end as suffix
 							from #set1 
-							--)tst --11163
+							--)tst --11169
 							--order by itemnumber
 							-- set2
 							
@@ -268,7 +269,7 @@ on #set7.minRecordNumber=p.RecordNumber
 						
 					)set4 
 					group by NSItemNumber
-					--)tst  --10294
+					--)tst  --10300
 					/*
 					having 
 					nsitemnumber like '000003%'
@@ -277,6 +278,7 @@ on #set7.minRecordNumber=p.RecordNumber
 					or nsitemnumber like '000547%'
 					or nsitemnumber like '200382%'
 					order by nsitemnumber
+					*/
 					--000003A -- 450  
 					--000054 (AV) --9145 
 					--000091 (E) --839  
@@ -286,7 +288,6 @@ on #set7.minRecordNumber=p.RecordNumber
 					--	when suffix = 'AV' then NSItemNumber + '-2'
 					--	when suffix = 'E' then NSItemNumber + '-3'
 					--	when suffix = 'A' then NSItemNumber + '-4'
-					*/
 					
 				)set5 
 				/*
@@ -309,9 +310,11 @@ on #set7.minRecordNumber=p.RecordNumber
 				*/
 				--where right(NSItemNumberPriority,1) = '4'
 			)set6 --
-			--)tst1 --10294 check for multiple copies of same nsitemnumber
+			--)tst1 --10300 check for multiple copies of same nsitemnumber
 		)set7 --
-		left join #set1
+		left join #set1  -- If an itemnumber has more than 1 record #set1 records the one
+		-- with the minimum record number.  There are only a few of these records;
+		-- possibly if the part is stored in multiple locations.
 		on set7.ItemNumber=#set1.ItemNumber
 		/*
 		where 
@@ -332,7 +335,7 @@ on #set7.minRecordNumber=p.RecordNumber
 		--	when suffix = 'A' then NSItemNumber + '-4'
 		*/
 	) -- #set7
-	--10294
+	--10300
 	--Check for dups
 	select COUNT(*)
 	from
@@ -348,9 +351,9 @@ on #set7.minRecordNumber=p.RecordNumber
 -- finally create set8 from #set7
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 select count(*) cnt from (
-select top 100 * from (
+--select top 100 * from (
 select 
-	--top 100
+	top 100
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
 	p.Numbered,  -- Not in final set
 	'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
@@ -787,47 +790,78 @@ where Row# = 54
 --STARTED AT 93
 /*
 --QUESTIONS: Can't find not in spreadsheet
-INFRARED SERVICES, INC.
-INTERCORE RESOURCES, INC.
 YAMAZEN INC.
 ***/
 --What is the New plex supplier Code?
 
 
---DEPEW PLUMBING, HEATING,							
+--UNIVERSAL SEPARATORS, INC						
 --1234567891234567891234567
-
+-- Looks like 2 identical suppliers were added  so I used OTP Industrial Solutions
+--OHIO TRANSMISSION & PUMP COMPANY   
+--OTP Industrial Solutions
 
 --Check Supply Code for previous mapping
 --The supply code should not be in this table because it was not added to plex yet
 select top 10 * from dbo.btSupplyCode
-where VendorName like '%haney%' 
-or Supplier_Code like '%American%Homes%'
+where VendorName like '%UNIVERSAL%' 
+or Supplier_Code like '%UNIVERSA%'
 
 --What is the EM vendor name it should map to?
 select top 200 numbered,description,Vendor 
 from dbo.Parts
-where Vendor like '%haney%'
+where Vendor like '%Universal%'
 
 
 --Create a new btSupplyCode record 
-insert into dbo.btSupplyCode VALUES ('American Elegance Homes','Active','Haney Glass')
+insert into dbo.btSupplyCode VALUES ('UNIVERSAL SEPARATORS, INC','Active','UNIVERSAL SEPERATORS, INC.')
 
 --Make sure btSupplyCode was inserted
 select top 10 * from dbo.btSupplyCode
-where VendorName like '%Haney Glass%' 
---delete from btsupplycode where supplier_code = 'C & E SALES'
+where VendorName like '%UNIVERSAL SEPERATORS, INC.%' 
+--delete from btsupplycode where supplier_code = 'IFM Efector'
 --The number of parts not mapped to suppliers should be decreasing
 select count(*) VendorsNotMapped
 from
 (
-select numbered,description,Vendor 
-from dbo.Parts p
-left outer join btSupplyCode sc
-on p.Vendor=sc.VendorName
-where sc.VendorName is null
+	select 
+	ROW_NUMBER() OVER(ORDER BY vendor ASC) AS Row#,
+	vendor
+	from
+	(
+		select 
+		numbered,description,Vendor,Supplier_Code 
+		from dbo.Parts p
+		left outer join btSupplyCode sc
+		on p.Vendor=sc.VendorName
+		where sc.VendorName is null
+		and p.Vendor <> ''
+	)set1
+	group by Vendor
+)set2
+
+select count(*) VendorsNotMapped
+from
+(
+	select 
+--	top 100
+	numbered,description,Vendor 
+--	numbered,description,Vendor,Supplier_Code 
+	from dbo.Parts p
+--	where p.Vendor is null or vendor = ''
+	left outer join btSupplyCode sc
+	on p.Vendor=sc.VendorName
+--	where sc.Supplier_Code is not null
+--	and p.Vendor <> ''
+--	where p.Vendor = ''
+	where sc.VendorName is null
+	and p.Vendor <> ''
 )set1
---300
+-- Parts have Vendors but no suppliers in Plex: 15
+-- Parts that have no vendors in EM: 497
+-- Parts in EM that are mapped to Plex suppliers: 11817
+-- Total Parts in EM: 12,329
+--49
 select COUNT(*) VendorNameCnt
 from
 (
@@ -835,8 +869,9 @@ select
 VendorName 
 --VendorName 
 from dbo.btSupplyCode
-group by VendorName --254
-having VendorName <> ''
+where VendorName=''
+--group by VendorName --254
+--having VendorName <> ''
 
 /*
 select 

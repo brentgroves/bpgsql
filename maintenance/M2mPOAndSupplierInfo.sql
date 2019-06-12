@@ -37,10 +37,15 @@ dbo.btM2mVendor pv
 --dbo.btM2mVendorAskKara2 pv
 left outer join dbo.apvend av
 on pv.fvendno=av.fvendno
+where pomCompany like '%Universal%'
 --where pomCompany not like '%Action Equipment%'
 
 select --top 100
-'Supplier_Code' Supplier_Code,pomCompany,fcompany avCompany,fmstreet Street,fcity City,fstate State,fzip Zip,fphone Phone,ffax Fax,'#' + pv.fvendno M2mVN#
+'Supplier_Code' Supplier_Code,fcompany avCompany,fmstreet Street,fcity City,fstate State,fzip Zip,fphone Phone,ffax Fax,'#' + fvendno M2mVN#
+FROM
+dbo.apvend
+--where fcompany like '%ROBO%HAND%'
+where fcompany in ('UNIVERSAL SEPARATORS, INC.') 
 from 
 (
 select 
@@ -109,11 +114,18 @@ select
 count(*) --85
 from
 (
-	select DISTINCT pom.fvendno,pom.fcompany,av.fcompany vCompany
+declare @ven varchar(50)
+set @ven = 'Univers'
+select DISTINCT pom.fvendno,pom.fcompany,av.fcompany vCompany
 	from dbo.pomast pom
 	left outer join dbo.apvend av
 	on pom.fvendno=av.fvendno
 --	order by pom.fcompany
+where pom.fcompany like '%' + @ven +'%'
+or av.fcompany like '%' + @ven +'%'
+
+
+or 
 	where pom.fbuyer ='KT'
 	and pom.fvendno='002458'
 --	and pom.fcompany <> av.fcompany
