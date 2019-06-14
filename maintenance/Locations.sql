@@ -6,6 +6,152 @@ For MRO we use the following:
 'MRO Crib' as location_group
 */
 
+
+/* 
+For Maintenance use the following:
+Location_type: Maintenance - has not been added to plex.
+location_group: Maintenance Crib
+building_code: 
+BPG Central Stores
+BPG Distribution Center
+BPG Edon
+BPG Metrology Lab
+BPG Plant 11
+BPG Plant 2
+BPG Plant 3
+BPG Plant 5
+BPG Plant 6
+BPG Plant 7
+BPG Plant 8
+BPG Plant 9
+BPG Pole Barn
+BPG Warehouse
+BPG Workholding
+Dependable Metal Treating, Inc.
+Edon
+Winona Powder Coatings 
+ */
+
+
+-- Used for Plex Location List Upload screen
+select 
+Location,Building_Code,Location_Type,Note,Location_Group
+--count(*)
+from
+(
+select Row#,Location,Building_Code,Location_Type,Note,Location_Group
+from
+(
+select 
+ROW_NUMBER() over(order by CribBin asc) as row#,
+CribBin  as location,
+CASE
+	WHEN 
+end as building_code,
+'Maintenance' as location_type,  -- has not been added to plex.
+'' as note,
+'Maintenance Crib' as location_group
+from dbo.Parts p --change this to set7
+left outer join dbo.btSiteMap sm
+on p.Site=sm.emSite
+left outer join dbo.btSiteBuildingMap bm
+on em.plxSite=bm.buildingCode
+where 
+p.Numbered in (
+'000003A',  
+'000054', 
+'000091',  
+'000547AV',  
+'200382E'
+)
+--and CribBin in ('12-AA3B03','12-AA3A03','12-AA1C02')
+)lv1
+-- where row# > 500 -- and row# <= 1000
+-- order by location
+)lv2
+
+select top 10 numbered from dbo.Parts
+CREATE TABLE btSiteBuildingMap (
+	plxSite varchar(25),
+	building_code varchar(50)
+) 
+				
+insert into dbo.btSiteBuildingMap values ('M4','BPG Workholding')
+select * from dbo.btSiteBuildingMap
+
+CREATE TABLE btSiteMap (
+	emSite varchar(25),
+	plxSite varchar(25)
+) 
+--Are there any parts without a site? NO
+--Are there any parts in plant 4? 2 but kristen said there were none.
+--How many total parts? 12307 
+--How many parts have quantities? 10088
+--How many parts have 0 quantity?2192
+--How many parts have null quantity? 3
+--How many parts have null quantity an no shelf? 3
+--How many parts have negative quantities? 24 
+--Kristen says I can make them all zeros.
+--How many parts have negative quantities and no shelves? 3 
+--How many parts have quantities but no shelves? 142
+--Compile a list of parts with quantities without shelves.
+--Compile a list of negative quantities.
+--Should we have a separate site(s),M3-no location yet, for parts with no assigned locations or just a location of: “no location yet”
+--Take note of the inventory in Plant 7 that is not being transferred into plex. 
+select COUNT(*) cntOnHandQty
+from
+(
+select numbered,description,site,Shelf,quantityonhand 
+from parts
+where quantityonhand > 0 
+and site = 'Plant # 4'
+--where (quantityonhand > 0 or quantityonhand < 0 or quantityonhand is null)
+and (shelf = '' or shelf is null)
+order by site, shelf
+/*
+where QuantityOnHand is not null
+and QuantityOnHand != 0
+and QuantityOnHand !> 0
+*/
+)tst
+
+select DISTINCT site
+from
+(
+select numbered,description,site,Shelf 
+from parts
+--where site = '' or site is null
+)tst
+
+insert into dbo.btSiteMap (emSite,plxSite)
+values ('POLE BARN E-2','MPB')
+--values ('Distribution Center','MD')
+select * from dbo.btSiteMap
+--delete from btsitemap where emSite = 'Plant 8 HR Office'
+select count(*) siteCnt from (
+select p.Numbered,p.Description,p.Site,sm.plxSite,
+sm.plxSite+'-'+p.Shelf as Location
+from dbo.Parts p
+left outer join dbo.btSiteMap sm
+on p.Site=sm.emSite
+where sm.plxSite = 'MPB' --1167 
+--and sm.emSite='POLE BARN E-2' --1
+--and sm.emSite='Pole Barn' --1166
+--where sm.plxSite = 'M8' --1960 
+--and sm.emSite = 'Plant 8 Maint Crib, Albio'  --1834
+--and sm.emSite = 'Plant # 8'  --126
+--where sm.plxSite = 'M5R' --1 
+--where sm.plxSite = 'M5' --6282 
+--and sm.emSite ='VPlant # 5' --1
+--and sm.emSite ='Plant 5 Maint. Crib' --3851
+--and sm.emSite ='Plant # 5' --2430
+--where sm.plxSite = 'M4' --2
+--where sm.plxSite = 'M11' --811
+--where sm.plxSite = 'MM' --1
+--where sm.plxSite = 'ME' --391
+--where sm.plxSite = 'MD' --540
+)tst
+
 select 
 --top 10 
 site,location,shelf from parts
@@ -13,44 +159,9 @@ where site like '%Plant 8%'
 --and site = ''
 order by location
 
-select distinct shelf from parts
---where site like '%All%' --CAB, 06-10
---where site like '%Distribution Center%' --211
---where site like '%Edon%' --228
-/* A- TOP
-A-1-1
-A-1-2
-A-1-3
-A-1-4
-A-1-5
-A-1-6
-A-10-1*/
-where site like '%Plant # 11%' --383
 /*
-A-02-03
-A-02-04
-A-02-05
-A-03-02
-A-03-03
-A-03-04
-A-03-05
-A-04-02
-A-04-05
-*/
-order by shelf
-
-	(
-		stuff(
-				(
-					select top 5 cast(CHAR(10) + LTRIM(RTRIM(numbered)) + ' Descr: ' + Description  as varchar(max)) 
-					from dbo.btAskKristin ak 
-					where (ak.vendor = set1.vendor)
-					order by ak.numbered
-					FOR XML PATH ('')
-				), 1, 1, ''
-			)
-	) as Parts 
-
+ * sampling of parts from each site
+ */
 select site,
 (
 	stuff(
@@ -69,20 +180,7 @@ from
 select distinct site from parts
 )set1
 
-select top 10 numbered,Description,CategoryID,site,'MV5-'+Shelf,QuantityOnHand from dbo.Parts
-where site = 'VPlant # 5'
-
-RACK B-1-3        
-ROLLING RACK C-1-5
-RACK E-2-1        
-ROLLING RACK G-2-4
-RACK B-2-4        
-WITH PIPES        
-C-1               
-RACK E-3-2        
-ROLLING RACK G-3-4
-D.C               
-
+/*
 where site in ( 
 'Plant # 4',
 'MRO Building',
@@ -90,18 +188,7 @@ where site in (
 'POLE BARN E-2',
 'VPlant # 5'
 )
-where numbered ='450165'
-order by site
-
--- How many records are there in each site.  Are some bogus?
-select site, count(*) partCnt from parts
-group by site
-order by site
-
-left outer join dbo.Parts p 
-on set1.site=p.Site
-
-
+*/
 
 /*
 <All>
@@ -121,19 +208,14 @@ Plant 8 HR Office
 Plant 8 Maint Crib, Albio
 Pole Barn
 POLE BARN E-2
-VPlant # 5 
-
-*/
-select distinct location from parts
-order by location
 
 select count(*) cnt from parts
 where shelf = '' --349
 where site = '' -- 0
 where location ='' --7206
+VPlant # 5 
 
-select numbered,quantityonhand,description,site,location,shelf from parts
-where shelf = '' --349
+*/
 
 
 select top 10 item,CribBin
