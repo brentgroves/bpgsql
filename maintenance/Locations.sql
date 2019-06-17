@@ -32,7 +32,7 @@ Edon
 Winona Powder Coatings 
  */
 
-
+select * from dbo.btSiteBuildingMap
 -- Used for Plex Location List Upload screen
 select 
 Location,Building_Code,Location_Type,Note,Location_Group
@@ -43,20 +43,44 @@ select Row#,Location,Building_Code,Location_Type,Note,Location_Group
 from
 (
 select 
-ROW_NUMBER() over(order by CribBin asc) as row#,
-CribBin  as location,
-CASE
-	WHEN 
-end as building_code,
+ROW_NUMBER() over(order by location asc) as row#,
+sm.plxSite+'-'+p.Shelf as Location,
+bm.building_code as building_code,
 'Maintenance' as location_type,  -- has not been added to plex.
 '' as note,
 'Maintenance Crib' as location_group
-from dbo.Parts p --change this to set7
+from 
+(
+	select DISTINCT plxSite,building_code,location from
+	(
+		select 
+		--top 100
+		--p.Site,p.Shelf,
+		sm.plxSite,
+		bm.building_code,
+		case 
+			when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+			when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+			when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+			when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
+			else '???'
+		end location
+		from dbo.Parts p  
+		left outer join dbo.btSiteMap sm
+		on p.Site=sm.emSite
+		left outer join dbo.btSiteBuildingMap bm
+		on sm.plxSite=bm.plxSite
+		where quantityonhand > 0
+		-- do not include Kendallville numbers.
+		and RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'
+	)set1
+)set2
 left outer join dbo.btSiteMap sm
 on p.Site=sm.emSite
 left outer join dbo.btSiteBuildingMap bm
-on em.plxSite=bm.buildingCode
-where 
+on sm.plxSite=bm.plxSite
+where p.Shelf = '' or p.Shelf is null
+/*
 p.Numbered in (
 '000003A',  
 '000054', 
@@ -64,11 +88,31 @@ p.Numbered in (
 '000547AV',  
 '200382E'
 )
+*/
 --and CribBin in ('12-AA3B03','12-AA3A03','12-AA1C02')
 )lv1
 -- where row# > 500 -- and row# <= 1000
 -- order by location
 )lv2
+
+-- What locations should be uploaded?
+select 
+sm.plxSite+'-'+p.Shelf as Location
+FROM dbo.Parts p
+left outer join dbo.btSiteMap sm
+on p.Site=sm.emSite
+--Should we add locations to plex that have no quantities?
+/*
+ * If we have locations assigned for parts with no inventory the location will still show up on the supply item detail 
+ * screen.  When we receive in a po item for a part that previously had no quantity can we receive it into the location record 
+ * that we previously set up?
+ * 1. Find an item with no location or create one.
+ * 2. order that item
+ * 3. receive it in.
+ */
+
+
+
 
 select top 10 numbered from dbo.Parts
 CREATE TABLE btSiteBuildingMap (
@@ -104,7 +148,7 @@ from
 select numbered,description,site,Shelf,quantityonhand 
 from parts
 where quantityonhand > 0 
-and site = 'Plant # 4'
+--and site = 'Plant # 4'
 --where (quantityonhand > 0 or quantityonhand < 0 or quantityonhand is null)
 and (shelf = '' or shelf is null)
 order by site, shelf
