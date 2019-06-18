@@ -32,7 +32,336 @@ Edon
 Winona Powder Coatings 
  */
 
+select * from dbo.btSiteMap
 select * from dbo.btSiteBuildingMap
+
+select 
+site,shelf,Location,numbered, COUNT(*) 
+from dbo.Parts
+group by site,shelf,Location,Numbered
+HAVING count(*) > 1
+--insert into dbo.btSiteBuildingMap VALUES ('MO','Kendallville')
+--insert into dbo.btSiteMap VALUES ('Plant # 7','MO')
+
+Select numbered, description, site,shelf
+from dbo.Parts
+where site = '' or site is null
+where site = 'POLE BARN E-2' --101211
+where site = 'Pole Barn'  --100988
+where site = 'Plant 8 HR Office'  --103232
+where site = 'Plant 8 Maint Crib, Albio'  --706202A
+where site = 'Plant # 8'  -- 700377A
+where site = 'Plant # 5 Offices'  --450800
+where site = 'VPlant # 5' --000902
+where site = 'Plant 5 Maint. Crib'  --999000
+where site = 'Plant # 5'  --200240
+where site = 'Plant # 4'  --200133
+where site = 'Plant # 11'  --650002AV
+where site = 'MRO Building'  --450768
+where site ='Edon'  --200003E
+where site ='Distribution Center'  --200713
+select * from dbo.btSiteMap
+select * from dbo.btSiteBuildingMap
+insert into dbo.btSiteBuildingMap VALUES ('M5R','BPG Plant 5')
+Plant # 5 Offices /M5R
+select Row#,Location,Building_Code,Location_Type,Note,Location_Group
+from
+(
+select 
+ROW_NUMBER() over(order by location asc) as row#,
+sm.plxSite+'-'+p.Shelf as Location,
+bm.building_code as building_code,
+'Maintenance' as location_type,  -- has not been added to plex.
+'' as note,
+'Maintenance Crib' as location_group
+from 
+(
+
+--drop table 
+create table 
+(
+	plxSite varchar(25),
+	building_code varchar(50),
+	location varchar(50)
+);
+
+select * from #set1
+
+
+			plxSite,
+			building_code,
+			location
+
+
+select 
+--COUNT(*) c
+*
+from
+(
+	select 
+	ROW_NUMBER() over(order by location asc) as row#,
+	Location,
+	building_code,
+	'Maintenance' as location_type,  
+	'' as note,
+	'Maintenance Crib' as location_group
+	from
+	(
+		--select 
+		--COUNT(*),
+		--plxSite,building_code,location
+		--from
+		--(
+		--select 
+		--count(*) cntLocation
+		--from
+		--(
+			select
+			--top 100
+			DISTINCT
+			plxSite,
+			building_code,
+			location
+			--drop table plxLocationSet
+			--into plxLocationSet
+			from
+			(
+				select COUNT(*) cnt from (
+				select 
+				--top 10
+				--p.Site,
+				--sm.emSite,f
+				--bm.plxSite
+				--Numbered,
+				--sm.plxSite,
+				--COUNT(*) c
+				--Numbered,
+				--quantityonhand,
+				sm.plxSite,
+				bm.building_code,
+				case 
+					when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+					when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+					when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+					when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
+					--else '???'
+				end location
+
+				select itemnumber,COUNT(*) from (
+
+				--select itemnumber from (
+				select p.Numbered,ap.itemnumber
+				from dbo.Parts p
+				left outer join plxAllPartsSet ap
+				on LTRIM(RTRIM(p.Numbered))=ap.itemnumber
+				where (ap.itemnumber is not null) 
+				)tst
+				
+				group by tst.itemnumber
+				having count(*) > 1
+
+				select set1.itemnumber FROM
+				(
+				
+				select itemnumber
+				from plxAllPartsSet
+				--group by itemnumber
+				--having COUNT(*) >1
+				)set1
+				join (
+				select LTRIM(RTRIM(Numbered)) itemnumber
+				from dbo.Parts
+				group by LTRIM(RTRIM(Numbered))
+				having COUNT(*) >1
+				)set2
+				on set1.itemnumber=set2.itemnumber
+				left outer join dbo.btSiteMap sm
+				on p.Site=sm.emSite
+				left outer join dbo.btSiteBuildingMap bm
+				on sm.plxSite=bm.plxSite
+				where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
+				)tst
+				--11158
+			)setLocation
+			
+		--)tst --3309
+		--)tst
+		--group by plxSite,building_code,location
+		--HAVING count(*) > 1
+	)set2
+)set3
+where row# >=1
+and row# <= 100
+--3309
+
+-- Used for Plex Supply Item Locations upload screen
+select 
+item as item_no,
+CribBin as location,
+BinQuantity as quantity,
+'N' as Building_Default,
+'' Transaction_Type
+from 
+
+
+SELECT
+COUNT(*) c
+from
+
+select 
+p.numbered,
+ap.NSItemNumber,
+p.QuantityOnHand,
+case 
+	when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+	when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+	when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+	when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
+	--else '???'
+end location
+from 
+dbo.Parts p
+left outer join 
+dbo.plxAllPartsSet ap  -- No Kendallville parts
+on nkp.numbered=ltrim(RTRIM(p.Numbered)
+where nkp.numbered is not null
+--dbo.plxAllPartsSet
+select * from dbo.plxLocationSet
+
+
+(
+	select
+	--top 100
+	DISTINCT
+	plxSite,
+	building_code,
+	location
+	from
+	(
+		select 
+		--top 10
+		--p.Site,
+		--sm.emSite,
+		--bm.plxSite
+		--Numbered,
+		--sm.plxSite,
+		--COUNT(*) c
+		--Numbered,
+		--quantityonhand,
+		sm.plxSite,
+		bm.building_code,
+		case 
+			when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+			when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+			when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+			when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
+			--else '???'
+		end location
+		from dbo.Parts p  
+		left outer join dbo.btSiteMap sm
+		on p.Site=sm.emSite
+		left outer join dbo.btSiteBuildingMap bm
+		on sm.plxSite=bm.plxSite
+		--Non Kendallville parts
+		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')  --00 =11158 
+	)set1
+	
+)set2
+
+
+select count(*) cntSameSiteShelf --2259
+FROM
+(
+
+select set1.site,set1.shelf,p.Numbered,p.Description,p.QuantityOnHand
+from
+(
+	select site,Shelf,COUNT(*) cntSameSiteShelf 
+	FROM
+	dbo.Parts
+	group by site,Shelf
+	having count(*) > 1
+	and shelf is not null and shelf <> ''
+)set1
+left outer join dbo.Parts p
+on set1.site=p.site and set1.shelf=p.Shelf
+order by set1.site,set1.shelf
+
+)set1
+
+where Shelf = '20-08-02'
+
+	--and COUNT(*) > 1
+--and (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) --then sm.plxSite+'-'+p.Shelf --11
+
+--and (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) --then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+
+--and (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null)  -- then sm.plxSite+'-'+ 'no location yet' --01
+
+--and (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) --then 'no location yet' --00
+	
+)tst
+
+select COUNT(*)
+from
+(
+	select 
+	DISTINCT Shelf,Numbered,site
+	from dbo.Parts p  
+	left outer join dbo.btSiteMap sm
+	on p.Site=sm.emSite
+	left outer join dbo.btSiteBuildingMap bm
+	on sm.plxSite=bm.plxSite
+	--Non Kendallville parts
+	where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')  --00 =11158 
+--	and Shelf is not null and Shelf <> ''
+)tst
+
+select Numbered,site,shelf,*
+FROM
+parts 
+where 
+Numbered in ('851280','900040')
+select Numbered, COUNT(*)
+	from dbo.Parts p  
+	group by Numbered
+	having 
+	RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'
+	and 
+	COUNT(*) > 1
+
+select COUNT(*) c
+select 
+top 100
+location
+from 
+(
+	select 
+	case 
+		when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+		when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+		when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+		when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
+		else '???'
+	end location
+	from dbo.Parts p
+	left outer join dbo.btSiteMap sm
+	on p.Site=sm.emSite
+)set1
+
+order by location
+
+dbo.Parts p
+WHERE
+(Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) --then sm.plxSite+'-'+p.Shelf --11
+
+(Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) --then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
+
+(Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null)  -- then sm.plxSite+'-'+ 'no location yet' --01
+
+(Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) --then 'no location yet' --00
+
+
 -- Used for Plex Location List Upload screen
 select 
 Location,Building_Code,Location_Type,Note,Location_Group
@@ -94,6 +423,23 @@ p.Numbered in (
 -- where row# > 500 -- and row# <= 1000
 -- order by location
 )lv2
+--Test set for all shelf categories:
+select 
+top 10
+numbered,description,site, shelf 
+from parts p
+where 
+-- below 0 records
+--(p.Shelf = '' or p.Shelf is null) and (p.Site='' or p.site is null) --'no location yet' --00
+-- below many records
+--(p.Shelf = '' or p.Shelf is null) and (p.Site<>'' and p.site is not null) -- sm.plxSite+'-'+ 'no location yet' --01
+-- 999000
+-- below 0 records
+-- (p.Shelf <> '' and p.Shelf is not null) and (p.Site='' or p.site is null) -- 'No site'+'-'+p.Shelf --10 
+-- below many records
+--(Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) -- sm.plxSite+'-'+p.Shelf --11
+--200240
+
 
 -- What locations should be uploaded?
 select 
@@ -147,7 +493,7 @@ from
 (
 select numbered,description,site,Shelf,quantityonhand 
 from parts
-where quantityonhand > 0 
+where quantityonhand < 0 
 --and site = 'Plant # 4'
 --where (quantityonhand > 0 or quantityonhand < 0 or quantityonhand is null)
 and (shelf = '' or shelf is null)
@@ -262,12 +608,6 @@ VPlant # 5
 */
 
 
-select top 10 item,CribBin
-FROM
-STATION st
-for xml path
-for xml raw
-for xml auto
 
 select distinct site from parts
 

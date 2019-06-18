@@ -141,29 +141,72 @@ create table #set7
 	NSItemNumber varchar(50)
 );
 
---drop table #set1
-create table #set1
+--drop table plxAllPartsSet
+create table plxAllPartsSet
 (
 	minRecordNumber numeric(18,0),
-	ItemNumber varchar(50)
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	suffix varchar(2)
 );
-select * from #set1
+select * from plxAllPartsSet
+
+
+
 
 
 --Set 1: {ItemNumber,minRecordNumber} => group by ItemNumber to delete duplicates, 
 --Duplicates are for items which have multiple location?
 --remove KendallVille records, and trim ItemNumbers. Store in temp table.
 
-insert into #set1 (minRecordNumber,ItemNumber)
+insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,suffix)
 (
-	select min(RecordNumber) minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber
-	from dbo.Parts
-	group by ltrim(rtrim(Numbered))
-	-- do not include Kendallville numbers.
-	having RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'
-)
+	--select COUNT(*) cntParts
+	--from (
+	select 
+	min(RecordNumber) minRecordNumber,
+	ItemNumber,
+	case 
+		when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
+		when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
+		else ItemNumber
+	end as NSItemNumber,
+	case 
+		when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
+		when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
+		else 'N' --none
+	end as suffix
+	from 
+	(
+		--select COUNT(*) cntParts
+		--from (
+		select 
+		ltrim(rtrim(Numbered)) ItemNumber, 
+		recordnumber
+		from dbo.Parts p
+		left outer join dbo.btSiteMap sm
+		on p.Site=sm.emSite
+		left outer join dbo.btSiteBuildingMap bm
+		on sm.plxSite=bm.plxSite
+		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
+		--)tst --11158
+	)set1 -- no kendallville parts
+	group by ItemNumber
+	--)tst --11145
 
-select count(*) from #set1
+) --11145
+
+				from dbo.Parts p  
+				left outer join 
+				plxAllPartsSet ap  -- No Kendallville parts
+				on ap.ItemNumber=ltrim(RTRIM(p.Numbered))
+				left outer join dbo.btSiteMap sm
+				on p.Site=sm.emSite
+				left outer join dbo.btSiteBuildingMap bm
+				on sm.plxSite=bm.plxSite
+				where ap.ItemNumber is not null
+
+select count(*) from dbo.plxAllPartsSet
 --11096
 --11157
 --11163
@@ -189,7 +232,7 @@ on #set7.minRecordNumber=p.RecordNumber
 -- Create #set 7 first then create set8 
 	insert into #set7 (NSItemNumber,minRecordNumber)
 	(
-		select set7.NSItemNumber,#set1.minRecordNumber
+		select set7.NSItemNumber,plxAllPartsSet.minRecordNumber
 		FROM
 		(
 			--select COUNT(*) from ( --are there any dups
@@ -214,6 +257,9 @@ on #set7.minRecordNumber=p.RecordNumber
 					select MIN(NSItemNumberPriority) NSItemNumberPriority,NSItemNumber 
 					from
 					(
+						--select count(*)
+						--from
+						--(
 						select 
 						ItemNumber, --for testing suffix
 						NSItemNumber,
@@ -224,30 +270,8 @@ on #set7.minRecordNumber=p.RecordNumber
 							when suffix = 'A' then NSItemNumber + '-4'
 						end as NSItemNumberPriority
 						from
-						(
-							--select count(*)
-							--from
-							--(
-							select 
-								ItemNumber, 
-								minrecordnumber, --for testing 
-
-								case 
-									when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
-									when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
-									else ItemNumber
-								end as NSItemNumber,
-								case 
-									when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
-									when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
-									else 'N' --none
-								end as suffix
-							from #set1 
-							--)tst --11169
-							--order by itemnumber
-							-- set2
-							
-						)set3
+						dbo.plxAllPartsSet 
+						--)tst --11145
 						/*
 						where 
 						itemnumber like '000003%'
@@ -266,10 +290,9 @@ on #set7.minRecordNumber=p.RecordNumber
 						--	when suffix = 'E' then NSItemNumber + '-3'
 						--	when suffix = 'A' then NSItemNumber + '-4'
 						*/
-						
 					)set4 
 					group by NSItemNumber
-					--)tst  --10300
+					--)tst  --10273
 					/*
 					having 
 					nsitemnumber like '000003%'
@@ -310,20 +333,20 @@ on #set7.minRecordNumber=p.RecordNumber
 				*/
 				--where right(NSItemNumberPriority,1) = '4'
 			)set6 --
-			--)tst1 --10300 check for multiple copies of same nsitemnumber
+			--)tst1 --10273 check for multiple copies of same nsitemnumber
 		)set7 --
-		left join #set1  -- If an itemnumber has more than 1 record #set1 records the one
+		left join dbo.plxAllPartsSet -- If an itemnumber has more than 1 record dbo.plxAllPartsSet records the one
 		-- with the minimum record number.  There are only a few of these records;
 		-- possibly if the part is stored in multiple locations.
-		on set7.ItemNumber=#set1.ItemNumber
+		on set7.ItemNumber=plxAllPartsSet.ItemNumber
 		/*
 		where 
-		nsitemnumber like '000003%'
-		or nsitemnumber like '000054%'
-		or nsitemnumber like '000091%'
-		or nsitemnumber like '000547%'
-		or nsitemnumber like '200382%'
-		order by nsitemnumber
+		set7.nsitemnumber like '000003%'
+		or set7.nsitemnumber like '000054%'
+		or set7.nsitemnumber like '000091%'
+		or set7.nsitemnumber like '000547%'
+		or set7.nsitemnumber like '200382%'
+		order by set7.nsitemnumber
 		--000003A -- 450  
 		--000054 (AV) --9145 
 		--000091 (E) --839  
@@ -335,7 +358,7 @@ on #set7.minRecordNumber=p.RecordNumber
 		--	when suffix = 'A' then NSItemNumber + '-4'
 		*/
 	) -- #set7
-	--10300
+	--10273
 	--Check for dups
 	select COUNT(*)
 	from
