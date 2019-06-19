@@ -88,16 +88,25 @@ create table
 select * from #set1
 
 
-			plxSite,
-			building_code,
-			location
 
-
-select 
---COUNT(*) c
-*
+/*
+ * plxLocationSet is used for the plex location upload.
+ */
+select * from plxTestSet1 --65
+--drop table plxTestSet1
+--select COUNT(*) c from (
+insert into dbo.plxTestSet1 
+select
+top 10
+Location,
+building_code,
+location_type,  
+note,
+location_group
+--into plxTestSet1
 from
 (
+	--select count(*) cnt from (
 	select 
 	ROW_NUMBER() over(order by location asc) as row#,
 	Location,
@@ -107,95 +116,162 @@ from
 	'Maintenance Crib' as location_group
 	from
 	(
-		--select 
-		--COUNT(*),
-		--plxSite,building_code,location
-		--from
-		--(
-		--select 
-		--count(*) cntLocation
-		--from
-		--(
-			select
-			--top 100
-			DISTINCT
-			plxSite,
-			building_code,
-			location
-			--drop table plxLocationSet
-			--into plxLocationSet
-			from
-			(
-				select COUNT(*) cnt from (
-				select 
-				--top 10
-				--p.Site,
-				--sm.emSite,f
-				--bm.plxSite
-				--Numbered,
-				--sm.plxSite,
-				--COUNT(*) c
-				--Numbered,
-				--quantityonhand,
-				sm.plxSite,
-				bm.building_code,
-				case 
-					when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
-					when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
-					when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
-					when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
-					--else '???'
-				end location
+		/*
+		 * Drop the itemnumber from this set.  Since there are many parts that share
+		 * locations the set count will drop significantly at this point. 
+		 */
+		--select count(*) cnt from (
+		select DISTINCT location,building_code 
+		from dbo.plxItemLocationSub il
+		--)tst --3309 Dropped itemnumber from set
+	)set1
+	--)tst --3309 Dropped itemnumber from set
+)set2
+--)tst  --3309 
+where SUBSTRING(location,1,3)='MPB'
+--where SUBSTRING(location,1,2)='MD'
+order by location
 
+select numbered,shelf from dbo.Parts 
+where site like '%Plant 8 HR Office%'
+where shelf like '(1)%'
 
-				select p.Numbered
-				from dbo.Parts p
-				--cant use all parts or we will drop the duplicate part numbers
-				-- we want to drop the duplicate part numbers when uploading supply items
-				-- but not when uploading locations
-				--left outer join plxAllPartsSet ap
-				--on ltrim(rtrim(p.numbered))=ap.itemnumber
-				--where (ap.itemnumber is not null) 
-				left outer join dbo.btSiteMap sm
-				on p.Site=sm.emSite
-				left outer join dbo.btSiteBuildingMap bm
-				on sm.plxSite=bm.plxSite
-				-- No Kendallville locations
-				where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
+select *
+from dbo.plxItemLocationSub il
+WHERE
+itemnumber = '103232'
+HR office numbered
+103232 
+103233 
+103234 
+103230 
+103231 
 
-				select set1.itemnumber FROM
-				(
-				
-				select itemnumber
-				from plxAllPartsSet
-				--group by itemnumber
-				--having COUNT(*) >1
-				)set1
-				join (
-				select LTRIM(RTRIM(Numbered)) itemnumber
-				from dbo.Parts
-				group by LTRIM(RTRIM(Numbered))
-				having COUNT(*) >1
-				)set2
-				on set1.itemnumber=set2.itemnumber
-				left outer join dbo.btSiteMap sm
-				on p.Site=sm.emSite
-				left outer join dbo.btSiteBuildingMap bm
-				on sm.plxSite=bm.plxSite
-				where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
-				)tst
-				--11158
-			)setLocation
-			
-		--)tst --3309
-		--)tst
-		--group by plxSite,building_code,location
-		--HAVING count(*) > 1
-	)set2
-)set3
+select 
+count(*)
+--* 
+from dbo.plxTestSet1
+
+select DISTINCT plxSite from btsitemap 
+order by plxSite
+
 where row# >=1
 and row# <= 100
+order by location
+
 --3309
+
+/*
+ * This set is used for the plex supply item location upload.
+ */
+--select location from (
+SELECT
+Item_No,set1.Location,Quantity,Building_Default,Transaction_Type
+--drop table plxTestSetItemLocation
+into plxTestSetItemLocation
+from 
+(
+	--select COUNT(*) cnt from (
+	select
+	ROW_NUMBER() over(order by il.location asc) as row#,
+	minRecordNumber as item_no,
+	il.location,
+	p.QuantityOnHand as quantity,
+	'N' as Building_Default,
+	'' Transaction_Type
+	from plxItemLocationSub il
+	left outer join dbo.Parts p
+	on il.minRecordNumber=p.RecordNumber
+	--)tst --11153
+)set1
+inner join plxTestSet1 ts -- only pull records we want to test
+on set1.location= ts.location
+--)tst --65
+--group by location  
+order by set1.location
+
+where row# >=1
+and row# <= 100
+order by item_no,location
+
+select * from plxTestSetItemLocation
+
+select COUNT(*) cnt from (
+select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
+/*
+ * plxItemLocationSub is used to generate the plex supply item and supply item location upload sets.
+ */
+--drop table plxItemLocationSub
+into plxItemLocationSub
+from (
+	--select COUNT(*) cnt from (
+	select 
+	--top 10
+	--p.Site,
+	--sm.emSite,f
+	--bm.plxSite
+	--Numbered,
+	--sm.plxSite,
+	--COUNT(*) c
+	ap.recordnumber,
+	ap.itemnumber, -- for test purposes to determine if there are duplicate item locations 
+	ap.BEItemNumber,
+	--quantityonhand,
+	sm.plxSite,
+	bm.building_code,
+	case 
+		when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+		when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+		when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+LTRIM(RTRIM(p.Shelf)) --10 ASK KRISTEN FOR SITE
+		when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
+		--else '???'
+	end location
+	from dbo.Parts p
+	--select top 10 * from plxAllPartsSetWithDups
+	inner join plxAllPartsSetWithDups ap
+	on p.RecordNumber=ap.recordnumber
+	-- we want the set created of all non-kendallville parts in EM
+	-- including duplicate parts which are stored in different locations.
+	left outer join dbo.btSiteMap sm
+	on p.Site=sm.emSite
+	left outer join dbo.btSiteBuildingMap bm
+	on sm.plxSite=bm.plxSite
+	--)tst --11159
+)set1
+group by itemnumber,BEItemNumber,plxSite,building_code,location
+)tstDistinct --11154
+SELECT * from dbo.btSiteMap
+
+/*
+ * Are there any duplicate locations.  Are there duplicate part numbers
+ * with duplicate locations.  Duplicate part numbers mean that the part
+ * was stored in multiple locations but if a part number has a 
+ * duplicate with the same location then something is wrong.
+ */
+
+			
+/*
+ * This set of parts have duplicate numbered,plxSite,shelf
+ */
+000529    |M5     |BPG Plant 5  |M5-27-04-05
+201206    |M5     |BPG Plant 5  |M5-17-01-03
+208220A   |M8     |BPG Plant 8  |M8-CAB H-2-
+404012    |M5     |BPG Plant 5  |M5-CHIPROOM
+701063    |M5     |BPG Plant 5  |M5-20-07-03
+
+select p.RecordNumber,numbered,description,site,shelf,QuantityOnHand
+from dbo.Parts p
+left outer join dbo.plxAllPartsSetWithDups ap
+on p.RecordNumber=ap.recordnumber
+where p.numbered in (
+'000529', 
+'201206', 
+'208220A',
+'404012', 
+'701063' 
+)
+
+order by numbered
 
 -- Used for Plex Supply Item Locations upload screen
 select 
@@ -205,71 +281,6 @@ BinQuantity as quantity,
 'N' as Building_Default,
 '' Transaction_Type
 from 
-
-
-SELECT
-COUNT(*) c
-from
-
-select 
-p.numbered,
-ap.NSItemNumber,
-p.QuantityOnHand,
-case 
-	when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
-	when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
-	when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
-	when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
-	--else '???'
-end location
-from 
-dbo.Parts p
-left outer join 
-dbo.plxAllPartsSet ap  -- No Kendallville parts
-on nkp.numbered=ltrim(RTRIM(p.Numbered)
-where nkp.numbered is not null
---dbo.plxAllPartsSet
-select * from dbo.plxLocationSet
-
-
-(
-	select
-	--top 100
-	DISTINCT
-	plxSite,
-	building_code,
-	location
-	from
-	(
-		select 
-		--top 10
-		--p.Site,
-		--sm.emSite,
-		--bm.plxSite
-		--Numbered,
-		--sm.plxSite,
-		--COUNT(*) c
-		--Numbered,
-		--quantityonhand,
-		sm.plxSite,
-		bm.building_code,
-		case 
-			when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
-			when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
-			when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+p.Shelf --10 ASK KRISTEN FOR SITE
-			when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+p.Shelf --11
-			--else '???'
-		end location
-		from dbo.Parts p  
-		left outer join dbo.btSiteMap sm
-		on p.Site=sm.emSite
-		left outer join dbo.btSiteBuildingMap bm
-		on sm.plxSite=bm.plxSite
-		--Non Kendallville parts
-		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')  --00 =11158 
-	)set1
-	
-)set2
 
 
 select count(*) cntSameSiteShelf --2259

@@ -133,12 +133,13 @@ FROM
 )set1
 where partCount > 1
 
--- drop table #set8
+-- drop table #set7
 
 create table #set7
 (
+	NSItemNumber varchar(50),
 	minRecordNumber numeric(18,0),
-	NSItemNumber varchar(50)
+	BEItemNumber varchar(50)
 );
 
 /*
@@ -157,6 +158,7 @@ create table plxAllPartsSetWithDups
 	RecordNumber numeric(18,0),
 	ItemNumber varchar(50),
 	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
 	suffix varchar(2)
 );
 select * from plxAllPartsSetWithDups
@@ -167,6 +169,7 @@ create table plxAllPartsSet
 	minRecordNumber numeric(18,0),
 	ItemNumber varchar(50),
 	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
 	suffix varchar(2)
 );
 select * from plxAllPartsSet
@@ -213,82 +216,105 @@ where itemnumber = '900040'
 */
 -- This does not include the Kendallville parts but does contain duplicate part numbers.
 -- which are part numbers stored in multiple locations
-insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,suffix)
+insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,suffix)
 (
---select COUNT(*) cntParts
---from (
+	--select COUNT(*) cntParts from (
 	select 
-	RecordNumber,
-	ItemNumber,
-	case 
-		when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
-		when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
-		else ItemNumber
-	end as NSItemNumber,
-	case 
-		when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
-		when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
-		else 'N' --none
-	end as suffix
-	from 
+		RecordNumber,
+		ItemNumber,
+		NSItemNumber,
+		'BE' + NSItemNumber as BEItemNumber,
+		suffix
+	from
 	(
-		--select COUNT(*) cntParts from (
-		--select itemnumber from (
-		--select COUNT(*) cntParts from (
 		select 
-		ltrim(rtrim(Numbered)) ItemNumber, 
-		recordnumber
-		from dbo.Parts p
-		left outer join dbo.btSiteMap sm
-		on p.Site=sm.emSite
-		left outer join dbo.btSiteBuildingMap bm
-		on sm.plxSite=bm.plxSite
-		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
-		--)tst --11158
-		--)tst group by itemnumber 
-		--)tst --11145
-	)set1 -- no kendallville parts  but has duplicate part numbers because of 
-	-- multiple locations.
---)tst --11158
+		RecordNumber,
+		ItemNumber,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
+			else ItemNumber
+		end as NSItemNumber,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
+			else 'N' --none
+		end as suffix
+		from 
+		(
+			--select COUNT(*) cntParts from (
+			--select itemnumber from (
+			--select COUNT(*) cntParts from (
+			select 
+			ltrim(rtrim(Numbered)) ItemNumber, 
+			recordnumber
+			from dbo.Parts p
+			left outer join dbo.btSiteMap sm
+			on p.Site=sm.emSite
+			left outer join dbo.btSiteBuildingMap bm
+			on sm.plxSite=bm.plxSite
+			where 
+			--sm.emSite is null or bm.plxSite is null --0
+			(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
+			--)tst --11159
+			--)tst group by itemnumber 
+			--having count(*) > 1
+			--)tst --11146
+		)set1 -- no kendallville parts  but has duplicate part numbers because of 
+		-- multiple locations.
+	)set2
+	--)tst --11159
+	
 )
+
+
 select * from dbo.plxAllPartsSetWithdups
 
-insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,suffix)
-(
-	--select COUNT(*) cntParts
-	--from (
-	select 
-	min(RecordNumber) minRecordNumber,
-	ItemNumber,
-	case 
-		when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
-		when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
-		else ItemNumber
-	end as NSItemNumber,
-	case 
-		when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
-		when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
-		else 'N' --none
-	end as suffix
-	from 
-	(
-		--select COUNT(*) cntParts
-		--from (
-		select 
-		ltrim(rtrim(Numbered)) ItemNumber, 
-		recordnumber
-		from dbo.Parts p
-		left outer join dbo.btSiteMap sm
-		on p.Site=sm.emSite
-		left outer join dbo.btSiteBuildingMap bm
-		on sm.plxSite=bm.plxSite
-		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
-		--)tst --11158
-	)set1 -- no kendallville parts
-	group by ItemNumber
-	--)tst --11145
 
-) --11145
+insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,BEItemNumber,suffix)
+(
+	--select COUNT(*) cntParts from (
+	select 
+	minRecordNumber,
+	ItemNumber,
+	NSItemNumber,
+	'BE' + NSItemNumber as BEItemNumber,
+	suffix
+	from
+	(
+		--select COUNT(*) cntParts from (
+		select 
+		min(RecordNumber) minRecordNumber,
+		ItemNumber,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
+			else ItemNumber
+		end as NSItemNumber,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
+			else 'N' --none
+		end as suffix
+		from 
+		(
+			--select COUNT(*) cntParts from (
+			select 
+			ltrim(rtrim(Numbered)) ItemNumber, 
+			recordnumber
+			from dbo.Parts p
+			left outer join dbo.btSiteMap sm
+			on p.Site=sm.emSite
+			left outer join dbo.btSiteBuildingMap bm
+			on sm.plxSite=bm.plxSite
+			where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
+			--)tst --11159
+		)set1 -- no kendallville parts
+		group by ItemNumber
+		--)tst --11146
+	)set2
+	--)tst --11146
+) --11146
 
 /*
  * To be used for sets requiring all non-kenallville parts
@@ -301,7 +327,7 @@ insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,suffix)
  * site.
  */
 select count(*) from dbo.plxAllPartsSet
---11145
+--11146
 
 /*
  * To be used for sets requiring all non-kendallville parts.
@@ -313,7 +339,7 @@ select count(*) from dbo.plxAllPartsSet
  * list.
  */
 select count(*) from dbo.plxAllPartsSetWithDups
---11158
+--11159
 
 select count(*) from #set7
 --10266
@@ -334,9 +360,9 @@ on #set7.minRecordNumber=p.RecordNumber
 --order by set8.NSitemnumber
 
 -- Create #set 7 first then create set8 
-	insert into #set7 (NSItemNumber,minRecordNumber)
+	insert into #set7 (NSItemNumber,minRecordNumber,BEItemNumber)
 	(
-		select set7.NSItemNumber,plxAllPartsSet.minRecordNumber
+		select set4.NSItemNumber,plxAllPartsSet.minRecordNumber,plxAllPartsSet.BEItemNumber
 		FROM
 		(
 			--select COUNT(*) from ( --are there any dups
@@ -361,9 +387,7 @@ on #set7.minRecordNumber=p.RecordNumber
 					select MIN(NSItemNumberPriority) NSItemNumberPriority,NSItemNumber 
 					from
 					(
-						--select count(*)
-						--from
-						--(
+						--select count(*) from (
 						select 
 						ItemNumber, --for testing suffix
 						NSItemNumber,
@@ -374,8 +398,18 @@ on #set7.minRecordNumber=p.RecordNumber
 							when suffix = 'A' then NSItemNumber + '-4'
 						end as NSItemNumberPriority
 						from
+						/*
+						 * To be used for sets requiring all non-kenallville parts
+						 * and no duplicate part numbers.  For those parts with
+						 * multiple locations the one with the lowest record number 
+						 * has been chosen to represent the part for description and
+						 * other non location related information.  Some part numbers
+						 * are in both Kendallville and non-Kendallville sites.  The
+						 * part number record of duplicate parts is NOT from a Kendallville
+						 * site.
+						 */
 						dbo.plxAllPartsSet 
-						--)tst --11145
+						--)tst --11146
 						/*
 						where 
 						itemnumber like '000003%'
@@ -394,7 +428,7 @@ on #set7.minRecordNumber=p.RecordNumber
 						--	when suffix = 'E' then NSItemNumber + '-3'
 						--	when suffix = 'A' then NSItemNumber + '-4'
 						*/
-					)set4 
+					)set1 
 					group by NSItemNumber
 					--)tst  --10273
 					/*
@@ -416,7 +450,7 @@ on #set7.minRecordNumber=p.RecordNumber
 					--	when suffix = 'E' then NSItemNumber + '-3'
 					--	when suffix = 'A' then NSItemNumber + '-4'
 					
-				)set5 
+				)set2 
 				/*
 				where 
 				nsitemnumber like '000003%'
@@ -436,21 +470,29 @@ on #set7.minRecordNumber=p.RecordNumber
 				--	when suffix = 'A' then NSItemNumber + '-4'
 				*/
 				--where right(NSItemNumberPriority,1) = '4'
-			)set6 --
+			)set3 --
 			--)tst1 --10273 check for multiple copies of same nsitemnumber
-		)set7 --
-		left join dbo.plxAllPartsSet -- If an itemnumber has more than 1 record dbo.plxAllPartsSet records the one
-		-- with the minimum record number.  There are only a few of these records;
-		-- possibly if the part is stored in multiple locations.
-		on set7.ItemNumber=plxAllPartsSet.ItemNumber
+		)set4 --
+		/*
+		 * To be used for sets requiring all non-kenallville parts
+		 * and no duplicate part numbers.  For those parts with
+		 * multiple locations the one with the lowest record number 
+		 * has been chosen to represent the part for description and
+		 * other non location related information.  Some part numbers
+		 * are in both Kendallville and non-Kendallville sites.  The
+		 * part number record of duplicate parts is NOT from a Kendallville
+		 * site.
+		 */
+		left join dbo.plxAllPartsSet
+		on set4.ItemNumber=plxAllPartsSet.ItemNumber
 		/*
 		where 
-		set7.nsitemnumber like '000003%'
-		or set7.nsitemnumber like '000054%'
-		or set7.nsitemnumber like '000091%'
-		or set7.nsitemnumber like '000547%'
-		or set7.nsitemnumber like '200382%'
-		order by set7.nsitemnumber
+		set4.nsitemnumber like '000003%'
+		or set4.nsitemnumber like '000054%'
+		or set4.nsitemnumber like '000091%'
+		or set4.nsitemnumber like '000547%'
+		or set4.nsitemnumber like '200382%'
+		order by set4.nsitemnumber
 		--000003A -- 450  
 		--000054 (AV) --9145 
 		--000091 (E) --839  
@@ -483,7 +525,8 @@ select
 	top 100
 	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
 	p.Numbered,  -- Not in final set
-	'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
+	BEItemNumber as "Item_No",
+	--'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
 	SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
 	CASE
 		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
@@ -668,6 +711,9 @@ left outer join (
 on p.Vendor=sc.VendorName
 left outer join btMfgMap mm
 	on p.Manufacturer=mm.plexMfg
+inner join plxTestSetItemLocation ts  -- only pull records we want to test
+on #set7.location= ts.location
+
 )tst
 --where manufacturer = ''  --8132
 --where manufacturer is null  --0
