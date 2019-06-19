@@ -141,6 +141,26 @@ create table #set7
 	NSItemNumber varchar(50)
 );
 
+/*
+ * plxAllPartsSetX will be used in other
+ * queries so will make it a table.  This
+ * set contains all non-kendallville part
+ * records.
+ * Dont make a view with with clause because
+ * it will be needed over time in other
+ * SQL files
+ * 
+ */
+--drop table plxAllPartsSetWithDups
+create table plxAllPartsSetWithDups
+(
+	RecordNumber numeric(18,0),
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	suffix varchar(2)
+);
+select * from plxAllPartsSetWithDups
+
 --drop table plxAllPartsSet
 create table plxAllPartsSet
 (
@@ -158,6 +178,80 @@ select * from plxAllPartsSet
 --Set 1: {ItemNumber,minRecordNumber} => group by ItemNumber to delete duplicates, 
 --Duplicates are for items which have multiple location?
 --remove KendallVille records, and trim ItemNumbers. Store in temp table.
+
+/* shows part numbers that are in Kendallville and non-kendallville sites.
+select ap.itemnumber
+from
+(
+select p.numbered 
+FROM
+parts p
+left outer join dbo.btSiteMap sm
+on p.Site=sm.emSite
+left outer join dbo.btSiteBuildingMap bm
+on sm.plxSite=bm.plxSite
+where (RIGHT(LTRIM(RTRIM(Numbered)),1) = 'K'  or sm.plxSite = 'MO') 
+)p
+inner join 
+(
+select * from plxAllPartsSet
+)ap
+on LTRIM(RTRIM(p.Numbered))=ap.itemnumber
+
+-- IN KENDALLVILLE AND ALBION 900040
+select RecordNumber,numbered,site,shelf,description
+from 
+parts p 
+where LTRIM(RTRIM(p.Numbered)) = '900040'
+RecordNumber|numbered|site              
+------------|--------|------------------
+        2838|900040  |Pole Barn         
+        8785|900040  |Plant 7 Maint Crib
+        
+select * from plxAllPartsSet
+where itemnumber = '900040'
+*/
+-- This does not include the Kendallville parts but does contain duplicate part numbers.
+-- which are part numbers stored in multiple locations
+insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,suffix)
+(
+--select COUNT(*) cntParts
+--from (
+	select 
+	RecordNumber,
+	ItemNumber,
+	case 
+		when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
+		when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
+		else ItemNumber
+	end as NSItemNumber,
+	case 
+		when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
+		when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
+		else 'N' --none
+	end as suffix
+	from 
+	(
+		--select COUNT(*) cntParts from (
+		--select itemnumber from (
+		--select COUNT(*) cntParts from (
+		select 
+		ltrim(rtrim(Numbered)) ItemNumber, 
+		recordnumber
+		from dbo.Parts p
+		left outer join dbo.btSiteMap sm
+		on p.Site=sm.emSite
+		left outer join dbo.btSiteBuildingMap bm
+		on sm.plxSite=bm.plxSite
+		where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
+		--)tst --11158
+		--)tst group by itemnumber 
+		--)tst --11145
+	)set1 -- no kendallville parts  but has duplicate part numbers because of 
+	-- multiple locations.
+--)tst --11158
+)
+select * from dbo.plxAllPartsSetWithdups
 
 insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,suffix)
 (
@@ -196,21 +290,31 @@ insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,suffix)
 
 ) --11145
 
-				from dbo.Parts p  
-				left outer join 
-				plxAllPartsSet ap  -- No Kendallville parts
-				on ap.ItemNumber=ltrim(RTRIM(p.Numbered))
-				left outer join dbo.btSiteMap sm
-				on p.Site=sm.emSite
-				left outer join dbo.btSiteBuildingMap bm
-				on sm.plxSite=bm.plxSite
-				where ap.ItemNumber is not null
-
+/*
+ * To be used for sets requiring all non-kenallville parts
+ * and no duplicate part numbers.  For those parts with
+ * multiple locations the one with the lowest record number 
+ * has been chosen to represent the part for description and
+ * other non location related information.  Some part numbers
+ * are in both Kendallville and non-Kendallville sites.  The
+ * part number record of duplicate parts is NOT from a Kendallville
+ * site.
+ */
 select count(*) from dbo.plxAllPartsSet
---11096
---11157
---11163
---11169
+--11145
+
+/*
+ * To be used for sets requiring all non-kendallville parts.
+ * It includes part numbers with multiple locations multiple times
+ * once for each location.  It also includes a record number to 
+ * ensure exactly which part record we are referring to.  Some
+ * part numbers are in both Kendallville and non-kendallville 
+ * sites.  There are no Kendallville part records included in this
+ * list.
+ */
+select count(*) from dbo.plxAllPartsSetWithDups
+--11158
+
 select count(*) from #set7
 --10266
 select COUNT(*)

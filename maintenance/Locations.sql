@@ -147,18 +147,21 @@ from
 					--else '???'
 				end location
 
-				select itemnumber,COUNT(*) from (
 
-				--select itemnumber from (
-				select p.Numbered,ap.itemnumber
+				select p.Numbered
 				from dbo.Parts p
-				left outer join plxAllPartsSet ap
-				on LTRIM(RTRIM(p.Numbered))=ap.itemnumber
-				where (ap.itemnumber is not null) 
-				)tst
-				
-				group by tst.itemnumber
-				having count(*) > 1
+				--cant use all parts or we will drop the duplicate part numbers
+				-- we want to drop the duplicate part numbers when uploading supply items
+				-- but not when uploading locations
+				--left outer join plxAllPartsSet ap
+				--on ltrim(rtrim(p.numbered))=ap.itemnumber
+				--where (ap.itemnumber is not null) 
+				left outer join dbo.btSiteMap sm
+				on p.Site=sm.emSite
+				left outer join dbo.btSiteBuildingMap bm
+				on sm.plxSite=bm.plxSite
+				-- No Kendallville locations
+				where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
 
 				select set1.itemnumber FROM
 				(
