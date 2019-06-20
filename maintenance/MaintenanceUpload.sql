@@ -168,25 +168,29 @@ select count(*) from dbo.plxAllPartsSetWithDups
 --11159
 
 
-
-
-select top 100 * from plxItemLocationSub
-select COUNT(*) cnt from (
-select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
 /*
  * 
  * 
  * ITEM LOCATION SUB MODULE
- * Contains the fields other queries need
- * plxItemLocationSub is used to generate the plex supply item and supply item location upload sets.
+ * Contains the fields other queries need.
  * 
- * 
+ * plxItemLocationSub is used to generate the plex supply item and 
+ * supply item location upload sets.  It uses the plxAllPartsSetWithDups
+ * set and adds the plxSite,building_code,location fields.
  * 
  * 
  */
 
+select
+count(*)
+--top 100 * 
+from plxItemLocationSub
+--11154
+
+select COUNT(*) cnt from (
+select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
 --drop table plxItemLocationSub
-into plxItemLocationSub
+--into plxItemLocationSub
 from (
 	--select COUNT(*) cnt from (
 	select 
@@ -203,30 +207,48 @@ from (
 		when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
 		--else '???'
 	end location
-	from dbo.Parts p
+	from dbo.Parts p  --contains KendallVille parts. count: 12286
 	--select top 10 * from plxAllPartsSetWithDups
+	--select count(*) from plxAllPartsSetWithDups  --11159
 	inner join plxAllPartsSetWithDups ap
 	on p.RecordNumber=ap.recordnumber
 	-- we want the set created of all non-kendallville parts in EM
-	-- including duplicate parts which are stored in different locations.
+	-- including duplicate parts which may or may not contain different locations.
 	left outer join dbo.btSiteMap sm
 	on p.Site=sm.emSite
 	left outer join dbo.btSiteBuildingMap bm
 	on sm.plxSite=bm.plxSite
 	--)tst --11159
 )set1
+/*
+ * If duplicate part numbers have distinct locations then
+ * they both will be in this set, but only the part number 
+ * with the lowest record number will be included if the
+ * duplicate part numbers have the same plxSite and EM shelf.
+ */
 group by itemnumber,BEItemNumber,plxSite,building_code,location
 )tstDistinct --11154
 
+select COUNT(*)
+from dbo.Parts
+--12286
+select count(*) from plxAllPartsSetWithDups  --11159
 
 /*
  * 
  * 
  * 
  * PLEX LOCATION UPLOAD
- * 
- * 
- * 
+ * Ctrl-m Location List screen
+ * This query has been formatted to the Location upload
+ * specification.
+ * The CSV is in five columns in this exact order:
+ * 1) Location
+ * 2) Building Code 
+ * 3) Location Type * (Must Exist in Location Type Setup Table)
+ * 4) Note *  (50 Characters Maximum)
+ * 5) Location Group * (Must Exist in Location Group Setup Table)
+ * template: ~/src/sql/csv/location_template.csv
  * 
  * 
  * 
@@ -283,6 +305,12 @@ order by location
  * ITEM LOCATION UPLOAD
  * This set is used for the plex supply item location upload.
  * 
+ * Item_No (Required)
+ * Location  (Required)
+ * Quantity (Must be a number)
+ * Building_Default (needs to be either Y or N)
+ * Transaction_Type (optional)
+ * Template: ~/src/sql/templates/item_location_template.csv
  * 
  * 
  * 
@@ -332,6 +360,59 @@ create table #set7
 	BEItemNumber varchar(50)
 );
 
--- FINISH WITH SUPPLY ITEM UPLOADS
+/*
+ * 
+ * 
+ * 
+ * 
+ * 
+ * SUPPLY ITEM UPLOAD
+ * This set is used for the plex supply item upload.
+ * Template: ~/src/sql/templates/supply_item_template.csv
+ * 
+ * Field List:
+   1. Item_No (Required)
+   2. Brief_Description
+   3. Description
+   4. Note
+   5. Item_Type (Required, must already exist)
+   6. Item_Group (Required, must already exist)
+   7. Item_Category (Required, must already exist)
+   8. Item_Priority  (Required, must already exist)
+   9. Customer_Unit_Price (If specified,must be a number)
+   10. Average_Cost (If specified,must be a number)
+   11. Inventory_Unit  (If specified, it must exist)
+   12. Min_Quantity (If specified, must be a number)
+   13. Max_Quantity (If specified, must be a number)
+   14. Tax_Code (If specified, it must exist)
+   15. Account_No (If specified, it must exist)
+   16. Manufacturer
+   17. Manf_Item_No (50 character limit)
+   18. Drawing_No
+   19. Item_Quantity  (If specified, must be a number and have a location)
+   20. Location (If specified, it must exist)
+   21. Supplier_Code (If specified, it must exist. If it is not, Supplier data is ignored)
+   22. Supplier_Part_No
+   23. Supplier_Std_Purch_Qty (If specified, must be a number)
+   24. Currency (Required, must be a valid currency code per the currency table)
+   25. Supplier_Std_Unit_Price (If specified, must be a number)
+   26. Supplier_Purchase_Unit (If specified, it must exist)
+   27. Supplier_Unit_Conversion (If specified, it must be a number.  Recommended greater than 0 as this affects extended price values)
+   28. Supplier_Lead_Time (If specified, it must be a number)
+   29. Update_When_Received (must be either Y for yes, or N or no)
+   30. Manufacturer_Item_Revision (max 8 characters)
+   31. Country_Of_Origin (if specified must exist)
+   32. Commodity_Code (if specified must exist)
+   33. Harmonized_Tariff_Code (if specified must exist)
+   34. Cube_Length (If specified, it must be a number)
+   35. Cube_Width (If specified, it must be a number)
+   36. Cube_Height (If specified, it must be a number)
+   37. Cube_Unit (if specified must exist)
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
 
 
