@@ -3,7 +3,7 @@
  * queries so will make it a table.  This
  * set contains all non-kendallville part
  * records.
- * Dont make a view with with clause because
+ * Dont make a view with the with clause because
  * it will be needed over time in other
  * SQL files
  * 
@@ -17,7 +17,11 @@ create table plxAllPartsSetWithDups
 	BEItemNumber varchar(50),
 	suffix varchar(2)
 );
-select top 100 * from plxAllPartsSetWithDups
+select 
+--top 100 *
+count(*) 
+from plxAllPartsSetWithDups
+--11159
 
 --drop table plxAllPartsSet
 create table plxAllPartsSet
@@ -28,11 +32,14 @@ create table plxAllPartsSet
 	BEItemNumber varchar(50),
 	suffix varchar(2)
 );
-select top 100 * from plxAllPartsSet
-
+select 
+--top 100 *
+count(*) 
+from plxAllPartsSet
+--11146
 
 -- This does not include the Kendallville parts but does contain duplicate part numbers.
--- which are part numbers stored in multiple locations
+-- which are part numbers stored in multiple locations and/or database corruption errors.
 insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,suffix)
 (
 	--select COUNT(*) cntParts from (
@@ -87,7 +94,9 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 
 select * from dbo.plxAllPartsSetWithdups
 
-
+-- This does not include the Kendallville parts and does NOT contain duplicate part numbers.
+-- For part number duplicates all but the part number with the minimum record number have
+-- been removed.
 insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,BEItemNumber,suffix)
 (
 	--select COUNT(*) cntParts from (
@@ -135,25 +144,25 @@ insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,BEItemNumber
 
 /*
  * To be used for sets requiring all non-kenallville parts
- * and no duplicate part numbers.  For those parts with
- * multiple locations the one with the lowest record number 
- * has been chosen to represent the part for description and
- * other non location related information.  Some part numbers
- * are in both Kendallville and non-Kendallville sites.  The
- * part number record of duplicate parts is NOT from a Kendallville
- * site.
+ * and no duplicate part numbers.  For the part number duplicates
+ * the one with the lowest record number has been chosen to 
+ * represent the part for description and other non location 
+ * related information.  Some part numbers are in both Kendallville
+ * and non-Kendallville sites and neither have the 'K' suffix.  
+ * For these parts only the ones with the non-Kendallville site 
+ * are included in this set.
  */
 select count(*) from dbo.plxAllPartsSet
 --11146
 
 /*
  * To be used for sets requiring all non-kendallville parts.
- * It includes part numbers with multiple locations multiple times
- * once for each location.  It also includes a record number to 
- * ensure exactly which part record we are referring to.  Some
- * part numbers are in both Kendallville and non-kendallville 
- * sites.  There are no Kendallville part records included in this
- * list.
+ * It includes part number duplicates.  It also includes a 
+ * record number to ensure exactly which part record we are 
+ * referring to.  Some part numbers are in both Kendallville 
+ * and non-kendallville sites and neither have the 'K' suffix.
+ * Of these parts no Kendallville part record numbers are 
+ * included in this set.
  */
 select count(*) from dbo.plxAllPartsSetWithDups
 --11159
