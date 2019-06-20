@@ -135,14 +135,7 @@ where partCount > 1
 
 -- drop table #set7
 
-create table #set7
-(
-	NSItemNumber varchar(50),
-	minRecordNumber numeric(18,0),
-	BEItemNumber varchar(50)
-);
-
-/*
+`/*
  * plxAllPartsSetX will be used in other
  * queries so will make it a table.  This
  * set contains all non-kendallville part
