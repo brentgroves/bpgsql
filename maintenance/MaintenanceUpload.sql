@@ -143,6 +143,14 @@ insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,BEItemNumber
 ) --11146
 
 /*
+ * plxAllPartsSet
+ * 
+	MinRecordNumber numeric(18,0),
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
+	suffix varchar(2)
+ *
  * To be used for sets requiring all non-kenallville parts
  * and no duplicate part numbers.  For the part number duplicates
  * the one with the lowest record number has been chosen to 
@@ -156,6 +164,14 @@ select count(*) from dbo.plxAllPartsSet
 --11146
 
 /*
+ * plxAllPartsSetWithDups
+ * 
+ * 	RecordNumber numeric(18,0),
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
+	suffix varchar(2)
+
  * To be used for sets requiring all non-kendallville parts.
  * It includes part number duplicates.  It also includes a 
  * record number to ensure exactly which part record we are 
@@ -174,9 +190,21 @@ select count(*) from dbo.plxAllPartsSetWithDups
  * ITEM LOCATION SUB MODULE
  * Contains the fields other queries need.
  * 
+	minRecordNumber numeric(18,0),
+	itemnumber varchar(50),
+	BEItemNumber varchar(50),
+	plxSite varchar(25),
+	building_code varchar(50),
+	location varchar(51),
+	QuantityOnHand numeric(18,5)
+ * 
  * plxItemLocationSub is used to generate the plex supply item and 
  * supply item location upload sets.  It uses the plxAllPartsSetWithDups
  * set and adds the plxSite,building_code,location fields.
+ * If duplicate part numbers have distinct locations then
+ * they both will be in this set, but only the part number 
+ * with the lowest record number will be included if the
+ * duplicate part numbers have the same plxSite and EM shelf.
  * 
  * 
  */
@@ -188,45 +216,51 @@ from plxItemLocationSub
 --11154
 
 select COUNT(*) cnt from (
-select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
---drop table plxItemLocationSub
---into plxItemLocationSub
-from (
-	--select COUNT(*) cnt from (
-	select 
-	ap.recordnumber,
-	ap.itemnumber,  
-	ap.BEItemNumber,
-	--quantityonhand,
-	sm.plxSite,
-	bm.building_code,
-	case 
-		when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
-		when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
-		when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+LTRIM(RTRIM(p.Shelf)) --10 ASK KRISTEN FOR SITE
-		when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
-		--else '???'
-	end location
-	from dbo.Parts p  --contains KendallVille parts. count: 12286
-	--select top 10 * from plxAllPartsSetWithDups
-	--select count(*) from plxAllPartsSetWithDups  --11159
-	inner join plxAllPartsSetWithDups ap
-	on p.RecordNumber=ap.recordnumber
-	-- we want the set created of all non-kendallville parts in EM
-	-- including duplicate parts which may or may not contain different locations.
-	left outer join dbo.btSiteMap sm
-	on p.Site=sm.emSite
-	left outer join dbo.btSiteBuildingMap bm
-	on sm.plxSite=bm.plxSite
-	--)tst --11159
-)set1
-/*
- * If duplicate part numbers have distinct locations then
- * they both will be in this set, but only the part number 
- * with the lowest record number will be included if the
- * duplicate part numbers have the same plxSite and EM shelf.
- */
-group by itemnumber,BEItemNumber,plxSite,building_code,location
+	select set2.*,p.QuantityOnHand
+	--drop table plxItemLocationSub
+	into plxItemLocationSub
+	from
+	(
+		select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
+		from (
+			--select COUNT(*) cnt from (
+			select 
+			ap.recordnumber,
+			ap.itemnumber,  
+			ap.BEItemNumber,
+			--quantityonhand,
+			sm.plxSite,
+			bm.building_code,
+			case 
+				when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
+				when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
+				when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+LTRIM(RTRIM(p.Shelf)) --10 ASK KRISTEN FOR SITE
+				when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
+				--else '???'
+			end location
+			from dbo.Parts p  --contains KendallVille parts. count: 12286
+			--select top 10 * from plxAllPartsSetWithDups
+			--select count(*) from plxAllPartsSetWithDups  --11159
+			inner join plxAllPartsSetWithDups ap
+			on p.RecordNumber=ap.recordnumber
+			-- we want the set created of all non-kendallville parts in EM
+			-- including duplicate parts which may or may not contain different locations.
+			left outer join dbo.btSiteMap sm
+			on p.Site=sm.emSite
+			left outer join dbo.btSiteBuildingMap bm
+			on sm.plxSite=bm.plxSite
+			--)tst --11159
+		)set1
+		/*
+		 * If duplicate part numbers have distinct locations then
+		 * they both will be in this set, but only the part number 
+		 * with the lowest record number will be included if the
+		 * duplicate part numbers have the same plxSite and EM shelf.
+		 */
+		group by itemnumber,BEItemNumber,plxSite,building_code,location
+	)set2
+	left outer join dbo.Parts p
+	on set2.minRecordNumber=p.RecordNumber
 )tstDistinct --11154
 
 select COUNT(*)
@@ -253,11 +287,14 @@ select count(*) from plxAllPartsSetWithDups  --11159
  * 
  * 
  */
-select * 
-from plxTestSetLocation
+select 
+--*
+count (*) 
+from plxTestSetLocation  --65
 
+select count(*) from (
 select
-top 10
+--top 10
 Location,
 building_code,
 location_type,  
@@ -279,6 +316,45 @@ from
 	'Maintenance Crib' as location_group
 	from
 	(
+
+		/*
+		 * plxAllPartsSetWithDups
+		 * 
+		 * 	RecordNumber numeric(18,0),
+			ItemNumber varchar(50),
+			NSItemNumber varchar(50),
+			BEItemNumber varchar(50),
+			suffix varchar(2)
+		
+		 * To be used for sets requiring all non-kendallville parts.
+		 * It includes part number duplicates.  It also includes a 
+		 * record number to ensure exactly which part record we are 
+		 * referring to.  Some part numbers are in both Kendallville 
+		 * and non-kendallville sites and neither have the 'K' suffix.
+		 * Of these parts no Kendallville part record numbers are 
+		 * included in this set.
+		 */
+	
+		/*
+			minRecordNumber numeric(18,0),
+			itemnumber varchar(50),
+			BEItemNumber varchar(50),
+			plxSite varchar(25),
+			building_code varchar(50),
+			location varchar(51),
+			QuantityOnHand numeric(18,5)
+		 * 
+		 * plxItemLocationSub is used to generate the plex supply item and 
+		 * supply item location upload sets.  It uses the plxAllPartsSetWithDups
+		 * set and adds the plxSite,building_code,location fields.
+		 * If duplicate part numbers have "distinct locations" then
+		 * they both will be in this set, but only the part number 
+		 * with the lowest record number will be included if the
+		 * duplicate part numbers have the same plxSite and EM shelf.
+		 * 
+		 * 
+		 */
+	
 		/*
 		 * Drop the itemnumber from this set.  Since there are many parts that share
 		 * locations the set count will drop significantly at this point. 
@@ -286,11 +362,11 @@ from
 		--select count(*) cnt from (
 		select DISTINCT location,building_code 
 		from dbo.plxItemLocationSub il
-		--)tst --3309 Dropped itemnumber from set
+		--)tst --3307 Dropped itemnumber from set
 	)set1
-	--)tst --3309 Dropped itemnumber from set
+	--)tst --3307 Dropped itemnumber from set
 )set2
---)tst  --3309 
+)tst  --3307 
 where SUBSTRING(location,1,3)='MPB'
 --where SUBSTRING(location,1,2)='MD'
 order by location
@@ -304,7 +380,8 @@ order by location
  * 
  * ITEM LOCATION UPLOAD
  * This set is used for the plex supply item location upload.
- * 
+ * Ctrl-m supply list screen
+ *  
  * Item_No (Required)
  * Location  (Required)
  * Quantity (Must be a number)
@@ -318,7 +395,7 @@ order by location
  * 
  */
 select * from plxTestSetItemLocation
-select top 10 * from plxItemLocationSub
+
 --select location from (
 SELECT
 Item_No,set1.Location,Quantity,Building_Default,Transaction_Type
@@ -334,8 +411,66 @@ from
 	p.QuantityOnHand as quantity,
 	'N' as Building_Default,
 	'' Transaction_Type
+
+	/*
+	 * plxAllPartsSetWithDups
+	 * 
+	 * 	RecordNumber numeric(18,0),
+		ItemNumber varchar(50),
+		NSItemNumber varchar(50),
+		BEItemNumber varchar(50),
+		suffix varchar(2)
+	
+	 * To be used for sets requiring all non-kendallville parts.
+	 * It includes part number duplicates.  It also includes a 
+	 * record number to ensure exactly which part record we are 
+	 * referring to.  Some part numbers are in both Kendallville 
+	 * and non-kendallville sites and neither have the 'K' suffix.
+	 * Of these parts no Kendallville part record numbers are 
+	 * included in this set.
+	 */
+
+	/*
+		minRecordNumber numeric(18,0),
+		itemnumber varchar(50),
+		BEItemNumber varchar(50),
+		plxSite varchar(25),
+		building_code varchar(50),
+		location varchar(51),
+		QuantityOnHand numeric(18,5)
+	 * 
+	 * plxItemLocationSub is used to generate the plex supply item and 
+	 * supply item location upload sets.  It uses the plxAllPartsSetWithDups
+	 * set and adds the plxSite,building_code,location fields.
+	 * If duplicate part numbers have "distinct locations" then
+	 * they both will be in this set, but only the part number 
+	 * with the lowest record number will be included if the
+	 * duplicate part numbers have the same plxSite and EM shelf.
+	 * 
+	 * 
+	 */
+
+	/*
+	 * As a result of duplicatate parts with the same plxSite and
+	 * EM shelf dropping all but the part with the lowest record
+	 * number.  We will loose the quantity found in the records
+	 * that were dropped.  For example we will not add the
+	 * quantityOnHand values for records with the exact same part
+	 * number, plxSite, and shelf. There are under 5 duplicate parts
+	 * with the same location. I informed Kristen of this
+	 * and she did not mind because the quantities have not been
+	 * updated since April anyway.
+	 */
+	
+	/*
+	 * To reiterate duplicate parts with different locations
+	 * will have a distinct item location (quantity) record 
+	 * for each location.
+	 */
 	from plxItemLocationSub il
-	left outer join dbo.Parts p
+	inner join dbo.Parts p  --join parts table to get quantity on hand.
+	-- I wanted to add quantity on hand field into plxItemLocationSub
+	-- but could not because of the 
 	on il.minRecordNumber=p.RecordNumber
 	--)tst --11154
 )set1
@@ -367,7 +502,9 @@ create table #set7
  * 
  * 
  * SUPPLY ITEM UPLOAD
- * This set is used for the plex supply item upload.
+ * Ctrl-m supply list screen
+ * 
+ *  * This set is used for the plex supply item upload.
  * Template: ~/src/sql/templates/supply_item_template.csv
  * 
  * Field List:
