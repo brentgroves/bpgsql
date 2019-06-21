@@ -73,7 +73,7 @@ from plxAllPartsSetWithDups
 --11159
 
 -- truncate table plxAllPartsSetWithDups
-insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,Location,BuildingCode,QuantityOnHand,Suffix)
+insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,BuildingCode,Location,QuantityOnHand,Suffix)
 (
 	--select COUNT(*) cntParts from (
 	select 
@@ -136,10 +136,10 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 				where 
 				--sm.emSite is null or bm.plxSite is null --0
 				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
-				--)tst --11160
+				--)tst --11164
 				--)tst group by itemnumber --12
 				--having count(*) > 1
-				--)tst --11147
+				--)tst --11151
 				
 			)set1	
 			/*
@@ -151,14 +151,14 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 			 */
 			group by ItemNumber,Location,BuildingCode
 			--having count(*) > 1  --5
-			--)tst --11155
+			--)tst --11159
 		)set2 
 		inner join dbo.Parts p
 		on set2.MinRecordNumber=p.RecordNumber
-		--)tst --11155
+		--)tst --11159
 	)set3
-	--)tst --11155
-)--11155
+	--)tst --11159
+)--11159
 
 
 select 
@@ -190,8 +190,8 @@ from dbo.plxAllPartsSetWithdups
  * 
  */
 select 
---*
-count (*) 
+*
+--count (*) 
 from plxTestSetLocation  --65
 
 select count(*) from (
@@ -279,6 +279,7 @@ where SUBSTRING(location,1,3)='MPB'
 order by location
 
 
+
 /*
  * 
  * 
@@ -304,10 +305,11 @@ order by location
 select * from plxTestSetItemLocation
 
 --select location from (
+select COUNT(*) cnt from (
 SELECT
-Item_No,Location,Quantity,Building_Default,Transaction_Type
+Item_No,set1.Location,Quantity,Building_Default,Transaction_Type
 --drop table plxTestSetItemLocation
---into plxTestSetItemLocation
+into plxTestSetItemLocation
 from 
 (
 	--select COUNT(*) cnt from (
@@ -361,20 +363,34 @@ from
 	 * item,location,quantity,etc. data in these cases. 
 	 */
 	from plxAllPartsSetWithDups
-	)tst --11155
+	--)tst --11159
 )set1
 inner join plxTestSetLocation ts -- only pull records we want to test
 on set1.Location= ts.Location
---)tst --65
---group by location  
 order by set1.Location
+
+)tst --163
+--group by location  
 
 where row# >=1
 and row# <= 100
 order by item_no,location
 
-select * from plxTestSetLocation
-select * from plxTestSetItemLocation
+select * 
+from plxTestSetLocation  --65
+
+select * from dbo.plxTestSetSupplyItems --133
+
+-- 1 to 1 map from il to l
+select * 
+from plxTestSetItemLocation il 
+--163
+inner join dbo.plxTestSetLocation l
+on il.Location=l.Location
+--163
+inner join plxTestSetSupplyItems si
+on il.Item_No=si.item_no
+--133
 
 /*
  * 
@@ -432,20 +448,69 @@ select * from plxTestSetItemLocation
  * 
  * 
  */
+
+/************************************
+	minRecordNumber numeric(18,0),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50)
+	
+ ************************************
+ * 
+ * plxSupplyItemRecNoSet
+ * This set has the task of picking which part number to insert
+ * into the plex purchasing.supplyitem table.
+ * For example with part numbers that are identical except for
+ * the suffix it chooses one, retains its record number, and 
+ * drops the others. For parts that are in just one location   
+ * it truncates the suffix, if any, and retains the record 
+ * number.  The record number can be used to join with the
+ * parts table to retrieve description,unit price,vendor
+ * and other information needed for the supply item upload. 
+ * 
+ * 850325AV = Avilla
+ * 850325E = Edon
+ * 850325A = PlT8
+ * 850325 = Albion
+ */
+
+select * from dbo.btSiteMap
+
 --drop table plxSupplyItemRecNoSet
 create table plxSupplyItemRecNoSet
 (
+	RecordNumber numeric(18,0),
 	NSItemNumber varchar(50),
-	minRecordNumber numeric(18,0),
 	BEItemNumber varchar(50)
 );
+
+select * 
+from plxTestSetItemLocation il 
+--163
+inner join plxSupplyItemRecNoSet ns
+on il.Item_No=ns.BEItemNumber
+--163
+
+select * 
+from plxTestSetItemLocation il 
+--163
+inner join dbo.plxTestSetLocation l
+on il.Location=l.Location
+--163
+inner join plxSupplyItemRecNoSet ns
+on il.Item_No=ns.BEItemNumber
+--163
+inner join plxTestSetSupplyItems si
+on il.Item_No=si.item_no
+--133
+
+
 --truncate table dbo.plxSupplyItemRecNoSet
 select * from dbo.plxSupplyItemRecNoSet
 -- Create plxSupplyItemSetRecNoSet first then create plxSupplyItemSet 
-	insert into plxSupplyItemRecNoSet (NSItemNumber,minRecordNumber,BEItemNumber)
+	insert into plxSupplyItemRecNoSet (RecordNumber,NSItemNumber,BEItemNumber)
 	(
 		--select COUNT(*) from ( --are there any dups
-		select set4.NSItemNumber,p.minRecordNumber,set4.BEItemNumber
+		select p.minRecordNumber RecordNumber, set4.NSItemNumber, set4.BEItemNumber
 		FROM
 		(
 			--select COUNT(*) from ( --are there any dups
@@ -529,7 +594,7 @@ select * from dbo.plxSupplyItemRecNoSet
 						 * item,location,quantity,etc. data in these cases. 
 						 */
 						plxAllPartsSetWithDups ap						
-						--)tst --11155
+						--)tst --11159
 						/*
 						where 
 						itemnumber like '000003%'
@@ -550,7 +615,7 @@ select * from dbo.plxSupplyItemRecNoSet
 						*/
 					)set1 
 					group by NSItemNumber, BEItemNumber
-					--)tst  --10274
+					--)tst  --10275
 					/*
 					having 
 					nsitemnumber like '000003%'
@@ -591,7 +656,7 @@ select * from dbo.plxSupplyItemRecNoSet
 				*/
 				--where right(NSItemNumberPriority,1) = '4'
 			)set3 --
-			--)tst1 --10274 check for multiple copies of same nsitemnumber
+			--)tst1 --10275 check for multiple copies of same nsitemnumber
 		)set4 --
 		/*
 		 * To be used for sets requiring all non-kenallville parts
@@ -617,7 +682,7 @@ select * from dbo.plxSupplyItemRecNoSet
 			group by numbered
 		)p
 		on set4.ItemNumber=p.ItemNumber
-		--)tst --10274
+		--)tst --10275
 		/*
 		where 
 		set4.nsitemnumber like '000003%'
@@ -636,7 +701,8 @@ select * from dbo.plxSupplyItemRecNoSet
 		--	when suffix = 'E' then NSItemNumber + '-3'
 		--	when suffix = 'A' then NSItemNumber + '-4'
 		*/
-	) -- #10274
+	) -- #10275
+	
 	select COUNT(*)
 	from
 	(
@@ -648,15 +714,32 @@ select * from dbo.plxSupplyItemRecNoSet
 		group by nsitemnumber
 	)tst --10274	
 
-
+select * 
+from plxTestSetItemLocation il 
+--163
+inner join dbo.plxTestSetLocation l
+on il.Location=l.Location
+--163
+inner join plxTestSetSupplyItems si
+on il.Item_No=si.item_no
+--133
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 select count(*) cnt from (
---select top 100 * from (
 select 
-	top 100
-	row_number() OVER(ORDER BY NSItemNumber ASC) AS Row#,
-	p.Numbered,  -- Not in final set
-	BEItemNumber as "Item_No",
+Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+--drop table plxTestSetSupplyItems
+--into plxTestSetSupplyItems
+from (
+	select 
+	--top 100
+	row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
+	si.BEItemNumber as "Item_No",
 	--'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
 	SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
 	CASE
@@ -832,23 +915,81 @@ select
 	'' as Cube_Width,
 	'' as Cube_Height,
 	'' as Cube_Unit
-from dbo.plxSupplyItemRecNoSet si
-left join dbo.Parts p
-on si.minRecordNumber=p.RecordNumber	
-left outer join (
-	select * from btSupplyCode sc
-	where VendorName <> ''
-) sc
-on p.Vendor=sc.VendorName
-left outer join btMfgMap mm
-on p.Manufacturer=mm.plexMfg
-inner join plxTestSetItemLocation ts  -- only pull records we want to test
-	on #set7.location= ts.location
+	/************************************
+		minRecordNumber numeric(18,0),
+		NSItemNumber varchar(50),
+		BEItemNumber varchar(50)
+		
+	 ************************************
+	 * 
+	 * plxSupplyItemRecNoSet
+	 * This set has the task of picking which part number to insert
+	 * into the plex purchasing.supplyitem table.
+	 * For example with part numbers that are identical except for
+	 * the suffix it chooses one, retains its record number, and 
+	 * drops the others. For parts that are in just one location   
+	 * it truncates the suffix, if any, and retains the record 
+	 * number.  The record number can be used to join with the
+	 * parts table to retrieve description,unit price,vendor
+	 * and other information needed for the supply item upload. 
+	 * 
+	 * 850325AV = Avilla
+	 * 850325E = Edon
+	 * 850325A = PlT8
+	 * 850325 = Albion
+	 */
+	--select count(*)
+	--select si.*, epc.*	
+	from dbo.plxSupplyItemRecNoSet si
+	left join dbo.Parts p
+	on si.RecordNumber=p.RecordNumber--10275
+	left outer join (
+		select * from btSupplyCode sc
+		where VendorName <> ''
+	) sc
+	on p.Vendor=sc.VendorName --10275
+	left outer join btMfgMap mm
+	on p.Manufacturer=mm.plexMfg  --10275
+	inner join 
+	(
+	 	select top 5 recordnumber,numbered,vendor
+	 	from dbo.Parts p
+		where p.CategoryID = 'Electronics' and vendor <> ''
+		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
 
-)tst
+		UNION
+	 	select top 5 recordnumber,numbered,vendor
+	 	from dbo.Parts p
+		where p.CategoryID = 'Pumps' and vendor <> ''
+		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
+		
+		UNION
+	 	select top 5 recordnumber,numbered,vendor
+	 	from dbo.Parts p
+		where p.CategoryID = 'Cover' and vendor <> ''
+		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
+	
+	)epc
+	on si.recordnumber=epc.recordnumber
+/*	
+	inner join 
+	(
+		select distinct item_no from plxTestSetItemLocation il  --163 No
+		 
+	)il
+	on si.BEitemnumber=il.Item_No	--163
+	*/
+)set1
+order by item_no
+where row# >=1
+and row# <=5
+
+select * from dbo.plxTestSetSupplyItems
+
+
 --where manufacturer = ''  --8132
 --where manufacturer is null  --0
-where manufacturer <> '' --2156
+--where manufacturer <> '' --2156
 )tst2  --10288
 
 --manufacturer is null  --0
@@ -880,6 +1021,94 @@ on p.Vendor=sc.VendorName
 
 
 
+/*
+ * How many parts have a site of Kendallville but do not have 
+ * a 'K' suffix.  Ask Kristen about these.
+ */
+
+select 
+Numbered,Description,Vendor,Site,Shelf
+from dbo.Parts p
+left outer join dbo.btSiteMap sm
+on p.Site=sm.emSite
+left outer join dbo.btSiteBuildingMap bm
+on sm.plxSite=bm.plxSite
+where 
+(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite = 'MO')
+
+--sm.emSite is null or bm.plxSite is null --0
+--(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
+
+/*
+	RecordNumber numeric(18,0),
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
+	BuildingCode varchar(50),
+	Location varchar(50),
+	QuantityOnHand numeric(18,5),	
+	Suffix varchar(2)
+ */
+
+/*
+ * Create a set of locations which have multiple parts assigned.
+ */
+
+select count(*) cnt from (
+select Location, count(*) cnt 
+from plxAllPartsSetWithDups ap
+group by Location
+--having COUNT(*) > 10  --86
+--having COUNT(*) > 5  --428
+--having COUNT(*) > 4  --648
+--having COUNT(*) > 3  --941
+--having COUNT(*) > 2  --1311
+having COUNT(*) > 1  --1957
+and location not like '%YET%'
+)tst 
+
+/*
+ * Create a set of locations which Kristen can look through
+ * which have more than 10 parts assigned.
+ */
+
+
+select set1.*
+from
+(
+select 
+ap.Location,
+ap.ItemNumber,
+p.Description,
+p.Vendor
+from plxAllPartsSetWithDups ap
+inner join dbo.Parts p
+on ap.RecordNumber=p.RecordNumber
+)set1
+inner join 
+(
+select Location 
+--count(*) cnt
+from plxAllPartsSetWithDups 
+group by Location
+having COUNT(*) > 10  --86
+and location not like '%YET%'
+)set2
+on set1.location=set2.location
+order by Location
+
+select top 10 
+* 
+from plxAllPartsSetWithDups ap
+
+			select top 5 cast(CHAR(10) + ap.ItemNumber + ' Descr: ' + Description  as varchar(max)) 
+			from plxAllPartsSetWithDups ap
+			inner join dbo.Parts p
+			on ap.RecordNumber=p.RecordNumber
+
+/* 
+ * Create a set of parts shelf length under 4 characters.
+ */
 
 
 
