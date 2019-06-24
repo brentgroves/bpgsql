@@ -1,18 +1,8 @@
 
-/*
- * plxAllPartsSetX will be used in other
- * queries so will make it a table.  This
- * set contains all non-kendallville part
- * records.
- * Dont make a view with the with clause because
- * it will be needed over time in other
- * SQL files
- * 
- */
 
-/*
- * plxAllPartsSetWithDups
- * 
+/********************************
+ * plxItemLocationBase
+ ******************************** 
 	RecordNumber numeric(18,0),
 	ItemNumber varchar(50),
 	NSItemNumber varchar(50),
@@ -21,21 +11,20 @@
 	Location varchar(50),
 	QuantityOnHand numeric(18,5),	
 	Suffix varchar(2)
-
- * To be used for sets requiring all non-kendallville parts.
- * It includes part number duplicates.  It also includes a 
- * record number to ensure exactly which part record we are 
- * referring to.  Some part numbers are in both Kendallville 
- * and non-kendallville sites and neither may have the 'K' suffix.
- * Of these parts no Kendallville part record numbers are 
- * included in this set. If duplicate part numbers have 
- * "distinct locations" then they both will be in this set, 
- * but only the part number with the lowest record number 
- * will be included if the duplicate part numbers have the 
- * same plxSite and EM shelf.
- */ 
- 
-		/*
+ *********************************
+ *
+ * To be used for sets requiring non-kendallville EM part records.
+ * Both the suffix of the part and the site field is used to 
+ * determine if a part is located in Kendallville since some
+ * Kendallville parts do not have a 'K' suffix. The set
+ * includes supply item, location, and quantity information
+ * that other queries rely on.  A few EM part records have 
+ * a duplicate part number and location. If duplicate part numbers
+ * have distinct locations then they both will be in this set, 
+ * but only the part number with the lowest record number will 
+ * be included if the duplicate part numbers have the same plxSite
+ * and EM shelf.
+ * 
  * As a result of duplicatate parts with the same plxSite and
  * EM shelf dropping all but the part with the lowest record
  * number.  We will loose the quantity found in the records
@@ -44,18 +33,15 @@
  * number, plxSite, and shelf. There are 5 duplicate parts
  * with the same location. I informed Kristen of this
  * and she did not mind because the quantities have not been
- * updated since April anyway.
- */
-
-/*
+ * updated since April so the count is probably not accurate.
+ *
  * To reiterate duplicate parts with different locations
  * will have a distinct record so we will not loose any
  * item,location,quantity,etc. data in these cases. 
  */
-	select count(*) from dbo.plxAllPartsSetWithDups
 
---drop table plxAllPartsSetWithDups
-create table plxAllPartsSetWithDups
+--drop table plxItemLocationBase
+create table plxItemLocationBase
 (
 	RecordNumber numeric(18,0),
 	ItemNumber varchar(50),
@@ -69,11 +55,11 @@ create table plxAllPartsSetWithDups
 select 
 top 100 *
 --count(*) 
-from plxAllPartsSetWithDups
+from plxItemLocationBase
 --11159
 
--- truncate table plxAllPartsSetWithDups
-insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,BuildingCode,Location,QuantityOnHand,Suffix)
+-- truncate table plxItemLocationBase
+insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,BuildingCode,Location,QuantityOnHand,Suffix)
 (
 	--select COUNT(*) cntParts from (
 	select 
@@ -86,7 +72,7 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 		QuantityOnHand,
 		Suffix
 	from
-	(
+	(	--Add Quantity for each item location record selected.
 		--select COUNT(*) cntParts from (
 		select 
 		MinRecordNumber,
@@ -106,6 +92,7 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 		end as Suffix
 		from 
 		(
+			--Reduce the set by selecting 1 record number to represent itemNumber,Location duplicates.
 			--select COUNT(*) cntParts from (
 			select 
 			min(RecordNumber) MinRecordNumber,
@@ -136,10 +123,10 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 				where 
 				--sm.emSite is null or bm.plxSite is null --0
 				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
-				--)tst --11164
-				--)tst group by itemnumber --12
-				--having count(*) > 1
-				--)tst --11151
+				)tst --11189
+				--)tst group by itemnumber --11176
+				--having count(*) > 12
+				--)tst --11176  --This is NOT item_no,recordNumber. This IS exact same item numbers only.
 				
 			)set1	
 			/*
@@ -151,33 +138,30 @@ insert into plxAllPartsSetWithDups (RecordNumber,ItemNumber,NSItemNumber,BEItemN
 			 */
 			group by ItemNumber,Location,BuildingCode
 			--having count(*) > 1  --5
-			--)tst --11159
+			--)tst --11184
 		)set2 
 		inner join dbo.Parts p
 		on set2.MinRecordNumber=p.RecordNumber
-		--)tst --11159
+		--)tst --11184
 	)set3
-	--)tst --11159
-)--11159
+	--order by location,itemNumber
+	--)tst --11184
+)--11189
 
 
 select 
---top 100 *
-count(*) 
-from dbo.plxAllPartsSetWithdups
-
-
-
+top 100 *
+--count(*) 
+from dbo.plxItemLocationBase
 
 
 /*
- * 
- * 
- * 
+ * plxLocation
  * PLEX LOCATION UPLOAD
  * Ctrl-m Location List screen
- * This query has been formatted to the Location upload
- * specification.
+ * This query has been formatted to the Plex Location upload
+ * specification except that it includes row numbers.
+ * 
  * The CSV is in five columns in this exact order:
  * 1) Location
  * 2) Building Code 
@@ -185,109 +169,52 @@ from dbo.plxAllPartsSetWithdups
  * 4) Note *  (50 Characters Maximum)
  * 5) Location Group * (Must Exist in Location Group Setup Table)
  * template: ~/src/sql/csv/location_template.csv
- * 
- * 
- * 
  */
-select 
-*
---count (*) 
-from plxTestSetLocation  --65
 
-select count(*) from (
-select
---top 10
+--select count(*) cnt from (
+select 
+ROW_NUMBER() over(order by location asc) as row#,
 Location,
-building_code,
-location_type,  
-note,
-location_group
---into plxTestSetLocation
+BuildingCode as building_code,
+'Maintenance' as location_type,  
+'' as note,
+'Maintenance Crib' as location_group
+into plxLocation
 from
 (
-/*
- * Plex Location Upload
- */
+	/*******************************
+	 * plxItemLocationBase
+	 * *****************************
+		RecordNumber numeric(18,0),
+		ItemNumber varchar(50),
+		NSItemNumber varchar(50),
+		BEItemNumber varchar(50),
+		BuildingCode varchar(50),
+		Location varchar(50),
+		QuantityOnHand numeric(18,5),	
+		Suffix varchar(2)
+	/***********************************
+	 * Since there are many parts that share locations the set
+	 *  count will drop significantly at this point. 
+	 */
 	--select count(*) cnt from (
-	select 
-	ROW_NUMBER() over(order by location asc) as row#,
-	Location,
-	BuildingCode as building_code,
-	'Maintenance' as location_type,  
-	'' as note,
-	'Maintenance Crib' as location_group
-	from
-	(
-		/*
-		 * plxAllPartsSetWithDups
-		 * 
-			RecordNumber numeric(18,0),
-			ItemNumber varchar(50),
-			NSItemNumber varchar(50),
-			BEItemNumber varchar(50),
-			BuildingCode varchar(50),
-			Location varchar(50),
-			QuantityOnHand numeric(18,5),	
-			Suffix varchar(2)
-		
-		 * To be used for sets requiring all non-kendallville parts.
-		 * It includes part number duplicates.  It also includes a 
-		 * record number to ensure exactly which part record we are 
-		 * referring to.  Some part numbers are in both Kendallville 
-		 * and non-kendallville sites and neither may have the 'K' suffix.
-		 * Of these parts no Kendallville part record numbers are 
-		 * included in this set. If duplicate part numbers have 
-		 * "distinct locations" then they both will be in this set, 
-		 * but only the part number with the lowest record number 
-		 * will be included if the duplicate part numbers have the 
-		 * same plxSite and EM shelf.
-		 */ 
- 
-		/*
-		 * As a result of duplicatate parts with the same plxSite and
-		 * EM shelf dropping all but the part with the lowest record
-		 * number.  We will loose the quantity found in the records
-		 * that were dropped.  For example we will not add the
-		 * QuantityOnHand values for records with the exact same part
-		 * number, plxSite, and shelf. There are 5 duplicate parts
-		 * with the same location. I informed Kristen of this
-		 * and she did not mind because the quantities have not been
-		 * updated since April anyway.
-		 */
-		
-		/*
-		 * To reiterate duplicate parts with different locations
-		 * will have a distinct record so we will not loose any
-		 * item,location,quantity,etc. data in these cases. 
-		 */
-	
-	
-		/*
-		 * Since there are many parts that share locations the set
-		 *  count will drop significantly at this point. 
-		 */
-		--select count(*) cnt from (
-		select DISTINCT Location,BuildingCode 
-		from plxAllPartsSetWithDups ap
-		--)tst --3307 
-	)set1
-	--)tst --3307 
-)set2
-)tst  --3307 
-where SUBSTRING(location,1,3)='MPB'
---where SUBSTRING(location,1,2)='MD'
-order by location
-
-
+	select DISTINCT Location,BuildingCode 
+	--select DISTINCT Location --Should be the same set as distinct location, buildingcode 
+	from plxItemLocationBase base
+	--)tst --3320 
+)set1
+--)tst --3319
+order by location 
 
 /*
  * 
- * 
- * 
- * 
+ * plxItemLocation
  * 
  * ITEM LOCATION UPLOAD
  * This set is used for the plex supply item location upload.
+ * It contains row# for uploading a range of item locations
+ * at a time.
+ * 
  * Ctrl-m supply list screen
  *  
  * Item_No (Required)
@@ -297,111 +224,41 @@ order by location
  * Transaction_Type (optional)
  * Template: ~/src/sql/templates/item_location_template.csv
  * 
- * 
- * 
- * 
- * 
  */
-select * from plxTestSetItemLocation
 
---select location from (
-select COUNT(*) cnt from (
-SELECT
-Item_No,set1.Location,Quantity,Building_Default,Transaction_Type
---drop table plxTestSetItemLocation
-into plxTestSetItemLocation
-from 
-(
-	--select COUNT(*) cnt from (
-	select
-	ROW_NUMBER() over(order by Location asc) as row#,
-	BEItemNumber as Item_No,
-	Location,
-	QuantityOnHand as Quantity,
-	'N' as Building_Default,
-	'' Transaction_Type
-	/*
-	 * plxAllPartsSetWithDups
-	 * 
-		RecordNumber numeric(18,0),
-		ItemNumber varchar(50),
-		NSItemNumber varchar(50),
-		BEItemNumber varchar(50),
-		BuildingCode varchar(50),
-		Location varchar(50),
-		QuantityOnHand numeric(18,5),	
-		Suffix varchar(2)
-	
-	 * To be used for sets requiring all non-kendallville parts.
-	 * It includes part number duplicates.  It also includes a 
-	 * record number to ensure exactly which part record we are 
-	 * referring to.  Some part numbers are in both Kendallville 
-	 * and non-kendallville sites and neither may have the 'K' suffix.
-	 * Of these parts no Kendallville part record numbers are 
-	 * included in this set. If duplicate part numbers have 
-	 * "distinct locations" then they both will be in this set, 
-	 * but only the part number with the lowest record number 
-	 * will be included if the duplicate part numbers have the 
-	 * same plxSite and EM shelf.
-	 */ 
- 
-		/*
-	 * As a result of duplicatate parts with the same plxSite and
-	 * EM shelf dropping all but the part with the lowest record
-	 * number.  We will loose the quantity found in the records
-	 * that were dropped.  For example we will not add the
-	 * QuantityOnHand values for records with the exact same part
-	 * number, plxSite, and shelf. There are 5 duplicate parts
-	 * with the same location. I informed Kristen of this
-	 * and she did not mind because the quantities have not been
-	 * updated since April anyway.
-	 */
-	
-	/*
-	 * To reiterate duplicate parts with different locations
-	 * will have a distinct record so we will not loose any
-	 * item,location,quantity,etc. data in these cases. 
-	 */
-	from plxAllPartsSetWithDups
-	--)tst --11159
-)set1
-inner join plxTestSetLocation ts -- only pull records we want to test
-on set1.Location= ts.Location
-order by set1.Location
+--select COUNT(*) cnt from (
+select
+ROW_NUMBER() over(order by Location asc) as row#,
+BEItemNumber as Item_No,
+Location,
+QuantityOnHand as Quantity,
+'N' as Building_Default,
+'' Transaction_Type
+/********************************
+ * plxItemLocationBase
+ ******************************** 
+	RecordNumber numeric(18,0),
+	ItemNumber varchar(50),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50),
+	BuildingCode varchar(50),
+	Location varchar(50),
+	QuantityOnHand numeric(18,5),	
+	Suffix varchar(2)
+*********************************
+*/
+--drop table plxItemLocation
+--into plxItemLocation
+from plxItemLocationBase
+--)tst --11184
 
-)tst --163
---group by location  
-
-where row# >=1
-and row# <= 100
-order by item_no,location
-
-select * 
-from plxTestSetLocation  --65
-
-select * from dbo.plxTestSetSupplyItems --133
-
--- 1 to 1 map from il to l
-select * 
-from plxTestSetItemLocation il 
---163
-inner join dbo.plxTestSetLocation l
-on il.Location=l.Location
---163
-inner join plxTestSetSupplyItems si
-on il.Item_No=si.item_no
---133
 
 /*
- * 
- * 
- * 
- * 
- * 
+ * plxSupplyItem 
  * SUPPLY ITEM UPLOAD
  * Ctrl-m supply list screen
  * 
- *  * This set is used for the plex supply item upload.
+ *  This set is used for the plex supply item upload.
  * Template: ~/src/sql/templates/supply_item_template.csv
  * 
  * Field List:
@@ -442,30 +299,27 @@ on il.Item_No=si.item_no
    35. Cube_Width (If specified, it must be a number)
    36. Cube_Height (If specified, it must be a number)
    37. Cube_Unit (if specified must exist)
- * 
- * 
- * 
- * 
- * 
  */
 
-/************************************
+/* *************************************
+ * plxSupplyItemBase
+ * *************************************
 	minRecordNumber numeric(18,0),
 	NSItemNumber varchar(50),
 	BEItemNumber varchar(50)
 	
  ************************************
- * 
- * plxSupplyItemRecNoSet
- * This set has the task of picking which part number to insert
- * into the plex purchasing.supplyitem table.
- * For example with part numbers that are identical except for
- * the suffix it chooses one, retains its record number, and 
- * drops the others. For parts that are in just one location   
- * it truncates the suffix, if any, and retains the record 
- * number.  The record number can be used to join with the
- * parts table to retrieve description,unit price,vendor
- * and other information needed for the supply item upload. 
+ * When creating this set we have the task of picking which 
+ * EM part records to insert into the plex purchasing.supplyitem table.
+ * The EM part records have a suffix that identifies which site it
+ * is located. This was required because there is no separate location
+ * table in EM and if a part was stored in multiple location a separate
+ * part record was created differing only in its suffix.  This suffix 
+ * is not needed in Plex and will be dropped because Plex has a
+ * one-to-many relationship between supply items and item location 
+ * tables. For parts with multiple EM part records we choose only 
+ * one to upload into plex. This chosen part will be used to retrieve 
+ * description,unit price,vendor and other non-location information. 
  * 
  * 850325AV = Avilla
  * 850325E = Edon
@@ -473,158 +327,84 @@ on il.Item_No=si.item_no
  * 850325 = Albion
  */
 
-select * from dbo.btSiteMap
 
---drop table plxSupplyItemRecNoSet
-create table plxSupplyItemRecNoSet
+--drop table plxSupplyItemBase
+create table plxSupplyItemBase
 (
 	RecordNumber numeric(18,0),
 	NSItemNumber varchar(50),
 	BEItemNumber varchar(50)
 );
 
-select * 
-from plxTestSetItemLocation il 
---163
-inner join plxSupplyItemRecNoSet ns
-on il.Item_No=ns.BEItemNumber
---163
 
-select * 
-from plxTestSetItemLocation il 
---163
-inner join dbo.plxTestSetLocation l
-on il.Location=l.Location
---163
-inner join plxSupplyItemRecNoSet ns
-on il.Item_No=ns.BEItemNumber
---163
-inner join plxTestSetSupplyItems si
-on il.Item_No=si.item_no
---133
-
-
---truncate table dbo.plxSupplyItemRecNoSet
-select * from dbo.plxSupplyItemRecNoSet
--- Create plxSupplyItemSetRecNoSet first then create plxSupplyItemSet 
-	insert into plxSupplyItemRecNoSet (RecordNumber,NSItemNumber,BEItemNumber)
+--truncate table dbo.plxSupplyItemBase
+insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
+(
+	--select COUNT(*) from ( --are there any dups
+	select p.minRecordNumber RecordNumber, set4.NSItemNumber, set4.BEItemNumber
+	FROM
 	(
 		--select COUNT(*) from ( --are there any dups
-		select p.minRecordNumber RecordNumber, set4.NSItemNumber, set4.BEItemNumber
-		FROM
+		--select DISTINCT NSItemNumber -- TEST form dups nsitemnumber record
+		select DISTINCT ItemNumber,NSItemNumber,BEItemNumber
+		--dups for multiple columns eliminated, distinct is not necessary 
+												--should not be any but do above TEST to be sure
+												--This set should not have any changes from previous set 
+												--except for the reduction of columns
+		from
 		(
-			--select COUNT(*) from ( --are there any dups
-			--select DISTINCT NSItemNumber -- TEST form dups nsitemnumber record
-			select DISTINCT ItemNumber,NSItemNumber,BEItemNumber
-			--dups for multiple columns eliminated, distinct is not necessary 
-													--should not be any but do above TEST to be sure
-													--This set should not have any changes from previous set 
-													--except for the reduction of columns
+			select 
+			CASE
+				when right(NSItemNumberPriority,1) = '1' then NSItemNumber
+				when right(NSItemNumberPriority,1) = '2' then NSItemNumber + 'AV'
+				when right(NSItemNumberPriority,1) = '3' then NSItemNumber + 'E'
+				when right(NSItemNumberPriority,1) = '4' then NSItemNumber + 'A'
+			end as ItemNumber,
+			NSItemNumber,
+			BEItemNumber
 			from
 			(
-				select 
-				CASE
-					when right(NSItemNumberPriority,1) = '1' then NSItemNumber
-					when right(NSItemNumberPriority,1) = '2' then NSItemNumber + 'AV'
-					when right(NSItemNumberPriority,1) = '3' then NSItemNumber + 'E'
-					when right(NSItemNumberPriority,1) = '4' then NSItemNumber + 'A'
-				end as ItemNumber,
+				--select count(*) cnt from (
+				select MIN(NSItemNumberPriority) NSItemNumberPriority,
 				NSItemNumber,
 				BEItemNumber
 				from
 				(
-					--select count(*) cnt from (
-					select MIN(NSItemNumberPriority) NSItemNumberPriority,
+					--select count(*) from (
+					select 
+					ItemNumber, 
 					NSItemNumber,
-					BEItemNumber
+					BEItemNumber,
+					case 
+						when suffix = 'N' then NSItemNumber + '-1'
+						when suffix = 'AV' then NSItemNumber + '-2'
+						when suffix = 'E' then NSItemNumber + '-3'
+						when suffix = 'A' then NSItemNumber + '-4'
+					end as NSItemNumberPriority
 					from
-					(
-						--select count(*) from (
-						select 
-						ItemNumber, 
-						NSItemNumber,
-						BEItemNumber,
-						case 
-							when suffix = 'N' then NSItemNumber + '-1'
-							when suffix = 'AV' then NSItemNumber + '-2'
-							when suffix = 'E' then NSItemNumber + '-3'
-							when suffix = 'A' then NSItemNumber + '-4'
-						end as NSItemNumberPriority
-						from
-						/*
-						 * plxAllPartsSetWithDups
-						 * 
-							RecordNumber numeric(18,0),
-							ItemNumber varchar(50),
-							NSItemNumber varchar(50),
-							BEItemNumber varchar(50),
-							BuildingCode varchar(50),
-							Location varchar(50),
-							QuantityOnHand numeric(18,5),	
-							Suffix varchar(2)
-						
-						 * To be used for sets requiring all non-kendallville parts.
-						 * It includes part number duplicates.  It also includes a 
-						 * record number to ensure exactly which part record we are 
-						 * referring to.  Some part numbers are in both Kendallville 
-						 * and non-kendallville sites and neither may have the 'K' suffix.
-						 * Of these parts no Kendallville part record numbers are 
-						 * included in this set. If duplicate part numbers have 
-						 * "distinct locations" then they both will be in this set, 
-						 * but only the part number with the lowest record number 
-						 * will be included if the duplicate part numbers have the 
-						 * same plxSite and EM shelf.
-						 */ 
-					 
-						/*
-						 * As a result of duplicatate parts with the same plxSite and
-						 * EM shelf dropping all but the part with the lowest record
-						 * number.  We will loose the quantity found in the records
-						 * that were dropped.  For example we will not add the
-						 * QuantityOnHand values for records with the exact same part
-						 * number, plxSite, and shelf. There are 5 duplicate parts
-						 * with the same location. I informed Kristen of this
-						 * and she did not mind because the quantities have not been
-						 * updated since April anyway.
-						 */
-						
-						/*
-						 * To reiterate duplicate parts with different locations
-						 * will have a distinct record so we will not loose any
-						 * item,location,quantity,etc. data in these cases. 
-						 */
-						plxAllPartsSetWithDups ap						
-						--)tst --11159
-						/*
-						where 
-						itemnumber like '000003%'
-						or itemnumber like '000054%'
-						or itemnumber like '000091%'
-						or itemnumber like '000547%'
-						or itemnumber like '200382%'
-						order by nsitemnumber
-						--000003A -- 450  
-						--000054 (AV) --9145 
-						--000091 (E) --839  
-						--000547AV --13043  
-						--200382E  --14322
-						--	when suffix = 'N' then NSItemNumber + '-1'
-						--	when suffix = 'AV' then NSItemNumber + '-2'
-						--	when suffix = 'E' then NSItemNumber + '-3'
-						--	when suffix = 'A' then NSItemNumber + '-4'
-						*/
-					)set1 
-					group by NSItemNumber, BEItemNumber
-					--)tst  --10275
+				/********************************
+				 * plxItemLocationBase
+				 ******************************** 
+					RecordNumber numeric(18,0),
+					ItemNumber varchar(50),
+					NSItemNumber varchar(50),
+					BEItemNumber varchar(50),
+					BuildingCode varchar(50),
+					Location varchar(50),
+					QuantityOnHand numeric(18,5),	
+					Suffix varchar(2)
+				*********************************
+				*/
+					plxItemLocationBase il						
+					--)tst --11189
 					/*
-					having 
-					nsitemnumber like '000003%'
-					or nsitemnumber like '000054%'
-					or nsitemnumber like '000091%'
-					or nsitemnumber like '000547%'
-					or nsitemnumber like '200382%'
+					where 
+					itemnumber like '000003%'
+					or itemnumber like '000054%'
+					or itemnumber like '000091%'
+					or itemnumber like '000547%'
+					or itemnumber like '200382%'
 					order by nsitemnumber
-					*/
 					--000003A -- 450  
 					--000054 (AV) --9145 
 					--000091 (E) --839  
@@ -634,16 +414,19 @@ select * from dbo.plxSupplyItemRecNoSet
 					--	when suffix = 'AV' then NSItemNumber + '-2'
 					--	when suffix = 'E' then NSItemNumber + '-3'
 					--	when suffix = 'A' then NSItemNumber + '-4'
-					
-				)set2 
+					*/
+				)set1 
+				group by NSItemNumber, BEItemNumber
+				--)tst  --10275
 				/*
-				where 
+				having 
 				nsitemnumber like '000003%'
 				or nsitemnumber like '000054%'
 				or nsitemnumber like '000091%'
 				or nsitemnumber like '000547%'
 				or nsitemnumber like '200382%'
 				order by nsitemnumber
+				*/
 				--000003A -- 450  
 				--000054 (AV) --9145 
 				--000091 (E) --839  
@@ -653,78 +436,96 @@ select * from dbo.plxSupplyItemRecNoSet
 				--	when suffix = 'AV' then NSItemNumber + '-2'
 				--	when suffix = 'E' then NSItemNumber + '-3'
 				--	when suffix = 'A' then NSItemNumber + '-4'
-				*/
-				--where right(NSItemNumberPriority,1) = '4'
-			)set3 --
-			--)tst1 --10275 check for multiple copies of same nsitemnumber
-		)set4 --
-		/*
-		 * To be used for sets requiring all non-kenallville parts
-		 * and no duplicate part numbers.  For those parts with
-		 * multiple locations the one with the lowest record number 
-		 * has been chosen to represent the part for description and
-		 * other non location related information.  Some part numbers
-		 * are in both Kendallville and non-Kendallville sites.  The
-		 * part number record of duplicate parts is NOT from a Kendallville
-		 * site.
-		 */
-		left outer join 
-		(
+				
+			)set2 
 			/*
-			 * There are some parts with duplicate part numbers, but since
-			 * we need exactly one record to retrieve description, category,
-			 * etc. information for any dups we will choose the one with the 
-			 * lowest record number. There are also some numbers with spaces
-			 * so use trim functions.
-			 */
-			select min(RecordNumber)minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber  
-			from dbo.Parts
-			group by numbered
-		)p
-		on set4.ItemNumber=p.ItemNumber
-		--)tst --10275
-		/*
-		where 
-		set4.nsitemnumber like '000003%'
-		or set4.nsitemnumber like '000054%'
-		or set4.nsitemnumber like '000091%'
-		or set4.nsitemnumber like '000547%'
-		or set4.nsitemnumber like '200382%'
-		order by set4.nsitemnumber
-		--000003A -- 450  
-		--000054 (AV) --9145 
-		--000091 (E) --839  
-		--000547AV --13043  
-		--200382E  --14322
-		--	when suffix = 'N' then NSItemNumber + '-1'
-		--	when suffix = 'AV' then NSItemNumber + '-2'
-		--	when suffix = 'E' then NSItemNumber + '-3'
-		--	when suffix = 'A' then NSItemNumber + '-4'
-		*/
-	) -- #10275
-	
-	select COUNT(*)
-	from
+			where 
+			nsitemnumber like '000003%'
+			or nsitemnumber like '000054%'
+			or nsitemnumber like '000091%'
+			or nsitemnumber like '000547%'
+			or nsitemnumber like '200382%'
+			order by nsitemnumber
+			--000003A -- 450  
+			--000054 (AV) --9145 
+			--000091 (E) --839  
+			--000547AV --13043  
+			--200382E  --14322
+			--	when suffix = 'N' then NSItemNumber + '-1'
+			--	when suffix = 'AV' then NSItemNumber + '-2'
+			--	when suffix = 'E' then NSItemNumber + '-3'
+			--	when suffix = 'A' then NSItemNumber + '-4'
+			*/
+			--where right(NSItemNumberPriority,1) = '4'
+		)set3 --
+		--)tst1 --10275 check for multiple copies of same nsitemnumber
+	)set4 --
+	/*
+	 * To be used for sets requiring all non-kenallville parts
+	 * and no duplicate part numbers.  For those parts with
+	 * multiple locations the one with the lowest record number 
+	 * has been chosen to represent the part for description and
+	 * other non location related information.  Some part numbers
+	 * are in both Kendallville and non-Kendallville sites.  The
+	 * part number record of duplicate parts is NOT from a Kendallville
+	 * site.
+	 */
+	left outer join 
 	(
-		select 
-		--*
-		--COUNT(*)
-		nsitemnumber 
-		from dbo.plxSupplyItemRecNoSet
-		group by nsitemnumber
-	)tst --10274	
+		/*
+		 * There are some parts with duplicate part numbers, but since
+		 * we need exactly one record to retrieve description, category,
+		 * etc. information for any dups we will choose the one with the 
+		 * lowest record number. There are also some numbers with spaces
+		 * so use trim functions.
+		 */
+		select min(RecordNumber)minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber  
+		from dbo.Parts
+		group by numbered
+	)p
+	on set4.ItemNumber=p.ItemNumber
+	--)tst --10275
+	/*
+	where 
+	set4.nsitemnumber like '000003%'
+	or set4.nsitemnumber like '000054%'
+	or set4.nsitemnumber like '000091%'
+	or set4.nsitemnumber like '000547%'
+	or set4.nsitemnumber like '200382%'
+	order by set4.nsitemnumber
+	--000003A -- 450  
+	--000054 (AV) --9145 
+	--000091 (E) --839  
+	--000547AV --13043  
+	--200382E  --14322
+	--	when suffix = 'N' then NSItemNumber + '-1'
+	--	when suffix = 'AV' then NSItemNumber + '-2'
+	--	when suffix = 'E' then NSItemNumber + '-3'
+	--	when suffix = 'A' then NSItemNumber + '-4'
+	*/
+) -- #10275
+
+select COUNT(*)
+from
+(
+	select 
+	--*
+	--COUNT(*)
+	nsitemnumber 
+	from dbo.plxSupplyItemBase
+	group by nsitemnumber
+)tst --10276	
 
 select * 
-from plxTestSetItemLocation il 
+from plxItemLocationTS il 
 --163
-inner join dbo.plxTestSetLocation l
+inner join dbo.plxLocationTS l
 on il.Location=l.Location
 --163
-inner join plxTestSetSupplyItems si
+inner join plxSupplyItemsTS si
 on il.Item_No=si.item_no
 --133
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
-select count(*) cnt from (
 select 
 Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
 Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
@@ -733,9 +534,10 @@ Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplie
 Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
 Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
 Cube_Unit			
---drop table plxTestSetSupplyItems
---into plxTestSetSupplyItems
+--drop table plxSupplyItem
+--into plxSupplyItem
 from (
+	--select count(*) cnt from (
 	select 
 	--top 100
 	row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
@@ -915,110 +717,296 @@ from (
 	'' as Cube_Width,
 	'' as Cube_Height,
 	'' as Cube_Unit
+	
 	/************************************
+	 *  plxSupplyItemBase
+	 ************************************
 		minRecordNumber numeric(18,0),
 		NSItemNumber varchar(50),
 		BEItemNumber varchar(50)
-		
-	 ************************************
-	 * 
-	 * plxSupplyItemRecNoSet
-	 * This set has the task of picking which part number to insert
-	 * into the plex purchasing.supplyitem table.
-	 * For example with part numbers that are identical except for
-	 * the suffix it chooses one, retains its record number, and 
-	 * drops the others. For parts that are in just one location   
-	 * it truncates the suffix, if any, and retains the record 
-	 * number.  The record number can be used to join with the
-	 * parts table to retrieve description,unit price,vendor
-	 * and other information needed for the supply item upload. 
-	 * 
-	 * 850325AV = Avilla
-	 * 850325E = Edon
-	 * 850325A = PlT8
-	 * 850325 = Albion
-	 */
-	--select count(*)
-	--select si.*, epc.*	
-	from dbo.plxSupplyItemRecNoSet si
+	 *************************************/
+	--select count(*) from (
+	--select si.*	
+	from dbo.plxSupplyItemBase si
+	--)tst --10276
 	left join dbo.Parts p
-	on si.RecordNumber=p.RecordNumber--10275
+	on si.RecordNumber=p.RecordNumber
+	--)tst --10276
 	left outer join (
 		select * from btSupplyCode sc
 		where VendorName <> ''
 	) sc
-	on p.Vendor=sc.VendorName --10275
+	on p.Vendor=sc.VendorName 
+	--)tst --10276
 	left outer join btMfgMap mm
-	on p.Manufacturer=mm.plexMfg  --10275
+	on p.Manufacturer=mm.plexMfg 
+	--)tst  --10276
+)set1
+order by item_no
+
+/*
+ * Query to upload plex supply items.
+ */
+--select count(*) cnt from (
+select * from dbo.plxSupplyItem
+--)tst --
+where row# >=1
+and row# <=5
+
+
+
+
+
+
+/*
+ * 
+ * 
+ * 
+ * 
+ *             Create Test Sets 
+ * 
+ * 
+ * 
+ * 
+ */
+
+/* 
+ * plxLocationTS
+ * Test set for Plex location uploads.
+ * 
+ * Process 
+ * 1. Create plxLocationTS. Query location records for all supply items and locations you want to test.  
+ *    Join this  query to the plxLocation set to get a reduced set of all the location for 
+ *    the supply items and locations you want to test. 
+ * 
+ * 2. Create plxItemLocationTS. Use location test set to reduce the plxItemLocation table with inner join clause
+ *    on the location field.  
+ * 
+ * 3. Create plxSupplyItemTS. Use plxItemLocationTS set to reduce the plxSupplyItem set with inner join clause
+ * 	  on the ItemNumber field.
+ * 
+ * Result:
+ * The above process should ensure that every supply item in your test set should have all its location and 
+ * ItemLocation records also
+ */
+ 
+ 
+ /*
+  * Per step 1 of the above proces make sure all locations for whatever items you wish to perform tests
+  * on is included in the plxLocationTS table.
+  * 1. Add up to 10 location records for each each plex site.
+  * 2. Add all location records for 5 parts which have a category of Electronics, Pumps, and Covers categories.
+  */
+
+/*
+ *   Add up to 10 location records for each each plex site.
+ */
+--drop table plxLocationTS
+select * from dbo.plxLocationTS
+select count(*) from (
+select
+top 10
+Location,
+building_code,
+location_type,  
+note,
+location_group
+into plxLocationTS
+from
+dbo.plxLocation
+--)tst  --3319
+where SUBSTRING(location,1,2)='MD'
+order by location
+
+insert into dbo.plxLocationTS 
+select
+top 10
+Location,
+building_code,
+location_type,  
+note,
+location_group
+from
+dbo.plxLocation
+where SUBSTRING(location,1,3)='MPB'
+order by location
+select * from dbo.btSiteMap order by emSite
+
+select * from dbo.plxLocationTS  
+--65  All sites
+
+--15 Pumps,Electronics,Covers
+
+/*
+ * Add all locations for union of part set which includes 5 parts each 
+ * with an item category of Electronic, Pumps, and Covers.
+ */
+insert into dbo.plxLocationTS 
+select 
+l.Location,
+building_code,
+location_type,  
+note,
+location_group
+from dbo.plxLocation l
+inner join 
+(
+	select distinct location 
+	/*******************************
+	 * plxItemLocationBase
+	 * *****************************
+		RecordNumber numeric(18,0),
+		ItemNumber varchar(50),
+		NSItemNumber varchar(50),
+		BEItemNumber varchar(50),
+		BuildingCode varchar(50),
+		Location varchar(50),
+		QuantityOnHand numeric(18,5),	
+		Suffix varchar(2)
+	 ********************************/
+	--select base.recordnumber,location,vendor
+	from plxItemLocationBase base
 	inner join 
 	(
 	 	select top 5 recordnumber,numbered,vendor
 	 	from dbo.Parts p
 		where p.CategoryID = 'Electronics' and vendor <> ''
 		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
+		and shelf <> ''
+		and vendor <> ''
 
 		UNION
 	 	select top 5 recordnumber,numbered,vendor
 	 	from dbo.Parts p
 		where p.CategoryID = 'Pumps' and vendor <> ''
 		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
+		and shelf <> ''
+		and vendor <> ''
 		
 		UNION
 	 	select top 5 recordnumber,numbered,vendor
 	 	from dbo.Parts p
 		where p.CategoryID = 'Cover' and vendor <> ''
 		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
+		and shelf <> ''
+		and vendor <> ''
 	
 	)epc
-	on si.recordnumber=epc.recordnumber
-/*	
-	inner join 
-	(
-		select distinct item_no from plxTestSetItemLocation il  --163 No
-		 
-	)il
-	on si.BEitemnumber=il.Item_No	--163
-	*/
-)set1
-order by item_no
+	on base.recordnumber=epc.recordnumber
+)c
+on l.location=c.location
+
+
+/* 
+ *	Per step 2 of the Test set generation process above.
+ * 
+ *  Create plxItemLocationTS. Use location test set to reduce the plxItemLocation table with inner join clause
+ *  on the location field.  
+ * 
+ */
+SELECT
+Item_No,il.Location,Quantity,Building_Default,Transaction_Type
+--drop table plxItemLocationTS
+--into plxItemLocationTS
+from 
+dbo.plxItemLocation il
+inner join plxLocationTs ts -- reduce set by joining to the location test set table.
+on il.Location= ts.Location
+order by item_no,location
+--163 
+
+/*
+ * Per set# 3 of the above Test Set generation process create the plxSupplyItemTS table.
+ * 
+ * 3. Use plxItemLocationTS set to reduce the plxSupplyItem set with inner join clause
+ * 	  on the ItemNumber field.
+ */
+
+select si.*
+from dbo.plxSupplyItem si
+inner JOIN plxItemLocationTS il
+on si.item_no=il.item_no
+
+
+/*
+ * Validate that our test sets include all the records we need.
+ * 
+ * 1. Validate that each item location has exactly one location record.
+ * 2. Validate that each item location record has exactly on supply item record.
+ * 
+ */
+select * 
+from plxItemLocationTS il 
+--163
+inner join dbo.plxLocationTS l
+on il.Location=l.Location
+--163
+
+select il.*
+from dbo.plxItemLocationTS il
+inner join dbo.plxSupplyItemTS si
+on il.item_no=si.item_no
+
+/*
+ * 
+ * 
+ * 			Production Upload section
+ * 
+ * 
+ */
+
+
+/*
+ * Quere to upload a range of locations
+ */
+select select 
+Location,building_code,location_type,note,location_group
+from dbo.plxLocation
 where row# >=1
-and row# <=5
+and row# <= 100
+order by location
 
-select * from dbo.plxTestSetSupplyItems
+/*
+ * Query to upload a range of item locations
+ */
+select Item_No,il.Location,Quantity,Building_Default,Transaction_Type 
+from plxItemLocation  --
+where row# >=1
+and row# <= 100
+order by location,item_no
+
+/*
+ * Query to upload a range of supply items.
+ */
+
+select
+Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+from dbo.plxSupplyItem
+where row# >=1
+and row# <= 100
+order by item_no
 
 
---where manufacturer = ''  --8132
---where manufacturer is null  --0
---where manufacturer <> '' --2156
-)tst2  --10288
 
---manufacturer is null  --0
-select count(*) from (
-select top 100 nsitemnumber,
-case 
-when p.Vendor is null then 'Null'
-when p.Vendor = '' then 'Empty'
-when LTRIM(RTRIM(p.Vendor)) = '' then 'Whitespace'
-else p.Vendor
-end as ven,
---p.Vendor,
-case 
-when sc.VendorName is null then 'Null'
-when sc.VendorName = '' then 'Empty'
-when LTRIM(RTRIM(sc.VendorName)) = '' then 'Whitespace'
-else sc.VendorName
-end as venName
-from #set7
-left join dbo.Parts p
-	on #set7.minRecordNumber=p.RecordNumber	
---)tst --10288
-left outer join (
-	select * from btSupplyCode sc
-	where VendorName <> ''
-) sc
-on p.Vendor=sc.VendorName
-)tst --10288
 
+
+
+/*
+ * 
+ * 
+ *  		Express Maintenance 
+ * 
+ * 			 Database
+ * 
+ * 			Cleanup Section
+ * 
+ */
 
 
 /*
@@ -1036,19 +1024,6 @@ on sm.plxSite=bm.plxSite
 where 
 (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite = 'MO')
 
---sm.emSite is null or bm.plxSite is null --0
---(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
-
-/*
-	RecordNumber numeric(18,0),
-	ItemNumber varchar(50),
-	NSItemNumber varchar(50),
-	BEItemNumber varchar(50),
-	BuildingCode varchar(50),
-	Location varchar(50),
-	QuantityOnHand numeric(18,5),	
-	Suffix varchar(2)
- */
 
 /*
  * Create a set of locations which have multiple parts assigned.
@@ -1056,7 +1031,7 @@ where
 
 select count(*) cnt from (
 select Location, count(*) cnt 
-from plxAllPartsSetWithDups ap
+from plxItemLocation il
 group by Location
 --having COUNT(*) > 10  --86
 --having COUNT(*) > 5  --428
@@ -1071,7 +1046,6 @@ and location not like '%YET%'
  * Create a set of locations which Kristen can look through
  * which have more than 10 parts assigned.
  */
-
 
 select set1.*
 from
@@ -1089,7 +1063,7 @@ inner join
 (
 select Location 
 --count(*) cnt
-from plxAllPartsSetWithDups 
+from plxItemLocation 
 group by Location
 having COUNT(*) > 10  --86
 and location not like '%YET%'
@@ -1097,14 +1071,6 @@ and location not like '%YET%'
 on set1.location=set2.location
 order by Location
 
-select top 10 
-* 
-from plxAllPartsSetWithDups ap
-
-			select top 5 cast(CHAR(10) + ap.ItemNumber + ' Descr: ' + Description  as varchar(max)) 
-			from plxAllPartsSetWithDups ap
-			inner join dbo.Parts p
-			on ap.RecordNumber=p.RecordNumber
 
 /* 
  * Create a set of parts shelf length under 4 characters.
