@@ -56,7 +56,7 @@ select
 top 100 *
 --count(*) 
 from plxItemLocationBase
---11159
+--
 
 -- truncate table plxItemLocationBase
 insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,BuildingCode,Location,QuantityOnHand,Suffix)
@@ -93,6 +93,7 @@ insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumb
 		from 
 		(
 			--Reduce the set by selecting 1 record number to represent itemNumber,Location duplicates.
+			--Remember at this point the itemnumber contains a suffix.
 			--select COUNT(*) cntParts from (
 			select 
 			min(RecordNumber) MinRecordNumber,
@@ -123,10 +124,10 @@ insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumb
 				where 
 				--sm.emSite is null or bm.plxSite is null --0
 				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO')
-				)tst --11189
+				--)tst --11215
 				--)tst group by itemnumber --11176
-				--having count(*) > 12
-				--)tst --11176  --This is NOT item_no,recordNumber. This IS exact same item numbers only.
+				--having count(*) > 1  --14, At this stage the item number has a suffix so were not including parts in different sites here.
+				--)tst --11200  --
 				
 			)set1	
 			/*
@@ -135,18 +136,19 @@ insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumb
 			 * with the lowest record number will be included if the
 			 * duplicate part numbers have the same plxSite and EM shelf.
 			 * There were only 5 parts with duplicate plxSite and EM shelf.
+			 * Remember itemNumber has a suffix at this point.
 			 */
 			group by ItemNumber,Location,BuildingCode
 			--having count(*) > 1  --5
-			--)tst --11184
+			--)tst --11210
 		)set2 
 		inner join dbo.Parts p
 		on set2.MinRecordNumber=p.RecordNumber
-		--)tst --11184
+		--)tst --11210
 	)set3
 	--order by location,itemNumber
-	--)tst --11184
-)--11189
+	--)tst --11210
+)--11210
 
 
 select 
@@ -179,7 +181,8 @@ BuildingCode as building_code,
 'Maintenance' as location_type,  
 '' as note,
 'Maintenance Crib' as location_group
-into plxLocation
+--drop table plxLocation
+--into plxLocation
 from
 (
 	/*******************************
@@ -193,7 +196,7 @@ from
 		Location varchar(50),
 		QuantityOnHand numeric(18,5),	
 		Suffix varchar(2)
-	/***********************************
+	 ***********************************
 	 * Since there are many parts that share locations the set
 	 *  count will drop significantly at this point. 
 	 */
@@ -201,9 +204,9 @@ from
 	select DISTINCT Location,BuildingCode 
 	--select DISTINCT Location --Should be the same set as distinct location, buildingcode 
 	from plxItemLocationBase base
-	--)tst --3320 
+	--)tst --3325 
 )set1
---)tst --3319
+--)tst --3325
 order by location 
 
 /*
@@ -250,7 +253,7 @@ QuantityOnHand as Quantity,
 --drop table plxItemLocation
 --into plxItemLocation
 from plxItemLocationBase
---)tst --11184
+--)tst --11210
 
 
 /*
@@ -312,14 +315,15 @@ from plxItemLocationBase
  * When creating this set we have the task of picking which 
  * EM part records to insert into the plex purchasing.supplyitem table.
  * The EM part records have a suffix that identifies which site it
- * is located. This was required because there is no separate location
- * table in EM and if a part was stored in multiple location a separate
+ * is located. This was required because there is no separate item location
+ * table in EM and if a part was stored in multiple locations a separate
  * part record was created differing only in its suffix.  This suffix 
  * is not needed in Plex and will be dropped because Plex has a
  * one-to-many relationship between supply items and item location 
- * tables. For parts with multiple EM part records we choose only 
- * one to upload into plex. This chosen part will be used to retrieve 
- * description,unit price,vendor and other non-location information. 
+ * tables. For parts with multiple EM part records,ie. a part with multiple 
+ * locations, we choose only one to upload into plex. This chosen part will 
+ * be used to retrieve description,unit price,vendor and other non-location 
+ * information. 
  * 
  * 850325AV = Avilla
  * 850325E = Edon
@@ -382,21 +386,21 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 						when suffix = 'A' then NSItemNumber + '-4'
 					end as NSItemNumberPriority
 					from
-				/********************************
-				 * plxItemLocationBase
-				 ******************************** 
-					RecordNumber numeric(18,0),
-					ItemNumber varchar(50),
-					NSItemNumber varchar(50),
-					BEItemNumber varchar(50),
-					BuildingCode varchar(50),
-					Location varchar(50),
-					QuantityOnHand numeric(18,5),	
-					Suffix varchar(2)
-				*********************************
-				*/
-					plxItemLocationBase il						
-					--)tst --11189
+					/********************************
+					 * plxItemLocationBase
+					 ******************************** 
+						RecordNumber numeric(18,0),
+						ItemNumber varchar(50),
+						NSItemNumber varchar(50),
+						BEItemNumber varchar(50),
+						BuildingCode varchar(50),
+						Location varchar(50),
+						QuantityOnHand numeric(18,5),	
+						Suffix varchar(2)
+					*********************************
+					*/
+					--select count(*) cnt from 
+					plxItemLocationBase il  --11210						
 					/*
 					where 
 					itemnumber like '000003%'
@@ -417,7 +421,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 					*/
 				)set1 
 				group by NSItemNumber, BEItemNumber
-				--)tst  --10275
+				--)tst  --10279
 				/*
 				having 
 				nsitemnumber like '000003%'
@@ -458,33 +462,23 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 			*/
 			--where right(NSItemNumberPriority,1) = '4'
 		)set3 --
-		--)tst1 --10275 check for multiple copies of same nsitemnumber
+		--)tst1 --10279 check for multiple copies of same nsitemnumber
 	)set4 --
-	/*
-	 * To be used for sets requiring all non-kenallville parts
-	 * and no duplicate part numbers.  For those parts with
-	 * multiple locations the one with the lowest record number 
-	 * has been chosen to represent the part for description and
-	 * other non location related information.  Some part numbers
-	 * are in both Kendallville and non-Kendallville sites.  The
-	 * part number record of duplicate parts is NOT from a Kendallville
-	 * site.
-	 */
 	left outer join 
 	(
 		/*
 		 * There are some parts with duplicate part numbers, but since
 		 * we need exactly one record to retrieve description, category,
-		 * etc. information for any dups we will choose the one with the 
-		 * lowest record number. There are also some numbers with spaces
-		 * so use trim functions.
+		 * etc. non-locatin information for any dups we will choose the 
+		 * one with the lowest record number. There are also some numbers 
+		 * with spaces so use trim functions.
 		 */
 		select min(RecordNumber)minRecordNumber, ltrim(rtrim(Numbered)) ItemNumber  
 		from dbo.Parts
-		group by numbered
+		group by ltrim(rtrim(Numbered))  
 	)p
 	on set4.ItemNumber=p.ItemNumber
-	--)tst --10275
+	--)tst --10279
 	/*
 	where 
 	set4.nsitemnumber like '000003%'
@@ -493,6 +487,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 	or set4.nsitemnumber like '000547%'
 	or set4.nsitemnumber like '200382%'
 	order by set4.nsitemnumber
+	*/
 	--000003A -- 450  
 	--000054 (AV) --9145 
 	--000091 (E) --839  
@@ -502,8 +497,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 	--	when suffix = 'AV' then NSItemNumber + '-2'
 	--	when suffix = 'E' then NSItemNumber + '-3'
 	--	when suffix = 'A' then NSItemNumber + '-4'
-	*/
-) -- #10275
+) -- #10279
 
 select COUNT(*)
 from
@@ -514,244 +508,217 @@ from
 	nsitemnumber 
 	from dbo.plxSupplyItemBase
 	group by nsitemnumber
-)tst --10276	
+)tst --10279	
 
-select * 
-from plxItemLocationTS il 
---163
-inner join dbo.plxLocationTS l
-on il.Location=l.Location
---163
-inner join plxSupplyItemsTS si
-on il.Item_No=si.item_no
---133
+
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
+--select count(*) cnt from (
 select 
-Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
-Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
-Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
-Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
-Cube_Unit			
+row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
+si.BEItemNumber as "Item_No",
+--'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
+SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
+CASE
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN p.Description --000
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
+	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	then '#' + p.VendorNumber + ', ' + p.Description -- 100
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg#' + p.ManufacturerNumber --101
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer  --110
+	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
+end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
+-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
+-- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
+-- all to upload it into varchar field.
+--REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
+-- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
+NotesText as Note, 
+'Maintenance' as item_type,
+CASE
+	when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
+	when p.CategoryID = '-PLATE' then 'PLATE'  -- Kristen did not change this in EM 06-04 
+	else LTRIM(RTRIM(CategoryID))
+end as Item_Group,
+--select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
+--select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
+'General' as Item_Category,
+'Low' as Item_Priority,
+CASE
+	when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
+	else p.CurrentCost
+end as Customer_Unit_Price,
+'' as Average_Cost,
+-- Standardize on units found in common_v_unit
+-- Add units as needed and assign default
+CASE 
+	when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
+	when LTRIM(RTRIM(Units)) = 'Case' then 'case'
+	when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
+	when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
+	when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
+	when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
+	when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
+	when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
+	when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
+	when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
+	when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
+	when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
+	when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
+	when LTRIM(RTRIM(Units)) = 'Set' then 'set'
+	else 'Ea'
+end as Inventory_Unit,
+-- check 0000007 and other items
+MinimumOnHand as Min_Quantity, -- if there are multiple parts,21 at last count, this will contain the value of the one chosen.
+/*
+select numbered,description,minimumonhand,maxonhand from dbo.Parts
+where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
+-- only 2 items where min > max
+select count(*) notZero
+from
+(
+select numbered,description,minimumonhand,maxonhand from dbo.Parts
+where (minimumOnHand is not null) and (MaxOnHand is not null)
+and (minimumOnHand <> 0) and (MaxOnHand <> 0) 
+)tst --7875
+*/
+CASE
+	when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
+	else MaxOnHand
+end as Max_Quantity,
+-- purchasing_v_tax_code / did not put this in for MRO supply items
+-- but before you update the item in plex it has to be filled with something
+-- and accountant said I could use tax exempt.
+-- Found that EM Parts are already marked as taxable 'Y' or 'N'
+-- where taxable = 'N' --2044
+-- where taxable = 'Y'--10619
+-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
+-- accountant also said this so I'm going to mark them all as Tax Exempt
+'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
+-- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
+-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
+-- and leave it blank.
+'' as Account_No,
+/* Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name 
+ * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
+ * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
+ * */
+--select distinct plexVendor from dbo.btMfgMap order by plexvendor --173
+/*
+case 
+	when mm.plexVendor is null then 'null' --many
+	when mm.plexVendor = '' then 'Empty'  --0
+	when LTRIM(RTRIM(mm.plexVendor)) = '' then 'WhiteSpace' --0
+	else mm.plexVendor
+end as ManufacturerTest,
+*/
+case 
+	when mm.plexMfg is null then ''
+	else mm.plexMfg
+end as Manufacturer,
+--mm.plexVendor as Manufacturer,  
+p.ManufacturerNumber as Manf_Item_No,
+/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
+select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
+*/
+'' as Drawing_No,
+'' as Item_Quantity,
+'' as Location,
+sc.Supplier_Code,
+/* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
+VendorNumber Supplier_Part_No, 
+'' as Supplier_Std_Purch_Qty,
+'USD' as Currency,
+CASE
+	when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
+	else p.CurrentCost
+end as Supplier_Std_Unit_Price,
+CASE 
+	when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
+	when LTRIM(RTRIM(Units)) = 'Case' then 'case'
+	when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
+	when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
+	when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
+	when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
+	when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
+	when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
+	when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
+	when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
+	when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
+	when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
+	when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
+	when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
+	when LTRIM(RTRIM(Units)) = 'Set' then 'set'
+	else 'Ea'
+end as Supplier_Purchase_Unit,
+1 as Supplier_Unit_Conversion,
+'' as Supplier_Lead_Time,
+'Y' as Update_When_Received,
+'' as Manufacturer_Item_Revision,
+'' as Country_Of_Origin,
+'' as Commodity_Code_Key,
+'' as Harmonized_Tariff_Code,
+'' as Cube_Length,
+'' as Cube_Width,
+'' as Cube_Height,
+'' as Cube_Unit
+
+/************************************
+ *  plxSupplyItemBase
+ ************************************
+	minRecordNumber numeric(18,0),
+	NSItemNumber varchar(50),
+	BEItemNumber varchar(50)
+ *************************************/
+--select count(*) from (
+--select si.*	
 --drop table plxSupplyItem
 --into plxSupplyItem
-from (
-	--select count(*) cnt from (
-	select 
-	--top 100
-	row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
-	si.BEItemNumber as "Item_No",
-	--'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
-	SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
-	CASE
-		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		THEN p.Description --000
-		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
-		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
-		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
-		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		then '#' + p.VendorNumber + ', ' + p.Description -- 100
-		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg#' + p.ManufacturerNumber --101
-		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer  --110
-		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
-	end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
-	-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
-	-- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
-	-- all to upload it into varchar field.
-	--REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
-	-- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
-	NotesText as Note, 
-	'Maintenance' as item_type,
-	CASE
-		when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
-		when p.CategoryID = '-PLATE' then 'PLATE'  -- Kristen did not change this in EM 06-04 
-		else LTRIM(RTRIM(CategoryID))
-	end as Item_Group,
-	--select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
-	--select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
-	'General' as Item_Category,
-	'Low' as Item_Priority,
-	CASE
-		when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
-		else p.CurrentCost
-	end as Customer_Unit_Price,
-	'' as Average_Cost,
-	-- Standardize on units found in common_v_unit
--- Add units as needed and assign default
-	CASE 
-		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
-		when LTRIM(RTRIM(Units)) = 'Case' then 'case'
-		when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
-		when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
-		when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
-		when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
-		when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
-		when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
-		when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
-		when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
-		when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
-		when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
-		when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
-		when LTRIM(RTRIM(Units)) = 'Set' then 'set'
-		else 'Ea'
-	end as Inventory_Unit,
-	-- check 0000007 and other items
- 	MinimumOnHand as Min_Quantity, -- if there are multiple parts,21 at last count, this will contain the value of the one chosen.
- 	/*
- 	select numbered,description,minimumonhand,maxonhand from dbo.Parts
- 	where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
- 	-- only 2 items where min > max
- 	select count(*) notZero
- 	from
- 	(
- 	select numbered,description,minimumonhand,maxonhand from dbo.Parts
- 	where (minimumOnHand is not null) and (MaxOnHand is not null)
-	and (minimumOnHand <> 0) and (MaxOnHand <> 0) 
-	)tst --7875
- 	*/
-	CASE
-		when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
-		else MaxOnHand
-	end as Max_Quantity,
-	-- purchasing_v_tax_code / did not put this in for MRO supply items
-	-- but before you update the item in plex it has to be filled with something
-	-- and accountant said I could use tax exempt.
-	-- Found that EM Parts are already marked as taxable 'Y' or 'N'
-	-- where taxable = 'N' --2044
-	-- where taxable = 'Y'--10619
-	-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
-	-- accountant also said this so I'm going to mark them all as Tax Exempt
-	'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
-	-- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
-	-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
-	-- and leave it blank.
-	'' as Account_No,
-	/* Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name 
-	 * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
-	 * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
-	 * */
-	--select distinct plexVendor from dbo.btMfgMap order by plexvendor --173
-	/*
-	case 
-		when mm.plexVendor is null then 'null' --many
-		when mm.plexVendor = '' then 'Empty'  --0
-		when LTRIM(RTRIM(mm.plexVendor)) = '' then 'WhiteSpace' --0
-		else mm.plexVendor
-	end as ManufacturerTest,
-	*/
-	case 
-		when mm.plexMfg is null then ''
-		else mm.plexMfg
-	end as Manufacturer,
-	--mm.plexVendor as Manufacturer,  
-	p.ManufacturerNumber as Manf_Item_No,
-	/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
-	select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
-	*/
-	'' as Drawing_No,
-	'' as Item_Quantity,
-	'' as Location,
-	sc.Supplier_Code,
-	/* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
-	VendorNumber Supplier_Part_No, 
-	'' as Supplier_Std_Purch_Qty,
-	'USD' as Currency,
-	CASE
-		when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
-		else p.CurrentCost
-	end as Supplier_Std_Unit_Price,
-	CASE 
-		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
-		when LTRIM(RTRIM(Units)) = 'Case' then 'case'
-		when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
-		when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
-		when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
-		when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
-		when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
-		when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
-		when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
-		when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
-		when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
-		when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
-		when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
-		when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
-		when LTRIM(RTRIM(Units)) = 'Set' then 'set'
-		else 'Ea'
-	end as Supplier_Purchase_Unit,
-	1 as Supplier_Unit_Conversion,
-	'' as Supplier_Lead_Time,
-	'Y' as Update_When_Received,
-	'' as Manufacturer_Item_Revision,
-	'' as Country_Of_Origin,
-	'' as Commodity_Code_Key,
-	'' as Harmonized_Tariff_Code,
-	'' as Cube_Length,
-	'' as Cube_Width,
-	'' as Cube_Height,
-	'' as Cube_Unit
-	
-	/************************************
-	 *  plxSupplyItemBase
-	 ************************************
-		minRecordNumber numeric(18,0),
-		NSItemNumber varchar(50),
-		BEItemNumber varchar(50)
-	 *************************************/
-	--select count(*) from (
-	--select si.*	
-	from dbo.plxSupplyItemBase si
-	--)tst --10276
-	left join dbo.Parts p
-	on si.RecordNumber=p.RecordNumber
-	--)tst --10276
-	left outer join (
-		select * from btSupplyCode sc
-		where VendorName <> ''
-	) sc
-	on p.Vendor=sc.VendorName 
-	--)tst --10276
-	left outer join btMfgMap mm
-	on p.Manufacturer=mm.plexMfg 
-	--)tst  --10276
-)set1
-order by item_no
+from dbo.plxSupplyItemBase si
+--)tst --10279
+inner join dbo.Parts p
+on si.RecordNumber=p.RecordNumber
+--)tst --10279
+left outer join (
+	select * from btSupplyCode sc
+	where VendorName <> ''
+) sc
+on p.Vendor=sc.VendorName 
+--select count(*) cnt from dbo.Parts where vendor = '' --485
+left join btMfgMap mm
+on p.Manufacturer=mm.plexMfg 
+--select count(*) cnt from dbo.Parts where manufacturer = '' --6990
+--)tst  --10279
 
-/*
- * Query to upload plex supply items.
- */
---select count(*) cnt from (
-select * from dbo.plxSupplyItem
---)tst --
-where row# >=1
-and row# <=5
 
 
 
@@ -914,6 +881,7 @@ inner join plxLocationTs ts -- reduce set by joining to the location test set ta
 on il.Location= ts.Location
 order by item_no,location
 --163 
+select * from plxitemlocationts
 
 /*
  * Per set# 3 of the above Test Set generation process create the plxSupplyItemTS table.
@@ -922,7 +890,16 @@ order by item_no,location
  * 	  on the ItemNumber field.
  */
 
-select si.*
+select 
+si.Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+--drop table plxSupplyItemTS
+into plxSupplyItemTS
 from dbo.plxSupplyItem si
 inner JOIN plxItemLocationTS il
 on si.item_no=il.item_no
@@ -946,6 +923,17 @@ select il.*
 from dbo.plxItemLocationTS il
 inner join dbo.plxSupplyItemTS si
 on il.item_no=si.item_no
+
+select * 
+from plxItemLocationTS il 
+--163
+inner join dbo.plxLocationTS l
+on il.Location=l.Location
+--163
+inner join plxSupplyItemsTS si
+on il.Item_No=si.item_no
+
+
 
 /*
  * 
