@@ -773,6 +773,7 @@ select * from dbo.plxLocationTS
 select count(*) from (
 select
 top 10
+row#,
 Location,
 building_code,
 location_type,  
@@ -788,6 +789,7 @@ order by location
 insert into dbo.plxLocationTS 
 select
 top 10
+row#,
 Location,
 building_code,
 location_type,  
@@ -799,7 +801,9 @@ where SUBSTRING(location,1,3)='MPB'
 order by location
 select * from dbo.btSiteMap order by emSite
 
-select * from dbo.plxLocationTS  
+select 
+COUNT(*) 
+from dbo.plxLocationTS  
 --65  All sites
 
 --15 Pumps,Electronics,Covers
@@ -809,7 +813,8 @@ select * from dbo.plxLocationTS
  * with an item category of Electronic, Pumps, and Covers.
  */
 insert into dbo.plxLocationTS 
-select 
+select
+row#,
 l.Location,
 building_code,
 location_type,  
@@ -872,16 +877,16 @@ on l.location=c.location
  * 
  */
 SELECT
-Item_No,il.Location,Quantity,Building_Default,Transaction_Type
+row#,Item_No,il.Location,Quantity,Building_Default,Transaction_Type
 --drop table plxItemLocationTS
 --into plxItemLocationTS
 from 
 dbo.plxItemLocation il
 inner join plxLocationTs ts -- reduce set by joining to the location test set table.
 on il.Location= ts.Location
-order by item_no,location
+order by location,item_no
 --163 
-select * from plxitemlocationts
+
 
 /*
  * Per set# 3 of the above Test Set generation process create the plxSupplyItemTS table.
@@ -891,6 +896,7 @@ select * from plxitemlocationts
  */
 
 select 
+row#,
 si.Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
 Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
 Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,Supplier_Code,
@@ -899,7 +905,7 @@ Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_It
 Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
 Cube_Unit			
 --drop table plxSupplyItemTS
-into plxSupplyItemTS
+--into plxSupplyItemTS
 from dbo.plxSupplyItem si
 inner JOIN plxItemLocationTS il
 on si.item_no=il.item_no
@@ -923,6 +929,7 @@ select il.*
 from dbo.plxItemLocationTS il
 inner join dbo.plxSupplyItemTS si
 on il.item_no=si.item_no
+--163
 
 select * 
 from plxItemLocationTS il 
@@ -930,9 +937,53 @@ from plxItemLocationTS il
 inner join dbo.plxLocationTS l
 on il.Location=l.Location
 --163
-inner join plxSupplyItemsTS si
+inner join plxSupplyItemTS si
 on il.Item_No=si.item_no
+--163
 
+
+/*
+ * 
+ * 
+ * 			Test Upload section
+ * 
+ * 
+ */
+
+/*
+ * Quere to upload a range of locations
+ */
+select  
+Location,building_code,location_type,note,location_group
+from dbo.plxLocationTS
+where row# >=1
+and row# <= 100
+order by location
+/*
+ * Query to upload a range of item locations
+ */
+select Item_No,Location,Quantity,Building_Default,Transaction_Type 
+from plxItemLocationTS  --
+where row# >=1
+and row# <= 100
+order by location,item_no
+
+/*
+ * Query to upload a range of supply items.
+ */
+
+select
+Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+from dbo.plxSupplyItemTS
+where row# >=1
+and row# <= 100
+order by item_no
 
 
 /*
