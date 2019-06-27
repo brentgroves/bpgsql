@@ -511,12 +511,27 @@ from
 )tst --10279	
 
 
+/*
+ * 
+ *   Validate SupplyItemBase
+ * 
+ * 
+ */
+
+
+/*
+ * BEItemNumber
+ */
+select BEItemNumber from plxSupplyItemBase 
+WHERE LTRIM(RTRIM(BEItemNumber) like '%' + ' ' + '%'  --are there any spaces
+
+
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 --select count(*) cnt from (
 select 
 row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
 si.BEItemNumber as "Item_No",
---'BE' + RTRIM(LTRIM(NSItemNumber)) as "Item_No",
+
 SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
 CASE
 	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
@@ -552,12 +567,16 @@ CASE
 	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
 	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
 end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
--- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n so replace 
--- should not be necessary.  DBeaver exports NotesText unicode field as ascii so you don't need to convert it at
--- all to upload it into varchar field.
---REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
+-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n.
+-- DBeaver exports NotesText unicode field as plain ascii text, but anywhere there is a \n, ie. 0D0A combo
+-- we need to replace it.  If we don't the Plex upload process will interpret this as a completely new record to be uploaded.
+-- So replace the \n (0x0D 0x0A) combo with 0x0D.  I tested with replacing the combo with 0x0A and the upload failed.
+-- When Plex exports the notes column and it contains a \n it puts quotes around the field and inserts the 0x0D 0x0A ascii characters.
+-- This seems like a hack but I don't see any way around it.
+REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as Note, --
 -- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
-NotesText as Note, 
+--Test with '100988','708991','200800','100012','100011'
+--NotesText as Note, 
 'Maintenance' as item_type,
 CASE
 	when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
@@ -566,7 +585,26 @@ CASE
 end as Item_Group,
 --select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
 --select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
-'General' as Item_Category,
+/*  -- EM/Plex item groups
+Coolant Pump
+Cover
+Electronics
+Pump Kits
+Pump Parts
+Pumps
+*/
+/* --Categories to report on 
+Electronics, Covers, Pumps
+*/
+CASE
+	when LTRIM(RTRIM(CategoryID)) = 'Coolant Pump' or 
+		 LTRIM(RTRIM(CategoryID)) = 'Pump Kits' or 
+		 LTRIM(RTRIM(CategoryID)) = 'Pump Parts' or
+		 LTRIM(RTRIM(CategoryID)) = 'Pumps' THEN 'Pumps'
+	when LTRIM(RTRIM(CategoryID)) = 'Electronics' THEN 'Electronics' 
+	when LTRIM(RTRIM(CategoryID)) = 'Cover' THEN 'Covers' 
+	else 'General'
+end as Item_Category
 'Low' as Item_Priority,
 CASE
 	when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
@@ -596,7 +634,7 @@ CASE
 	else 'Ea'
 end as Inventory_Unit,
 -- check 0000007 and other items
-MinimumOnHand as Min_Quantity, -- if there are multiple parts,21 at last count, this will contain the value of the one chosen.
+MinimumOnHand as Min_Quantity, 
 /*
 select numbered,description,minimumonhand,maxonhand from dbo.Parts
 where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
@@ -720,8 +758,395 @@ on p.Manufacturer=mm.plexMfg
 --)tst  --10279
 
 
+/*
+ * 
+ * 
+ * 			plxSupplyItem
+ * 			Validation
+ * 
+ * 
+ */
+
+/*
+Test: 15 
+Verify that the description field is being formatted correctly 
+*/
+
+select 
+item_no,Description 
+from plxSupplyItem  
+where item_no in
+(
+'BE800300','BE999997','BE139987','BE000668','BE600005','BE999000','BE200703','BE650002AV' 
+)
+
+--VendorNumber,Manufacturer,ManufactuerNumber 
+--000 800300 
+--001 999997  |            |            |02120             | 
+--010 139987  |            |MORI SEIKI  |                  | 
+--011 000668  |            |SIEMENS     |1FT6044-4AF71-4AA6| 
+--100 600005  |6408M-22MM  |            |                  | 
+--101 999000  |945         |            |945               | 
+--110 200703  |800EPMJ3    |Allen Bradley|                  | 
+--111 650002AV|54041462    |Kendall Electric|SUPER33+          | 
+
+/*
+Test: 20 
+Verify that items with a newline in the notes field display correctly on the Supply Item detail screen. 
+*/
+
+select  
+--count(*) 
+--top 10 
+item_no,Note
+from plxSupplyItem  
+where item_no
+in
+(
+'BE100988','BE708991','BE200800','BE100012','BE100011'
+)
+--where notestext like '%'+CHAR(10)+'%' --2503 
+--where notestext like '%'+char(13)+'%' --2503 
+--where notestext like '%'+char(13)+CHAR(10)+'%' -- 2503 --THESE ARE THE ASCII VALUES THAT GET STORED IN THE DATABASE (0x0D 0x0A) 
+--where notestext like '%'+char(13)+'%'  
+--and notestext not like '%'+CHAR(10)+'%' --0 
+--where notestext like '%'+char(10)+'%'  
+--and notestext not like '%'+CHAR(13)+'%' --0 
 
 
+/*
+Test: 30 
+Verify that Item_Group field is identical to EM categoryId.  Check for nulls 
+*/
+
+select  
+--count(*) 
+top 100 
+item_no,
+item_group
+from plxSupplyItem  
+where 
+--item_group is null or item_group = ''
+-- and item_group like '%cover%   
+item_no
+in
+(
+'BE100988','BE708991','BE200800','BE100012','BE100011'
+)
+/*
+item_no |item_group     
+--------|---------------
+BE100011|B Axis         
+BE100012|B Axis         
+BE100988|OEM Okuma parts
+BE200800|Switch, General
+BE708991|Pumps          
+*/
+
+/*
+Test: 33 
+Verify that the Item_Category contains only ‘Electronics’,’Pumps’,’Covers’ or ‘General’. 
+Verify the count of parts with the categories of ‘Electronics’,’Pumps’,’Covers’ or ‘General’
+Verify that all parts with a categoryid of ‘pump kits’,’Pump Parts’, and ‘Pumps’ have all been mapped to a category of Pumps.  
+Verify that all parts with a categoryid of ‘Cover’ has been mapped to item_category of ‘Covers’. 
+Verify that all parts with a categoryid of ‘Electronics’ has been mapped to item_category of ‘Electronics’. 
+*/
+select 
+top 1 numbered,categoryid
+from dbo.Parts
+where categoryid = 'Electronics'
+
+
+select  
+--count(*) 
+top 100 
+item_no,
+item_category
+from plxSupplyItem  
+where item_no NOT in
+(
+'Electronics','Pumps','Covers' or 'General'
+)
+where 
+item_category =  'Electronics'
+item_category =  'Pumps'
+item_category =  'Covers'
+item_category =  'General'
+/*
+numbered|categoryid
+--------|----------
+700869  |Pump Kits 
+000154  |Pump Parts
+708991  |Pumps     
+*/
+where item_no
+(
+'BE700869','BE000154','BE708991'
+)
+/*
+numbered|categoryid
+--------|----------
+100033  |Cover      
+*/
+where item_no = 'BE100033'
+/*
+numbered|categoryid 
+--------|-----------
+200713  |Electronics
+ */
+where item_no = 'BE200713'
+
+
+/*
+Test: 40 
+Verify that Customer_Unit_Price contains the same amounts as in EM. 
+*/
+
+select  
+--count(*) 
+--top 10 
+item_no,
+Customer_Unit_Price
+from plxSupplyItem  
+where item_no
+in
+(
+'BE100988','BE708991','BE200800','BE100012','BE100011'
+)
+
+/*
+Test: 50 
+Verify that there are no blank units.
+Verify blank parts.units map to Ea
+Verify that Each maps to Ea
+Verify that Electrical maps to Ea
+Verify EA count is correct
+Verify that Box maps to Box and count is correct
+Verify that Case maps to case and count is correct
+Verify that Dozen maps to dozen and count is correct
+Verify that Feet maps to Feet and count is correct
+Verify that Gallons maps to Gallons and count is correct
+Verify that INCHES maps to inches and count is correct
+Verify that Meters maps to meters and count is correct
+Verify that Per 100 maps to hundred and count is correct
+Verify that Per Package maps to Package 
+Verify that Package maps to Package 
+Verify count of Package correct
+Verify that Pounds maps to lbs and count is correct
+Verify that Quart maps to quart and count is correct
+Verify that Roll maps to Roll and count is correct
+Verify that Set maps to set and count is correct
+*/
+select 
+--COUNT(*)
+top 1 numbered,units 
+from dbo.Parts
+where LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' --Ea
+--where LTRIM(RTRIM(Units)) = 'Each' --Ea
+--where LTRIM(RTRIM(Units)) = 'Electrical' --Ea
+--where LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = ''
+--or LTRIM(RTRIM(Units)) = 'Each' 
+--or LTRIM(RTRIM(Units)) = 'Electrical' --Ea
+--where LTRIM(RTRIM(Units)) = 'Box'
+--where LTRIM(RTRIM(Units)) = 'Case'
+--where LTRIM(RTRIM(Units)) = 'Dozen'
+--where LTRIM(RTRIM(Units)) = 'Feet'
+--where LTRIM(RTRIM(Units)) = 'Gallons'
+--where LTRIM(RTRIM(Units)) = 'INCHES'
+--where LTRIM(RTRIM(Units)) = 'Meters'
+--where LTRIM(RTRIM(Units)) = 'Per 100'
+--where LTRIM(RTRIM(Units)) = 'Per Package'
+--where LTRIM(RTRIM(Units)) = 'Package'
+--where LTRIM(RTRIM(Units)) = 'Per Package' 
+--or LTRIM(RTRIM(Units)) = 'Package'
+--where LTRIM(RTRIM(Units)) = 'Pounds'
+--where LTRIM(RTRIM(Units)) = 'Quart'
+--where LTRIM(RTRIM(Units)) = 'Roll'
+where LTRIM(RTRIM(Units)) = 'Set'
+
+/*  
+numbered|categoryid |
+--------|-----------|
+110000  |     |
+999000  |Each |
+200020  |Electrical|
+All		|     | 11907
+450820  |Box  | 7
+200603  |Case | 3
+700984  |Dozen| 5
+200570  |Feet | 285
+999002  |Gallons|9
+705529A |INCHES|3
+200539  |Meters|5
+200000  |Per 100|10
+500008  |Per Package|3
+500025  |Package|10
+All		|     | 13
+990003  |Pounds|2
+800300  |Quart|1
+650006AV|Roll |12
+000030  |Set  |141
+*/
+
+select  
+--count(*) 
+--top 10 
+item_no,
+inventory_unit
+from plxSupplyItem 
+--where inventory_unit = '' or inventory_unit is null
+where item_no in 
+(
+--Plex/EM unit
+'BE000030'--set / Set
+'BE110000',--Ea / blank
+'BE200000',--hundred / Per 100
+'BE200020',--Ea / Electrical
+'BE200539', --meters / Meters
+'BE200570',--Feet / Feet
+'BE200603',--case / Case
+'BE450820',--Box / Box
+'BE500008',--Package / Per Package
+'BE500025',--Package / Package
+'BE650006', --Roll / Roll
+'BE700984',--dozen / Dozen
+'BE705529', --inches /Inches
+'BE800300',--quart / Quart
+'BE990003',--lbs / Pounds
+'BE999000',--Ea / Each
+'BE999002',--Gallons / Gallons
+)
+where inventory_unit = 'Box' --count
+where inventory_unit = 'case'
+where inventory_unit = 'dozen'
+where inventory_unit = 'Ea'
+where inventory_unit = 'Feet'
+where inventory_unit = 'Gallons'
+where inventory_unit = 'inches'
+where inventory_unit = 'meters'
+where inventory_unit = 'hundred'
+where inventory_unit = 'Package'
+where inventory_unit = 'lbs'
+where inventory_unit = 'quart'
+where inventory_unit = 'Roll'
+where inventory_unit = 'set'
+order by item_no
+
+/*
+and item_no in 
+(
+'110000',--Ea
+'999000',--Ea
+'200020',--Ea
+'450820',--Box
+'200603',--case
+'700984',--dozen
+'200570',--Feet
+'999002',--Gallons
+'705529A', --inches
+'200539', --meters
+'200000',--hundred
+'500008',--Package
+'500025',--Package
+'990003',--lbs
+'800300',--quart
+'650006AV', --Roll
+'000030'--set
+)
+*/
+
+/*
+Test: 55 
+Verify that Min_Quantity contains EM.MinimumOnHand. 
+*/
+
+select numbered,MinimumOnHand
+from dbo.Parts
+where ltrim(rtrim(numbered))
+in
+(
+'100988','708991','200800','100012','100011'
+)
+order by numbered
+select  
+--count(*) 
+p.numbered,
+b.BEItemNumber
+from plxSupplyItemBase b
+left outer join dbo.Parts p
+on b.recordnumber=p.RecordNumber
+where BEItemNumber
+in
+(
+'BE100988','BE708991','BE200800','BE100012','BE100011'
+)
+
+select  
+--count(*) 
+--top 10 
+item_no,
+Min_Quantity
+from plxSupplyItem  
+where item_no
+in
+(
+'BE100988','BE708991','BE200800','BE100012','BE100011'
+)
+order by item_no
+/*
+numbered|MinimumOnHand
+--------|-------------
+100011  |      4.00000
+100012  |      8.00000
+100988  |      0.00000
+200800  |      1.00000
+708991  |      1.00000
+*/
+
+/*
+Test: 60 
+Verify that when EM.minimumOnHand > EM.maxOnHand then plex Max_Quantity gets set to 0
+Verify that in other cases that Max_Quantity gets set to EM.MaxOnHand
+CASE
+	when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
+	else MaxOnHand
+end as Max_Quantity,
+
+numbered|RecordNumber|MinimumOnHand|MaxOnHand
+--------|------------|-------------|---------
+100988  |        9901|      0.00000|  1.00000
+705286A |        6223|     10.00000|  1.00000
+705334A |        6274|      2.00000|  1.00000
+
+*/
+
+select numbered,MinimumOnHand,MaxOnHand
+from dbo.Parts
+where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) 
+order by numbered
+
+select numbered,RecordNumber,MinimumOnHand,MaxOnHand
+from dbo.Parts
+where 
+numbered like '%100988%'
+or numbered like '%200277%'
+or numbered like '%705334%'
+or numbered like '%705286%'
+order by numbered,RecordNumber
+
+
+select  
+--count(*) 
+--top 10 
+item_no,
+Min_Quantity,Max_Quantity
+from plxSupplyItem  
+where item_no
+in
+(
+'BE705334','BE705286','BE100988'
+)
+order by item_no
 
 
 
@@ -942,6 +1367,7 @@ on il.Item_No=si.item_no
 --163
 
 
+
 /*
  * 
  * 
@@ -956,9 +1382,35 @@ on il.Item_No=si.item_no
 select  
 Location,building_code,location_type,note,location_group
 from dbo.plxLocationTS
-where row# >=1
-and row# <= 100
+--where row# >=1
+--and row# <= 100
 order by location
+
+/*
+ * Query to upload a range of supply items.
+ */
+
+select
+top 1
+Item_No+'B',Brief_Description,Description,
+--REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), ''), CHAR(10), '') as Note, --
+--REPLACE(REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
+--'Line 1'+ char(13) + char(10) +'Line 2' + char(13)+char(10) + 'Line 3' Note,
+--'Test' + char(10) + char(13) + 'Test' Note,
+Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+from dbo.plxSupplyItemTS
+where 
+item_no = 'BE000412'
+--where row# >=1
+--and row# <= 100
+order by item_no
+select notestext from dbo.Parts where numbered like '%000001%'
 /*
  * Query to upload a range of item locations
  */
@@ -967,23 +1419,6 @@ from plxItemLocationTS  --
 where row# >=1
 and row# <= 100
 order by location,item_no
-
-/*
- * Query to upload a range of supply items.
- */
-
-select
-Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
-Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
-Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
-Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
-Cube_Unit			
-from dbo.plxSupplyItemTS
-where row# >=1
-and row# <= 100
-order by item_no
 
 
 /*
