@@ -1,0 +1,19 @@
+
+
+Repairs & Maint - Building 
+Repairs & Maint - Building-Manufacturing-General 
+Repairs & Maint - Building Maint 
+Repairs & Maint - Machine MFG 
+Repairs & Maint - Machine Maint 
+Repairs & Maint - Material Handling Equipment MFG 
+Repairs & Maint - Material Handling Equipment Shipping 
+Repairs & Maint - Material Handling Equipment Maint 
+Repairs & Maint - Tooling MFG 
+Repairs & Maint - Gages MFG 
+Repairs & Maint - Gages QA 
+Repairs & Maint - Gages Maint 
+Repairs & Maint - Other QA 
+Repairs & Maint - Other Maint 
+Repairs & Maint - Other Fac 
+Repairs & Maint - Other Admin 
+

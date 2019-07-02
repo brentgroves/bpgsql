@@ -51,29 +51,30 @@ where item in
 
 
 -- Remove previous days backup of station and PlxSupplyItemLocation tables
--- drop table PlxSupplyItemLocation0503
--- drop table  station0502
+-- drop table PlxSupplyItemLocation0524
+-- drop table  station0524
 -- Make backup of station quantities table before changing it in Cribmaster. 
 select * 
-into station0524
+into station0628
 from STATION
+--12654
 --12624
 --verify backup of station
-select count(*) from station0524
---12637
+select count(*) from station0628
+--12654
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0524 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0628 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation0524
+select count(*) from PlxSupplyItemLocation0628  --13206
 -- truncate table PlxSupplyItemLocation0416
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0524
-from 'c:\il0524GE12500.csv'
+Bulk insert PlxSupplyItemLocation0628
+from 'c:\il0628GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -82,9 +83,48 @@ with
 
 select
 	count(*) 
-	from PlxSupplyItemLocation0524 --0
+	from PlxSupplyItemLocation0628 --0
 
+/*
+ * Set Cribmaster station with item numbers in this set to 0
+ * Station0628 contains a backup of this table prior to
+ * performing this change.
+ */	
+left outer join STATION st --12614 / 11284
+on il.location=st.CribBin
+and il.item_no=st.Item
+left outer join INVENTRY inv
+on il.item_no=inv.ItemNumber
+where st.CribBin is null  --1922
 	
+--update STATION 
+set BinQuantity = 0,
+Quantity = 0
+where
+
+
+
+inner	
+(
+select 
+il.item_no,il.location,il.quantity
+
+--count(*) --236	
+--il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
+from (
+	select --distinct incase I inserted items more than once
+		distinct item_no,location,quantity
+--	from PlxSupplyItemLocation0418 
+	from PlxSupplyItemLocation0628 
+) il
+left outer join STATION st --12614 / 11284
+on il.location=st.CribBin
+and il.item_no=st.Item
+left outer join INVENTRY inv
+on il.item_no=inv.ItemNumber
+where st.CribBin is null  --1922
+and il.quantity = 0 --17
+)set1	
 	
 	
 select count(*)
@@ -94,8 +134,9 @@ from
 		distinct item_no,location,quantity
 	--count(*) 
 	--*
-	from PlxSupplyItemLocation0524 --0
+	from PlxSupplyItemLocation0628 --0
 )lv1
+--13206
 --12998
 --12997
 --12822
@@ -106,13 +147,34 @@ from
 --update STATION 
 set BinQuantity = il.quantity,
 Quantity = il.quantity
-select 
-count(*) --236	
+--select 
+--il.item_no,il.location,il.quantity
+--count(*) --1013  06/28
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0524 
+--	from PlxSupplyItemLocation0418 
+	from PlxSupplyItemLocation0628 
+) il
+inner join STATION st --12614 / 11284
+on il.location=st.CribBin
+and il.item_no=st.Item
+inner join INVENTRY inv
+on il.item_no=inv.ItemNumber
+where
+--il.quantity < st.BinQuantity
+il.quantity <> st.BinQuantity	--1013 06/28
+and inv.InactiveItem = 0  
+
+
+select 
+--count(*) --236	
+il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
+from (
+	select --distinct incase I inserted items more than once
+		distinct item_no,location,quantity
+	from PlxSupplyItemLocation0628 
 ) il
 inner join STATION st --12614
 on il.location=st.CribBin
@@ -125,23 +187,33 @@ on il.item_no=inv.ItemNumber
 --530
 where il.quantity <> st.BinQuantity	
 and inv.InactiveItem = 0  
---1126
---145
---130
---61
---213
---124
---98
---90
--- 4 inactive items changed quantities in plex and 
--- would like to know why
---0001377
---15313  
---15762  
---16711  
 
---81
---233
+
+select itemnumber
+from INVENTRY inv
+inner join
+(
+select 
+il.item_no,il.location,il.quantity
+
+--count(*) --236	
+--il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
+from (
+	select --distinct incase I inserted items more than once
+		distinct item_no,location,quantity
+--	from PlxSupplyItemLocation0418 
+	from PlxSupplyItemLocation0628 
+) il
+left outer join STATION st --12614 / 11284
+on il.location=st.CribBin
+and il.item_no=st.Item
+left outer join INVENTRY inv
+on il.item_no=inv.ItemNumber
+where st.CribBin is null  --1922
+and il.quantity <> 0 --17
+)il
+on inv.ItemNumber=il.item_no
+
 
 --Update the items Nancy told me to
 --16520,006944,14396,009259

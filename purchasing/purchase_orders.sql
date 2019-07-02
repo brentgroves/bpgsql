@@ -1,3 +1,4 @@
+
 /*
 Item number picker query
 */
@@ -136,8 +137,11 @@ MNT00000000073	RM-Edon-M&R Misc.
 --select po.po_no,po.po_type,po.po_date,dpt.Department_Code,
 --sup.supplier_code 
 
+--select po.po_no,po.po_type,po.po_date,dpt.Department_Code,
+--sup.supplier_code 
+
 Declare @min_date datetime
-set @min_date = '6/24/2019 00:00:00 AM'
+set @min_date = '6/10/2019 00:00:00 AM'
 Declare @max_date datetime
 set @max_date = '7/2/2018 10:42:43 AM'
 --select count(*) --8
@@ -147,6 +151,8 @@ set @max_date = '7/2/2018 10:42:43 AM'
 select po.po_no,
 po.po_type,
 li.item_key,
+li.part_key,
+li.updated_by,
 i.item_no,
 i.description,
 i.manufacturer_key,
@@ -159,6 +165,7 @@ Issued_By,
 pu.last_name,
 li.Manufacturer_No,
 li.account_no,
+a.account_name,
 j.accounting_job_no,
 li.for_job_key,
 --dpt.name,
@@ -173,6 +180,8 @@ left outer join common_v_department dpt
 on po.department_no=dpt.department_no
 left outer join purchasing_v_line_item li
 on po.po_key = li.po_key
+left outer join accounting_v_account a
+on li.account_no=a.account_no
 left outer join accounting_v_accounting_job j
 on li.accounting_job_key=j.accounting_job_key
 left outer join purchasing_v_item i
@@ -181,8 +190,15 @@ left outer join common_v_manufacturer m
 on i.manufacturer_key=m.manufacturer_key
 left outer join Plexus_Control_v_Plexus_User pu
 on po.issued_by=pu.Plexus_User_No
-where po.po_no = 'BM001568'
---where po.po_date > @min_date
+--left outer join Plexus_Control_v_Plexus_User pu
+--on li.updated_by=pu.Plexus_User_No
+--where pu.last_name = 'Swank'
+where pu.last_name = 'Try'
+
+--and j.accounting_job_no is not null 
+--where i.item_no = '0001035'
+--where po.po_no = 'BM001568'
+and  po.po_date > @min_date
 --)tst
 
 

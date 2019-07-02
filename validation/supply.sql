@@ -68,7 +68,7 @@ and item_type = 'Maintenance'
 Test: 25 
 Verify that item_type field contains ‘Maintenance’. 
 */
-Item No	Description	Supplier Code	Item Type	Supplier Item No	Unit Price(s)
+
 select  
 count(*) 
 --top 10 
@@ -362,68 +362,21 @@ in
 )
 order by item_no
 
-/*
-Test: 65 
-Verify the tax code on the Supply Item detail screen the tax code says 'Tax Exempt - Labor / Industrial Processing' 
-'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
-*/
-
-select 
-item_no,i.tax_code_no,tax_code
+select  
+item_no,Description,  
+sup.supplier_code,
+isp.Unit_Price,
+i.Inventory_Unit
 from purchasing_v_item i  
 left outer join purchasing_v_item_type it
 on i.item_type_key=it.item_type_key
-left outer join purchasing_v_tax_code tc
-on i.tax_code_no=tc.tax_code_no
+left outer join purchasing_v_item_supplier isu
+on i.item_key = isu.item_key
+left outer join common_v_supplier sup
+on isu.supplier_no = sup.supplier_no
+left outer join Purchasing_v_Item_Supplier_Price isp
+on isu.Item_Key=isp.Item_Key and isu.Supplier_No=isp.Supplier_No
 where item_type = 'Maintenance'
-and tc.tax_code <> 'Tax Exempt - Labor / Industrial Processing' 
-
-
-
-select 
-top 100
-item_no,
-Account_No
-
-from purchasing_v_item i  
-left outer join purchasing_v_item_type it
-on i.item_type_key=it.item_type_key
-where item_type = 'Tooling'
-
---where item_type = 'Maintenance'
-and item_no
-in
-(
-'BE705334','BE705286','BE100988'
-)
 order by item_no
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--where item_type = 'Tooling'

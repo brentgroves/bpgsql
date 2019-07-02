@@ -659,11 +659,14 @@ end as Max_Quantity,
 -- where taxable = 'Y'--10619
 -- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
 -- accountant also said this so I'm going to mark them all as Tax Exempt
+-- 70	Tax Exempt - Labor / Industrial Processing
 'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
+
 -- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
 -- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
 -- and leave it blank.
-'' as Account_No,
+-- 70200-320-0000	Repairs & Maint - Machine Maint
+'70200-320-0000' as Account_No,
 /* Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name 
  * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
  * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
@@ -1148,6 +1151,28 @@ in
 )
 order by item_no
 
+/*
+
+Test: 65 
+Verify the tax code on the Supply Item detail screen the tax code 
+says 'Tax Exempt - Labor / Industrial Processing'  for item_no = 'BE705334' 
+Verify all maintenance supply items have a tax_code of 'Tax Exempt - Labor / Industrial Processing' 
+and a tax_code_no = 70 
+
+**/
+
+select  
+--count(*) 
+top 10 
+item_no,
+tax_code
+from plxSupplyItem  
+where tax_code = 'Tax Exempt - Labor / Industrial Processing'
+--where tax_code <> 'Tax Exempt - Labor / Industrial Processing'
+
+
+
+'70200-320-0000' as Account_No,
 
 
 /*
