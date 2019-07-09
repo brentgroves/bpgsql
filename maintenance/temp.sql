@@ -57,67 +57,53 @@ top 100 *
 --count(*) 
 from plxItemLocationBase
 --
-/*
- * 
- * Generate CSV Files
- * 
- * Start: 7/9 11:00
- * Count: 11,376
- * 
- * 
- * 
- */
+
 -- truncate table plxItemLocationBase
 insert into plxItemLocationBase (RecordNumber,ItemNumber,NSItemNumber,BEItemNumber,BuildingCode,Location,QuantityOnHand,Suffix)
-select * from dbo.btTemp  -- This is the only way to order the records before inserting them 
-select * from dbo.plxItemLocationBase
---	select BEItemNumber,location,count(*) cnt
---	from
---	(
-
-	--Add Quantity for each item location record selected.
+(
 	--select COUNT(*) cntParts from (
 	select 
-	MinRecordNumber as RecordNumber,
-	ltrim(rtrim(Numbered)) ItemNumber, 
-	NSItemNumber,
-	BEItemNumber,
-	BuildingCode,
-	set2.Location,
-	QuantityOnHand,
-	case 
-		when ltrim(rtrim(Numbered)) like '%[A-Z][A-Z]' then right(ltrim(rtrim(Numbered)),2) 
-		when ltrim(rtrim(Numbered)) like '%[^A-Z][A-Z]' then right(ltrim(rtrim(Numbered)),1) 
-		else 'N' --none
-	end as Suffix --705627 has a plant 8 and albion number
-	-- with the same location so suffix is figured after choosing a record number to
-	-- represent BEItemNumber,Location pair. 
-	--drop table btTemp
-	into btTemp
-	from 
-	(
-		--Reduce the set by selecting 1 record number to represent BEItemNumber,Location duplicates.
-		--select COUNT(*) cntParts from (
-		select 
-		min(RecordNumber) MinRecordNumber,
+		MinRecordNumber,
+		ItemNumber,
 		NSItemNumber,
 		'BE' + NSItemNumber as BEItemNumber,
+		BuildingCode,
 		Location,
-		BuildingCode
+		QuantityOnHand,
+		Suffix
+	from
+	(	--Add Quantity for each item location record selected.
+		--select COUNT(*) cntParts from (
+		select 
+		MinRecordNumber,
+		ItemNumber,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
+			else ItemNumber
+		end as NSItemNumber,
+		set2.BuildingCode,
+		set2.Location,
+		QuantityOnHand,
+		case 
+			when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
+			when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
+			else 'N' --none
+		end as Suffix
 		from 
 		(
-
+			--Reduce the set by selecting 1 record number to represent itemNumber,Location duplicates.
+			--Remember at this point the itemnumber contains a suffix.
+			--select COUNT(*) cntParts from (
 			select 
-			RecordNumber,
-			case 
-				when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
-				when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
-				else ItemNumber
-			end as NSItemNumber,
+			min(RecordNumber) MinRecordNumber,
+			ItemNumber,
 			BuildingCode,
 			Location
 			from 
 			(
+				--select COUNT(*) cntParts from (
+				select itemnumber,location from (
 				--select COUNT(*) cntParts from (
 				select 
 				ltrim(rtrim(Numbered)) ItemNumber, 
@@ -133,73 +119,46 @@ select * from dbo.plxItemLocationBase
 				--select 
 				--count(*) cnt
 				--sm.emSite,sm.plxSite
-				from dbo.Parts p  --12488 07/09
+				from dbo.Parts p  --12474
 				left outer join dbo.btSiteMap sm
 				on p.Site=sm.emSite
-				--where sm.emSite is null --0 07/09
+				--where sm.emSite is null --0
 				left outer join dbo.btSiteBuildingMap bm
 				on sm.plxSite=bm.plxSite
 				where 
-				--sm.emSite is null or bm.plxSite is null --0 07/09
-				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11389 07/09 14:45
-				--and Numbered like '%000219%'
-				--)tst --11386 07/09 14:45
-			)set1
-			--where ItemNumber like '%000219%'
+				--sm.emSite is null or bm.plxSite is null --0
+				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11369
+				--)tst --11372
+				)tst group by itemnumber,location --11176
+				having count(*) > 1  --14, At this stage the item number has a suffix so were not including parts in different sites here.
+				--)tst --11200  --
+				
+			)set1	
+			/*
+			 * If duplicate part numbers have distinct locations then
+			 * they both will be in this set, but only the part number 
+			 * with the lowest record number will be included if the
+			 * duplicate part numbers have the same plxSite and EM shelf.
+			 * There were only 5 parts with duplicate plxSite and EM shelf.
+			 * Remember itemNumber has a suffix at this point.
+			 */
+			group by ItemNumber,Location,BuildingCode
+			--having count(*) > 1  --5
+			--)tst --11367
+		)set2 
+		inner join dbo.Parts p
+		on set2.MinRecordNumber=p.RecordNumber
+		--)tst --11367
+	)set3
+	--order by location,itemNumber
+	--)tst --11210
+)--11210
 
-		/*
-		 * If duplicate part numbers have distinct locations then
-		 * they both will be in this set, but only the part number 
-		 * with the lowest record number will be included if the
-		 * duplicate part numbers have the same location.
-		 * There were only 5 parts with duplicate locations.
-		 * 
-		 * ERROR: if you have same ItemNumber except for the suffix
-		 * and both item numbers have the same location
-		 * then both ItemNumbers will be mapped to the same
-		 * BE number and there will be a duplicate BE number location pair
-		 * I.e. 705627. So group on NSItemNumber instead of ItemNumber. 
-		 */
-		)set2	
-		group by NSItemNumber,Location,BuildingCode
-		--having NSItemNumber like '%000219%'
-		--having NSItemNumber ='705627'
-		--having count(*) > 1  --6 07/09 14:45
-		--)tst
-		--group by NSItemNumber,Location,BuildingCode
-		--having count(*) > 1  --0 07/09 14:45
-		
-		/*
-		 * The following items have duplicate numbered,location pairs.
-		 * In addition 705627 and 705627A have identical locations.
-		MinRecordNumber|NSItemNumber|BEItemNumber|Location     |BuildingCode           
-		---------------|------------|------------|-------------|-----------------------
-		           6368|208220      |BE208220    |M8-CAB H-2-4 |BPG Plant 8            
-		           4798|404012      |BE404012    |M5-CHIPROOM  |BPG Plant 5            
-		           4622|701063      |BE701063    |M5-20-07-03  |BPG Plant 5            
-		           5383|201206      |BE201206    |M5-17-01-03  |BPG Plant 5            
-		           1292|705627(A)   |BE705627    |MD-RACK B-3-3|BPG Distribution Center
-		          10698|000529      |BE000529    |M5-27-04-05  |BPG Plant 5            
-		 */
-	)set2 
-	inner join dbo.Parts p
-	on set2.MinRecordNumber=p.RecordNumber
-	--where NSItemNumber like '%000219%'
-	--order by set2.location,set2.BEItemNumber
-	--)tst --11382 07/09 14:45
-		
-	
-/*
-/*
-beitemnumber|location     | |
-------------|-------------|-|
-BE705627    |MD-RACK B-3-3|2|
 
-705627  |Distribution Center|RACK B-3-3
-705627A |Distribution Center|RACK B-3-3
-*/ 
- */
-
+select 
+top 100 *
+--count(*) 
+from dbo.plxItemLocationBase
 
 /*
  * Test: 200 
@@ -207,7 +166,6 @@ BE705627    |MD-RACK B-3-3|2|
  */
 select * 
 from plxItemLocationBase
---where NSItemNumber like '%000219%'
 where ItemNumber <> LTRIM(RTRIM(itemnumber))
 
 /*
@@ -217,11 +175,6 @@ where ItemNumber <> LTRIM(RTRIM(itemnumber))
  * and verify record count makes sense
  * 
  */
-
-select 
---top 100 *
-count(*) 
-from dbo.plxItemLocationBase --11382 07/09 14:45
 
 /*
  * Test: 220 
@@ -316,18 +269,16 @@ or bm.building_code='' or bm.building_code is null
 select 
 count(*) cnt
 --sm.emSite,sm.plxSite
---from dbo.Parts p  --12474
-from dbo.plxItemLocationBase ilb
-left outer join dbo.Parts p
-on ilb.RecordNumber=p.RecordNumber
+from dbo.Parts p  --12474
 left outer join dbo.btSiteMap sm
 on p.Site=sm.emSite
 --where sm.emSite is null --0
---left outer join dbo.btSiteBuildingMap bm
---on ilb.BuildingCode=bm.building_code
+left outer join dbo.btSiteBuildingMap bm
+on sm.plxSite=bm.plxSite
 where 
---(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11379 07/09
-(RIGHT(LTRIM(RTRIM(Numbered)),1) = 'K'  or sm.plxSite = 'MO')     --0 07/09
+--(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11369
+--(RIGHT(LTRIM(RTRIM(Numbered)),1) = 'K'  or sm.plxSite = 'MO')     --1105
+--														Total Parts: 12474  Matches number of records in parts table.
 
 /*
  * Test: 250 
@@ -358,8 +309,8 @@ and
  */
 
 select
-count(*) cnt
---fp.numbered,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,sm.plxSite,ilb.Location
+--count(*) cnt
+fp.numbered,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,ilb.Location
 from
 dbo.plxItemLocationBase ilb
 inner join
@@ -368,16 +319,13 @@ select
 RecordNumber,numbered,shelf,site
 --count(*) cnt  --331 match this criteria
 --top 100 Numbered,site,Shelf
-from dbo.Parts p 
+from dbo.Parts p  --12474
 where 
-(p.Shelf = '' or p.Shelf is null) 
+(p.Shelf = '' or p.Shelf is null) --331
 and 
-(p.Site <> '' and p.Site is not null)  
+(p.Site <> '' and p.Site is not null)  --12474
 )fp
-on ilb.RecordNumber=fp.recordnumber --312 07/09 14:45
-left outer join dbo.btSiteMap sm
-on fp.Site=sm.emSite
-where ilb.Location = sm.plxSite + '-no location yet' --312 07/09 14:45
+on ilb.RecordNumber=fp.recordnumber --311
 where ilb.BEItemNumber = 'BE000203'
 
 
@@ -392,7 +340,7 @@ count(*) cnt  --331 match this criteria
 --top 100 Numbered,site,Shelf
 from dbo.Parts p  --12474
 where 
-(p.Shelf <> '' and p.Shelf is not null) 
+(p.Shelf <> '' and p.Shelf is not null) --12145
 and 
 (p.Site = '' or p.Site is null)  --0
 
@@ -401,36 +349,30 @@ and
  */
 
 select
-count(*) cnt
---fp.numbered,ilb.BEItemNumber,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,ilb.Location
+--count(*) cnt
+fp.numbered,ilb.BEItemNumber,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,ilb.Location
 from
 dbo.plxItemLocationBase ilb
 inner join
 (
 select 
 RecordNumber,numbered,shelf,site
-from dbo.Parts p 
+--count(*) cnt  --331 match this criteria
+--top 100 Numbered,site,Shelf
+from dbo.Parts p  --12474
 where 
-(p.Shelf <> '' and p.Shelf is not null) --
+(p.Shelf <> '' and p.Shelf is not null) --12145
 and 
-(p.Site <> '' and p.Site is not null)  
+(p.Site <> '' and p.Site is not null)  --12476
 )fp  --12145
-on ilb.RecordNumber=fp.recordnumber --11070 07/09 14:45
-left outer join dbo.btSiteMap sm
-on fp.Site=sm.emSite
-where ilb.Location = sm.plxSite + '-' + ltrim(RTRIM(fp.Shelf)) --11070
-
-select numbered,site,shelf
-from dbo.Parts p
-where numbered like '%000219%'
+on ilb.RecordNumber=fp.recordnumber --10899
 where ilb.BEItemNumber = 'BE200240' --3 records
-
 
 /*
  * Verify that all plxItemLocationBase records fall into one of these categories.
- * Both site and shelf: 		   11070
- * Shelf is blank but site is not:   312
- *      Total plxItemLocationBase: 11382
+ * Both site and shelf: 		   10899
+ * Shelf is blank but site is not:   311
+ *      Total plxItemLocationBase: 11210
  * Totals Match: YES
  */
 select COUNT(*)
@@ -440,58 +382,23 @@ from dbo.plxItemLocationBase
  * Test: 255 
  * Verify that for dup numbered, location, building code records all but one record is removed. 
  * This test is done in the query itself above.
- *
- * The following items have duplicate numbered,location pairs.
- * In addition 705627 and 705627A have identical locations.
-RecordNumber|ItemNumber|Location     |BuildingCode           
-------------|----------|-------------|-----------------------
-       10698|000529    |M5-27-04-05  |BPG Plant 5            
-        5383|201206    |M5-17-01-03  |BPG Plant 5            
-        6368|208220A   |M8-CAB H-2-4 |BPG Plant 8            
-        4798|404012    |M5-CHIPROOM  |BPG Plant 5            
-        4622|701063    |M5-20-07-03  |BPG Plant 5            
-        1292|705627    |MD-RACK B-3-3|BPG Distribution Center         
  */
 
-/*
- * Must be only one record for each of these item location dups.
- */
 select 
 --COUNT(*)
 RecordNumber,  
 ItemNumber,
-Location,
-BuildingCode
+Location
 from dbo.plxItemLocationBase
-where ItemNumber in
+where LTRIM(RTRIM(ItemNumber)) in
 (
 '404012', 
 '208220A', 
 '701063',--
 '201206',
-'000529',
-'705627',
-'705627A'  --This record is dropped because it has the same location as 705627 
+'000529'
 )
 order by ItemNumber
-
-/*
-RecordNumber|ItemNumber|site                     |Shelf     
-------------|----------|-------------------------|----------
-       10698|000529    |Plant 5 Maint. Crib      |27-04-05  
-       14223|000529    |Plant # 5                |27-04-05  
-        5383|201206    |Plant 5 Maint. Crib      |17-01-03  
-       12390|201206    |Plant 5 Maint. Crib      |17-01-03  
-       14658|208220A   |Plant # 8                |CAB H-2-4 
-        6368|208220A   |Plant 8 Maint Crib, Albio|CAB H-2-4 
-        7907|404012    |Plant 5 Maint. Crib      |CHIPROOM  
-        4798|404012    |Plant 5 Maint. Crib      |CHIPROOM  
-        4803|404012    |Plant 5 Maint. Crib      |CHIPROOM  
-       14194|701063    |Plant # 5                |20-07-03  
-        4622|701063    |Plant 5 Maint. Crib      |20-07-03  
-        1292|705627    |Distribution Center      |RACK B-3-3
-        6728|705627A   |Distribution Center      |RACK B-3-3 
- */
 
 select 
 --COUNT(*)
@@ -505,12 +412,27 @@ where LTRIM(RTRIM(Numbered)) in
 '208220A', 
 '701063',--
 '201206',
-'000529',
-'705627',
-'705627A'  --This record is dropped because it has the same location as 705627 
+'000529'
 )
 order by Numbered
 
+--update dbo.Parts
+set Shelf = 'CHIPROOM'
+--select shelf,* from dbo.Parts
+where 
+RecordNumber = 7907
+
+select * 
+--into btparts0708
+from dbo.Parts
+/* Duplicate item/locationa
+itemnumber|location    
+----------|------------
+404012    |M5-CHIPROOM 
+208220A   |M8-CAB H-2-4
+701063    |M5-20-07-03 
+201206    |M5-17-01-03 
+000529    |M5-27-04-05   
 
 /*
  * Test: 260 
@@ -550,17 +472,15 @@ RecordNumber|ItemNumber|Suffix|BEItemNumber
  * Verify that part number with multiple locations 
  * all get uploaded to plex including quantities
  */
---select count(*) cnt from (
 select 
---COUNT(*) cnt
-BEItemNumber
---RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
+
+--COUNT(*)
+--BEItemNumber
+RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
 from dbo.plxItemLocationBase
-group by BEItemNumber
-HAVING count(*) > 1
---)tst  --836 07/09 14:45
-and BEItemNumber in
---where BEItemNumber in
+--group by BEItemNumber
+--HAVING count(*) > 1
+where BEItemNumber in
 (
 'BE200051',
 'BE201069',
@@ -603,8 +523,6 @@ RecordNumber|ItemNumber|BEItemNumber|location                 |QuantityOnHand
  * template: ~/src/sql/csv/location_template.csv
  */
 
---drop table plxLocation
-
 --select count(*) cnt from (
 select 
 ROW_NUMBER() over(order by location asc) as row#,
@@ -636,11 +554,10 @@ from
 	select DISTINCT Location,BuildingCode 
 	--select DISTINCT Location --Should be the same set as distinct location, buildingcode 
 	from plxItemLocationBase base
-	--order by location
-	--)tst --3409  07/09 14:45 
-)set1 --
---)tst --3409  07/09 14:45 
---order by location 
+	--)tst --3325 
+)set1
+--)tst --3325
+order by location 
 
 /*
  * 
@@ -673,7 +590,7 @@ count(*) cnt
 --top 100  
 --Location,building_code,location_type,note,location_group
 from dbo.plxLocation
---3409 07/09 14:45
+--3325
 
 /*
  * Verify 5 locations that they were uploaded correctly on Plex screen.
@@ -2511,6 +2428,13 @@ inner join
 )c
 on l.location=c.location
 
+/*
+ * Add locations from the plxLocation tests. 
+ * 
+ * 
+ */
+
+
 
 /* 
  *	Per step 2 of the Test set generation process above.
@@ -2609,7 +2533,7 @@ order by location
  */
 
 select
---top 1
+top 1
 Item_No+'B',Brief_Description,Description,
 --REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), ''), CHAR(10), '') as Note, --
 --REPLACE(REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --

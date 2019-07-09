@@ -19,13 +19,17 @@ fieldterminator = '|',
 rowterminator = '\n'
 )
 CREATE TABLE btManufacturer (
-	Vendor varchar(50)
+	Vendor varchar(50)  --This should be manufacturer instead of vendor.  the data is from common_v_manufacturers
 )
+select * from dbo.btManufacturer
+select * from dbo.Parts
+where manufacturer = 'ABB'
 
 --manufacturers in plex before uploading EM manufacturers
 CREATE TABLE btPlexManufacturer (
-	Vendor varchar(50)
+	Vendor varchar(50)  --This should be manufacturer instead of vendor.  the data is from common_v_manufacturers
 )
+select * from dbo.btPlexManufacturer
 
 Bulk insert btPlexManufacturer
 from 'C:\plexmanufacturers.csv'
@@ -35,18 +39,17 @@ fieldterminator = '|',
 rowterminator = '\n'
 )
 
-CREATE TABLE btMfgMap (
-	emVendor varchar(50),
-	plexVendor varchar(50)
-)
-
+select 
+top 10 *
+from btmfgmap
 /*
  * 
-insert into dbo.btMfgMap(emVendor,plexvendor)
+insert into dbo.btMfgMap(emMfg,plexMfg)
 select vendor emVendor, vendor plexvendor from dbo.btManufacturer
 use btManufacturer for mapping
 use btEMManufacturer for uploading into plex 
 -- because dup vendors are deleted and vendors already in plex are removed
+select * from btEMManufacturer
 
 *
 * pending/questions out
@@ -90,7 +93,13 @@ select * from dbo.btMfgMap
 	select *
 	into dbo.btMfgMap
 	from dbo.btMfgMap0506
-select * from dbo.btMfgMap
+select * from dbo.btMfgMap 
+
+select numbered,vendor
+from dbo.Parts 
+--where vendor = 'ABB'
+where Manufacturer = 'ABB'
+
 
 
 --select Manufacturer_Code,Manufacturer_Name,Note
