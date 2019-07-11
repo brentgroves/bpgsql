@@ -1130,6 +1130,7 @@ select BEItemNumber from plxSupplyItemBase
 WHERE LTRIM(RTRIM(BEItemNumber)) like '%' + ' ' + '%'  --are there any spaces
 --Pass 07/09 14:45
 
+-- SI-X
 
 --CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 --select count(*) cnt from (
@@ -1177,7 +1178,9 @@ end as Description,  -- Description field is on the ordering screen so make sure
 -- So replace the \n (0x0D 0x0A) combo with 0x0D.  I tested with replacing the combo with 0x0A and the upload failed.
 -- When Plex exports the notes column and it contains a \n it puts quotes around the field and inserts the 0x0D 0x0A ascii characters.
 -- This seems like a hack but I don't see any way around it.
-REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as Note, --
+-- There are 31 records in which the NotesText field is > 200 characters.  
+SUBSTRING(REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)),1,200) as Note, --
+--SUBSTRING(Note,1,200) Note,  --Asking Kristen if this is ok it will truncate around 30 EM parts records notes field. 
 -- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
 --Test with '100988','708991','200800','100012','100011'
 --NotesText as Note, 
@@ -1277,7 +1280,11 @@ select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.P
 '' as Drawing_No,
 '' as Item_Quantity,
 '' as Location,
-sc.Supplier_Code,
+--sc.Supplier_Code,
+case 
+	when Supplier_Code = 'UNKNOWN' then ''
+	else Supplier_Code
+end Supplier_Code,  -- make this change in plxSupplyItem query
 /* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
 VendorNumber Supplier_Part_No, 
 '' as Supplier_Std_Purch_Qty,
@@ -2184,6 +2191,35 @@ select * from dbo.btSupplyCode
 	where VendorName <> ''
 order by supplier_code
 
+
+select 
+--distinct p.Vendor --21 07/09 14:45 
+p.Numbered,p.Vendor,p.site,p.Shelf,p.QuantityOnHand
+from dbo.plxSupplyItemBase sb --10370 07/09 14:45
+inner join dbo.plxSupplyItem si
+on sb.BEItemNumber=si.Item_No  --10370 07/09 14:45
+inner join dbo.Parts p
+on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
+left outer join (
+	select * from btSupplyCode sc
+	where VendorName <> ''
+) sc
+on p.Vendor=sc.VendorName 
+--where si.Item_No = 'BE001029'
+where si.Supplier_Code ='UNKNOWN'  --28 07/09 14:45
+order by vendor
+
+select 
+
+select sc.VendorName,sc.Supplier_Code,sc.Supplier_Status 
+from btSupplyCode sc
+where VendorName <> ''
+--and sc.Supplier_Code = 'UNKNOWN'
+order by VendorName
+
+where sc.Supplier_Code = 'UNKNOWN'
+
+
 /* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
 
 /*
@@ -2643,55 +2679,93 @@ Row# >=1 and Row# <= 100
  */
 
 /*
+ * Issue: 1
  * How many EM part notes field will be truncated? 31
+ * Combine notes field with description field for parts with notes field over 200 characters.
  */
 
-select 
-top 100
-Numbered,datalength(Numbered), datalength(notes) lenNotes, Notes
+                                                      --10360
+select
+item_no,
+--ltrim(rtrim(REPLACE(SUBSTRING(Note,201,450), CHAR(13), char(32)))), 
+--ltrim(rtrim(SUBSTRING(Note,201,450))),
+SUBSTRING(Note,1,450) Note1to450
+--into plxBigNote
 from
-dbo.Parts
+dbo.plxSupplyItem si
+where 
+-- Account for all the following cases to get every valid big note
+ltrim(rtrim(SUBSTRING(Note,201,450))) <> '' 
+and ltrim(rtrim(SUBSTRING(Note,201,450))) <> char(13)
+and ltrim(rtrim(SUBSTRING(Note,201,450))) not like char(09)+char(09)+char(09)+'%'
+and ltrim(rtrim(REPLACE(SUBSTRING(Note,201,450), CHAR(13), char(32)))) <> ''
+and SUBSTRING(Note,201,450) is not null
 
-SELECT
-count(*)cnt
---*
-from
-(
-	select 
-	si.Item_No,
-	SUBSTRING(Note,201,400) Note201to400,
-	SUBSTRING(Note,1,200) Note1to200
-	from dbo.plxSupplyItem si
-)tst
-where Note201to400 = '' or note201to400 is null 	   --10339
-where Note201to400 <> '' and note201to400 is not null     --31
-                                                       --10360
-
-
+select * from dbo.plxBigNote
 
 select count(*) cnt from dbo.plxSupplyItem  --10370 07/09 14:45
 
+
 select 
-si.Item_No,Brief_Description,Description,
-SUBSTRING(Note,1,200) Note,
+si.Item_No,Brief_Description,
+case
+	when bn.item_no is not NULL then Description + char(13) + bn.Note1to450
+	else Description
+end as Description,
+SUBSTRING(Note,1,200) Note,  -- 26 Notes are to big to fit in this field
 Item_Type,Item_Group,Item_Category,
 Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,
+Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,
+Currency,
+Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
 Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
 Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
 Cube_Unit			
 --drop table plxSupplyItemTS
 --into plxSupplyItemTS
 from dbo.plxSupplyItem si
---where Row# >=1 and Row# <= 100
-where Row# >=101 and Row# <= 1500
+left outer join dbo.plxBigNote bn
+on si.Item_No=bn.item_no
+--where bn.item_no is not null
+--where Row# >=1 and Row# <= 900
+--where Row# >=901 and Row# <= 1800
+--where Row# >=1801 and Row# <= 2700
+--where Row# >=2701 and Row# <= 3600
+--where Row# >=3601 and Row# <= 4500  
+--where Row# >=4501 and Row# <= 5400  
+--where Row# >=5401 and Row# <= 6300  
+--where Row# >=6301 and Row# <= 7200  
+--where Row# >=7201 and Row# <= 8100  
+--where Row# >=8101 and Row# <= 9000  
+--where Row# >=9001 and Row# <= 9900  
+where Row# >=9901 and Row# <= 10800 
 
-select item_no,description,note
+/*
+ * Test: Issue 1
+ * Verify Description and Note fields in 5 items with big notes in plex
+ * Verify items without a big note description is not changed.
+ */
+
+
+select Row#, item_no,Supplier_Part_No,Supplier_Code,description,note
 FROM
 dbo.plxSupplyItem
-where Item_No = 'BE000195'
+where item_no = 'BE705140'
+where item_no = 'BE101121' --1449 did not upload
+--where item_no = 'BE101116' --1448  last item uploaded
+--where Item_No = 'BE000195'
 
+select * 
+--into btSupplyCode0711
+FROM
+dbo.btSupplyCode
+--where Supplier_Code = 'GLOBAL%MACHINE'
+where Supplier_Code = 'WESTECH AUTOMATION'
+--update dbo.btSupplyCode
+set Supplier_Code='WESTECH AUTOMATION'
+where Supplier_Code = 'WESTECH AUTOMATION SOLUTI'
 /*
 **COST OF NEW F/GOSIGER IS $3990.52 (with 10% DISCOUNT) 9/21/17 KT
 **COST OF NEW FROM KAMMERER: $2800.00/E  10/13/16 KT
