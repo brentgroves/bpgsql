@@ -2641,10 +2641,40 @@ Row# >=1 and Row# <= 100
 /*
  * Create Supply Item CSV files
  */
+
+/*
+ * How many EM part notes field will be truncated? 31
+ */
+
+select 
+top 100
+Numbered,datalength(Numbered), datalength(notes) lenNotes, Notes
+from
+dbo.Parts
+
+SELECT
+count(*)cnt
+--*
+from
+(
+	select 
+	si.Item_No,
+	SUBSTRING(Note,201,400) Note201to400,
+	SUBSTRING(Note,1,200) Note1to200
+	from dbo.plxSupplyItem si
+)tst
+where Note201to400 = '' or note201to400 is null 	   --10339
+where Note201to400 <> '' and note201to400 is not null     --31
+                                                       --10360
+
+
+
 select count(*) cnt from dbo.plxSupplyItem  --10370 07/09 14:45
 
 select 
-si.Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
+si.Item_No,Brief_Description,Description,
+SUBSTRING(Note,1,200) Note,
+Item_Type,Item_Group,Item_Category,
 Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
 Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,Supplier_Code,
 Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
@@ -2654,7 +2684,22 @@ Cube_Unit
 --drop table plxSupplyItemTS
 --into plxSupplyItemTS
 from dbo.plxSupplyItem si
-where Row# >=1 and Row# <= 100
+--where Row# >=1 and Row# <= 100
+where Row# >=101 and Row# <= 1500
+
+select item_no,description,note
+FROM
+dbo.plxSupplyItem
+where Item_No = 'BE000195'
+
+/*
+**COST OF NEW F/GOSIGER IS $3990.52 (with 10% DISCOUNT) 9/21/17 KT
+**COST OF NEW FROM KAMMERER: $2800.00/E  10/13/16 KT
+STOCK CONFIRMED: 7/9/19 KT
+
+1 REPAIRS ON PO 141011-00//000156
+1 NEW AND 1 REPAIR ON PO 141597-00//000159.  3/16/19 KT
+*/
 
 /*
  * Create Item Location CSV files
