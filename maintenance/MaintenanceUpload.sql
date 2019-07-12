@@ -93,7 +93,7 @@ select * from dbo.plxItemLocationBase
 	-- with the same location so suffix is figured after choosing a record number to
 	-- represent BEItemNumber,Location pair. 
 	--drop table btTemp
-	into btTemp
+	--into btTemp
 	from 
 	(
 		--Reduce the set by selecting 1 record number to represent BEItemNumber,Location duplicates.
@@ -130,18 +130,17 @@ select * from dbo.plxItemLocationBase
 					when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
 					--else '???'
 				end Location
-				--select 
-				--count(*) cnt
+				--select count(*) cnt
 				--sm.emSite,sm.plxSite
-				from dbo.Parts p  --12488 07/09
+				from dbo.Parts p  --12490 07/12A
 				left outer join dbo.btSiteMap sm
 				on p.Site=sm.emSite
-				--where sm.emSite is null --0 07/09
+				--where sm.emSite is null --0 07/12A
 				left outer join dbo.btSiteBuildingMap bm
 				on sm.plxSite=bm.plxSite
 				where 
-				--sm.emSite is null or bm.plxSite is null --0 07/09
-				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11389 07/09 14:45
+				--sm.emSite is null or bm.plxSite is null --0 07/12A
+				(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --07/12A
 				--and Numbered like '%000219%'
 				--)tst --11386 07/09 14:45
 			)set1
@@ -164,10 +163,10 @@ select * from dbo.plxItemLocationBase
 		group by NSItemNumber,Location,BuildingCode
 		--having NSItemNumber like '%000219%'
 		--having NSItemNumber ='705627'
-		--having count(*) > 1  --6 07/09 14:45
+		--having count(*) > 1  --6 --07/12A
 		--)tst
 		--group by NSItemNumber,Location,BuildingCode
-		--having count(*) > 1  --0 07/09 14:45
+		--having count(*) > 1  --0 --07/12A
 		
 		/*
 		 * The following items have duplicate numbered,location pairs.
@@ -185,8 +184,8 @@ select * from dbo.plxItemLocationBase
 	inner join dbo.Parts p
 	on set2.MinRecordNumber=p.RecordNumber
 	--where NSItemNumber like '%000219%'
-	--order by set2.location,set2.BEItemNumber
-	--)tst --11382 07/09 14:45
+	order by set2.location,set2.BEItemNumber
+	--)tst --11382 --07/12A
 		
 	
 /*
@@ -208,7 +207,7 @@ BE705627    |MD-RACK B-3-3|2|
 select * 
 from plxItemLocationBase
 --where NSItemNumber like '%000219%'
-where ItemNumber <> LTRIM(RTRIM(itemnumber))
+where ItemNumber <> LTRIM(RTRIM(itemnumber)) --07/12A
 
 /*
  * Test: 210 
@@ -221,7 +220,7 @@ where ItemNumber <> LTRIM(RTRIM(itemnumber))
 select 
 --top 100 *
 count(*) 
-from dbo.plxItemLocationBase --11382 07/09 14:45
+from dbo.plxItemLocationBase --11382 --07/12A
 
 /*
  * Test: 220 
@@ -252,7 +251,7 @@ from dbo.Parts p  --12474
 )ds
 left outer join dbo.btSiteMap sm
 on ds.Site=sm.emSite
-where sm.emSite is null
+where sm.emSite is null --07/12A
 
 /*
  * Verify that every part record has an plex site.
@@ -264,7 +263,7 @@ count(*)
 from dbo.Parts p  --12474
 left outer join dbo.btSiteMap sm
 on p.Site=sm.emSite
-where sm.emSite is null --0
+where sm.emSite is null --0 --07/12A
 
 /*
  * Test: 230 
@@ -280,7 +279,7 @@ where sm.emSite is null --0
  * Verify that btSiteBuildingMap looks correct.
  */
 select *
-from dbo.btSiteBuildingMap
+from dbo.btSiteBuildingMap --07/12A
 
 /*
  * Verify that btSiteBuildingMap has a valid record for all Plex site 
@@ -292,7 +291,7 @@ sm.emSite,sm.plxSite,bm.building_code
 from 
 dbo.btSiteMap sm
 left outer join btSiteBuildingMap bm
-on sm.plxSite=bm.plxSite
+on sm.plxSite=bm.plxSite  --07/12A
 
 /*
  * Verify that all records in the plxItemLocationBase table have a
@@ -305,7 +304,7 @@ dbo.btSiteBuildingMap bm
 on
 ilb.BuildingCode=bm.building_code
 where Buildingcode ='' or Buildingcode is null
-or bm.building_code='' or bm.building_code is null
+or bm.building_code='' or bm.building_code is null  --07/12A
 
 /*
  * Test: 240 
@@ -326,8 +325,8 @@ on p.Site=sm.emSite
 --left outer join dbo.btSiteBuildingMap bm
 --on ilb.BuildingCode=bm.building_code
 where 
---(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11379 07/09
-(RIGHT(LTRIM(RTRIM(Numbered)),1) = 'K'  or sm.plxSite = 'MO')     --0 07/09
+(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') --11382 07/12A
+(RIGHT(LTRIM(RTRIM(Numbered)),1) = 'K'  or sm.plxSite = 'MO')     --0 07/12A
 
 /*
  * Test: 250 
@@ -351,15 +350,15 @@ from dbo.Parts p  --12474
 where 
 (p.Shelf = '' or p.Shelf is null) --331
 and 
-(p.Site = '' or p.Site is null)  --0
+(p.Site = '' or p.Site is null)  --0  07/12A
 
 /*
  * Verify that if shelf is blank but site is not the plxItemLocationBase location field is in form of plxSite + 'no location yet' --01
  */
 
 select
-count(*) cnt
---fp.numbered,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,sm.plxSite,ilb.Location
+--count(*) cnt
+fp.numbered,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,sm.plxSite,ilb.Location
 from
 dbo.plxItemLocationBase ilb
 inner join
@@ -374,11 +373,11 @@ where
 and 
 (p.Site <> '' and p.Site is not null)  
 )fp
-on ilb.RecordNumber=fp.recordnumber --312 07/09 14:45
+on ilb.RecordNumber=fp.recordnumber --312 07/12A
 left outer join dbo.btSiteMap sm
 on fp.Site=sm.emSite
-where ilb.Location = sm.plxSite + '-no location yet' --312 07/09 14:45
-where ilb.BEItemNumber = 'BE000203'
+--where ilb.Location = sm.plxSite + '-no location yet' --312 --07/12A
+where ilb.BEItemNumber = 'BE000203'  --07/12A
 
 
 /*
@@ -394,15 +393,15 @@ from dbo.Parts p  --12474
 where 
 (p.Shelf <> '' and p.Shelf is not null) 
 and 
-(p.Site = '' or p.Site is null)  --0
+(p.Site = '' or p.Site is null)  --0  07/12A
 
 /*
  * Verify that if there is both a site and shelf in EM part record the plxItemLocationBase field is in the form of plxSite + shelf --11
  */
 
 select
-count(*) cnt
---fp.numbered,ilb.BEItemNumber,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,ilb.Location
+--count(*) cnt
+top 5 fp.numbered,ilb.BEItemNumber,ilb.RecordNumber,fp.recordnumber,fp.site,fp.shelf,ilb.Location
 from
 dbo.plxItemLocationBase ilb
 inner join
@@ -415,15 +414,11 @@ where
 and 
 (p.Site <> '' and p.Site is not null)  
 )fp  --12145
-on ilb.RecordNumber=fp.recordnumber --11070 07/09 14:45
+on ilb.RecordNumber=fp.recordnumber --11070 07/12A
 left outer join dbo.btSiteMap sm
 on fp.Site=sm.emSite
-where ilb.Location = sm.plxSite + '-' + ltrim(RTRIM(fp.Shelf)) --11070
+where ilb.Location = sm.plxSite + '-' + ltrim(RTRIM(fp.Shelf)) --11070  --07/12A
 
-select numbered,site,shelf
-from dbo.Parts p
-where numbered like '%000219%'
-where ilb.BEItemNumber = 'BE200240' --3 records
 
 
 /*
@@ -431,7 +426,7 @@ where ilb.BEItemNumber = 'BE200240' --3 records
  * Both site and shelf: 		   11070
  * Shelf is blank but site is not:   312
  *      Total plxItemLocationBase: 11382
- * Totals Match: YES
+ * Totals Match: YES  --07/12A
  */
 select COUNT(*)
 from dbo.plxItemLocationBase
@@ -453,6 +448,7 @@ RecordNumber|ItemNumber|Location     |BuildingCode
         1292|705627    |MD-RACK B-3-3|BPG Distribution Center         
  */
 
+
 /*
  * Must be only one record for each of these item location dups.
  */
@@ -473,7 +469,7 @@ where ItemNumber in
 '705627',
 '705627A'  --This record is dropped because it has the same location as 705627 
 )
-order by ItemNumber
+order by ItemNumber  --07/12A
 
 /*
 RecordNumber|ItemNumber|site                     |Shelf     
@@ -509,7 +505,7 @@ where LTRIM(RTRIM(Numbered)) in
 '705627',
 '705627A'  --This record is dropped because it has the same location as 705627 
 )
-order by Numbered
+order by Numbered  --07/12A
 
 
 /*
@@ -531,7 +527,7 @@ where BEItemNumber in
 'BE000547',
 'BE200382'
 )
-order by BEItemNumber
+order by BEItemNumber  --07/12A
 
 /*
 RecordNumber|ItemNumber|Suffix|BEItemNumber
@@ -547,42 +543,65 @@ RecordNumber|ItemNumber|Suffix|BEItemNumber
 
 /*
  * Test: 265 
- * Verify that part number with multiple locations 
- * all get uploaded to plex including quantities
+ * Verify 5 part number with multiple locations 
+ * get uploaded to plex including quantities.
+ * 
+ * Verify the correct number of parts with multiple locations
+ * get uploaded correctly.
+ * Verify the correct number of parts with single locations
+ * get uploaded correctly.
  */
---select count(*) cnt from (
+
+/*
+ * Verify the correct number of parts with multiple locations
+ * get uploaded correctly.
+ * Verify the correct number of parts with single locations
+ * get uploaded correctly.
+ */
+select count(*) cnt from (
 select 
 --COUNT(*) cnt
 BEItemNumber
 --RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
-from dbo.plxItemLocationBase
-group by BEItemNumber
-HAVING count(*) > 1
---)tst  --836 07/09 14:45
-and BEItemNumber in
---where BEItemNumber in
+from dbo.plxItemLocationBase  --11382  07/12A
+group by BEItemNumber --10370 
+--HAVING count(*) > 1 --  835 07/12A
+HAVING count(*) = 1  --  9535 07/12A
+					 -- 10370 07/12A
+)tst  
+
+/*
+ * Verify 5 part number with multiple locations 
+ * get uploaded to plex including quantities.
+ */
+select 
+--COUNT(*) cnt
+--BEItemNumber
+RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
+from dbo.plxItemLocationBase  --11382  07/12A
+where BEItemNumber in
 (
 'BE200051',
 'BE201069',
 'BE451057',
 'BE000054', 
 'BE000091'
-)
+) --5 --07/12A
 order by BEItemNumber
-/*
+/* --07/12A
 RecordNumber|ItemNumber|BEItemNumber|location                 |QuantityOnHand
 ------------|----------|------------|-------------------------|--------------
-        9145|000054    |BE000054    |M5-09-05-04              |      13.00000
        13424|000054AV  |BE000054    |M11-B-02-03              |       7.00000
+        9145|000054    |BE000054    |M5-09-05-04              |      13.00000
          839|000091    |BE000091    |M5-19-05-05              |       2.00000
        10986|000091E   |BE000091    |ME-B-6-4                 |       6.00000
-       15358|200051E   |BE200051    |ME-A-5-4                 |       6.00000
        14930|200051AV  |BE200051    |M11-COMP RM SHELF A-03-01|      14.00000
          385|200051    |BE200051    |M5-23-07-05              |      15.00000
-        4985|201069    |BE201069    |M5-13-01-02              |       4.00000
+       15358|200051E   |BE200051    |ME-A-5-4                 |       2.00000
         5033|201069E   |BE201069    |ME-B-5-5                 |       3.00000
-       12822|451057    |BE451057    |MPB-C-4-2                |       4.00000
-       12845|451057AV  |BE451057    |M11-B-03-04              |       4.00000          
+        4985|201069    |BE201069    |M5-13-01-02              |       4.00000
+       12845|451057AV  |BE451057    |M11-B-03-04              |       4.00000
+       12822|451057    |BE451057    |MPB-C-4-2                |       4.00000         
  */
 
 
@@ -637,9 +656,9 @@ from
 	--select DISTINCT Location --Should be the same set as distinct location, buildingcode 
 	from plxItemLocationBase base
 	--order by location
-	--)tst --3409  07/09 14:45 
+	--)tst --3409  07/12A 
 )set1 --
---)tst --3409  07/09 14:45 
+--)tst --3409  07/12A  
 --order by location 
 
 /*
@@ -669,11 +688,10 @@ from
  * Verify count of all locations
  */
 select 
---count(*) cnt
-top 100  
-row#,Location,building_code,location_type,note,location_group
+count(*) cnt
+--top 100 row#,Location,building_code,location_type,note,location_group
 from dbo.plxLocation
---3409 07/09 14:45
+--3409 07/12A 
 
 /*
  * Verify 5 locations that they were uploaded correctly on Plex screen.
@@ -694,7 +712,7 @@ where Location in
 'M8-A-1',
 'MPB-09-09-03',
 'M4-C-1'
-)
+) --07/12A 
 /*
  * Verify 5 locations were created in correct format
  * use the plex supply item screen to verify location
@@ -720,7 +738,7 @@ where bil.Location in
 'M8-A-1',
 'MPB-09-09-03',
 'M4-C-1'
-)
+)  --07/12A 
 
 /*
  * Verify count of locations with location_type of 'Maintenance' 
@@ -732,19 +750,19 @@ count(*) cnt
 --Location,building_code,location_type,note,location_group
 from dbo.plxLocation
 where location_type = 'Maintenance'
-and location_group = 'Maintenance Crib'  --3409 07/09 14:45
+and location_group = 'Maintenance Crib'  --3409 07/12A 
 /*
  * Verify count of location with each building code.
  * Verify no records have a building code other than the 
  * expected ones.
  */
 select 
---count(*) cnt
+count(*) cnt
 --distinct building_code
 --top 100  
-Location,building_code,location_type,note,location_group
+--Location,building_code,location_type,note,location_group
 from dbo.plxLocation
---07/09 14:45
+--3409 07/12A 
 --where building_code = 'BPG Central Stores' --1
 --where building_code = 'BPG Distribution Center' --212
 --where building_code = 'BPG Edon'  --328
@@ -753,7 +771,7 @@ from dbo.plxLocation
 --where building_code = 'BPG Plant 8'  --518
 --where building_code = 'BPG Pole Barn'  --225
 --where building_code = 'BPG Workholding'  --2
---07/09 14:45
+--07/12A 
 where building_code <> 'BPG Central Stores' 
 and building_code <> 'BPG Distribution Center' 
 and building_code <> 'BPG Edon'  
@@ -762,7 +780,7 @@ and building_code <> 'BPG Plant 5'
 and building_code <> 'BPG Plant 8'  
 and building_code <> 'BPG Pole Barn'
 and building_code <> 'BPG Workholding' 
---0
+--0 07/12A 
 order by building_code
 /*
 building_code          
@@ -822,7 +840,18 @@ QuantityOnHand as Quantity,
 --drop table plxItemLocation
 --into plxItemLocation
 from plxItemLocationBase
---)tst --11382  07/09 14:45
+--)tst --11382  07/12A 
+
+select * 
+from dbo.plxItemLocation 
+
+/*
+ *   The plxItemLocation testing
+ *   was done above for the plxItemLocationBase
+ *   table.
+ * 
+ * 
+ */
 
 
 
@@ -929,7 +958,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 		(
 			select 
 			--test purposes does the case statement below work correctly?
-			--Pass 07/09 14:45
+			--Pass 07/12A
 			--NSItemNumberPriority, 
 			CASE
 				when right(NSItemNumberPriority,1) = '1' then NSItemNumber
@@ -952,6 +981,12 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 					ItemNumber, 
 					NSItemNumber,
 					BEItemNumber,
+					/*
+					 * Todo: instead of basing the priority by suffix base it on priority field.
+					 * The priority field is deterimined by a case statement which gives a 
+					 * higher value to part records with more information such as vendor
+					 * or manufacturer.
+					 */
 					case 
 						when suffix = 'N' then NSItemNumber + '-1'
 						when suffix = 'AV' then NSItemNumber + '-2'
@@ -973,7 +1008,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 					*********************************
 					*/
 					--select count(*) cnt from 
-					plxItemLocationBase il  --11382	 07/09 14:45					
+					plxItemLocationBase il  --11382	 07/12A					
 					/*
 					where 
 					itemnumber like '000003%'
@@ -994,8 +1029,8 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 					*/
 				)set1 
 				group by NSItemNumber, BEItemNumber
-				--)tst  --10370 07/09 14:45
-				/* Are there any duplicates left.  If there were multiple
+				--)tst  --10370 07/12A
+				/* Are there any duplicates left?  If there were multiple
 				 * Albion records for a part number is there only one now?
 				 * Since these items would have the same NSItemNumberPriority
 				 * which one is chosen in the min(NSItemNumberPriority) function? 
@@ -1005,7 +1040,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 				 * QUERY SELECTS WITH MIN(NSItemNumberPriority).
 				 */
 				--group by NSItemNumber,BEItemNumber
-				--having count(*) > 1
+				--having count(*) > 1 --0 07/12A
 				/*
 				having 
 				nsitemnumber like '000003%'
@@ -1043,18 +1078,20 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 			--	when suffix = 'AV' then NSItemNumber + '-2'
 			--	when suffix = 'E' then NSItemNumber + '-3'
 			--	when suffix = 'A' then NSItemNumber + '-4'
-			*/
 			--where right(NSItemNumberPriority,1) = '4'
+			*/
 		)set3 --
 		--)tst1 --10370 check for multiple copies of same nsitemnumber
-		--Pass No dups 07/09 14:45
+		--Pass No dups 07/12A
 	)set4 --
-	left outer join 
+	inner join 
 	(
 		/*
 		 * There are many parts with multiple locations and
-		 * there are some part/locations with duplicates. Since
-		 * we need to pick exactly one record for each part to 
+		 * there are some part/locations with duplicates and there
+		 * are even some parts with different suffixes but the same
+		 * location. 
+		 * Since, we need to pick exactly one record for each part to 
 		 * retrieve non-location type information such as description, 
 		 * category,unit, etc. We will choose the part record  
 		 * which has the lowest record number. There are also some numbers 
@@ -1065,7 +1102,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 		group by ltrim(rtrim(Numbered))  
 	)p
 	on set4.ItemNumber=p.ItemNumber
-	--)tst --10370  07/09 14:45
+	--)tst --10370  07/12A
 	/*
 	where 
 	set4.nsitemnumber like '000003%'
@@ -1074,7 +1111,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 	or set4.nsitemnumber like '000547%'
 	or set4.nsitemnumber like '200382%'
 	order by set4.nsitemnumber
-	Pass: 07/09 14:45
+	Pass: 07/12A
 	*/ 
 	--000003A -- 450  
 	--000054 (AV) --9145 
@@ -1085,7 +1122,7 @@ insert into plxSupplyItemBase (RecordNumber,NSItemNumber,BEItemNumber)
 	--	when suffix = 'AV' then NSItemNumber + '-2'
 	--	when suffix = 'E' then NSItemNumber + '-3'
 	--	when suffix = 'A' then NSItemNumber + '-4'
-) -- #10370 07/09 14:45
+)--tst -- #10370 07/12A
 
 
 
@@ -1112,13 +1149,13 @@ from
 (
 	select 
 	--*
-	COUNT(*)
+	--COUNT(*)
 	nsitemnumber 
 	from dbo.plxSupplyItemBase
 	--10370 records before grouping clause.
 	group by nsitemnumber
 )tst --10370 records after grouping clause.
---Pass 07/09 14:45
+--Pass 07/12A
 
 /*
  * Test: 10B 
@@ -1128,231 +1165,254 @@ from
  */  
 select BEItemNumber from plxSupplyItemBase 
 WHERE LTRIM(RTRIM(BEItemNumber)) like '%' + ' ' + '%'  --are there any spaces
---Pass 07/09 14:45
+--Pass 07/12A
 
--- SI-X
 
---CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
---select count(*) cnt from (
-select 
-row_number() OVER(ORDER BY si.BEItemNumber ASC) AS Row#,
-si.BEItemNumber as "Item_No",
-SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
-CASE
-	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-	THEN p.Description --000
-	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-	THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
-	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
-	WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
-	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-	THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
-	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-	then '#' + p.VendorNumber + ', ' + p.Description -- 100
-	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-	and ((p.Manufacturer is null) or (p.Manufacturer = ''))
-	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg#' + p.ManufacturerNumber --101
-	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-	and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
-	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer  --110
-	WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
-	and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
-	and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
-	THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
-end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
--- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n.
--- DBeaver exports NotesText unicode field as plain ascii text, but anywhere there is a \n, ie. 0D0A combo
--- we need to replace it.  If we don't the Plex upload process will interpret this as a completely new record to be uploaded.
--- So replace the \n (0x0D 0x0A) combo with 0x0D.  I tested with replacing the combo with 0x0A and the upload failed.
--- When Plex exports the notes column and it contains a \n it puts quotes around the field and inserts the 0x0D 0x0A ascii characters.
--- This seems like a hack but I don't see any way around it.
--- There are 31 records in which the NotesText field is > 200 characters.  
-SUBSTRING(REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)),1,200) as Note, --
---SUBSTRING(Note,1,200) Note,  --Asking Kristen if this is ok it will truncate around 30 EM parts records notes field. 
--- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
---Test with '100988','708991','200800','100012','100011'
---NotesText as Note, 
-'Maintenance' as item_type,
-CASE
-	when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
-	when p.CategoryID = '-PLATE' then 'PLATE'  -- Kristen did not change this in EM 06-04 
-	else LTRIM(RTRIM(CategoryID))
-end as Item_Group,
---select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
---select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
-'General' as Item_Category,
-'Low' as Item_Priority,
-CASE
-	when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
-	else p.CurrentCost
-end as Customer_Unit_Price,
-'' as Average_Cost,
--- Standardize on units found in common_v_unit
--- Add units as needed and assign default
-CASE 
-	when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
-	when LTRIM(RTRIM(Units)) = 'Case' then 'case'
-	when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
-	when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
-	when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
-	when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
-	when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
-	when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
-	when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
-	when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
-	when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
-	when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
-	when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
-	when LTRIM(RTRIM(Units)) = 'Set' then 'set'
-	else 'Ea'
-end as Inventory_Unit,
--- check 0000007 and other items
-MinimumOnHand as Min_Quantity, 
-/*
-select numbered,description,minimumonhand,maxonhand from dbo.Parts
-where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
--- only 2 items where min > max
-select count(*) notZero
+
+
+-- plxSupplyItem:
+
+
+select
+row_number() OVER(ORDER BY set1.item_no ASC) AS Row#,
+set1.item_no,
+Brief_Description,
+case
+	when bn.item_no is not NULL then Description + char(13) + bn.Note1to450  --append big notes to varchar(800) description field
+	else Description
+end as Description,
+SUBSTRING(Note,1,200) Note,  -- 26 Notes are to big to fit in this field
+Item_Type,Item_Group,Item_Category,
+Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
+Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,
+Location,
+Supplier_Code,
+Supplier_Part_No,Supplier_Std_Purch_Qty,
+Currency,
+Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
+Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
+Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
+Cube_Unit			
+--drop table plxSupplyItem
+into plxSupplyItem
 from
 (
-select numbered,description,minimumonhand,maxonhand from dbo.Parts
-where (minimumOnHand is not null) and (MaxOnHand is not null)
-and (minimumOnHand <> 0) and (MaxOnHand <> 0) 
-)tst --7875
-*/
-CASE
-	when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
-	else MaxOnHand
-end as Max_Quantity,
--- purchasing_v_tax_code / did not put this in for MRO supply items
--- but before you update the item in plex it has to be filled with something
--- and accountant said I could use tax exempt.
--- Found that EM Parts are already marked as taxable 'Y' or 'N'
--- where taxable = 'N' --2044
--- where taxable = 'Y'--10619
--- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
--- accountant also said this so I'm going to mark them all as Tax Exempt
--- 70	Tax Exempt - Labor / Industrial Processing
-'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
-
--- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
--- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
--- and leave it blank.
--- 70200-320-0000	Repairs & Maint - Machine Maint
-'70200-320-0000' as Account_No,
-/* Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name 
- * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
- * All the Manufacturer fields are greater than varchar(25) so don't know what is going on?
- * */
---select distinct plexVendor from dbo.btMfgMap order by plexvendor --173
-/*
-case 
-	when mm.plexVendor is null then 'null' --many
-	when mm.plexVendor = '' then 'Empty'  --0
-	when LTRIM(RTRIM(mm.plexVendor)) = '' then 'WhiteSpace' --0
-	else mm.plexVendor
-end as ManufacturerTest,
-*/
-case 
-	when mm.plexMfg is null then ''
-	else mm.plexMfg
-end as Manufacturer,
---mm.plexVendor as Manufacturer,  
-p.ManufacturerNumber as Manf_Item_No,
-/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
-select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
-*/
-'' as Drawing_No,
-'' as Item_Quantity,
-'' as Location,
---sc.Supplier_Code,
-case 
-	when Supplier_Code = 'UNKNOWN' then ''
-	else Supplier_Code
-end Supplier_Code,  -- make this change in plxSupplyItem query
-/* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
-VendorNumber Supplier_Part_No, 
-'' as Supplier_Std_Purch_Qty,
-'USD' as Currency,
-CASE
-	when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
-	else p.CurrentCost
-end as Supplier_Std_Unit_Price,
-CASE 
-	when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
-	when LTRIM(RTRIM(Units)) = 'Case' then 'case'
-	when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
-	when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
-	when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
-	when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
-	when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
-	when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
-	when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
-	when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
-	when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
-	when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
-	when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
-	when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
-	when LTRIM(RTRIM(Units)) = 'Set' then 'set'
-	else 'Ea'
-end as Supplier_Purchase_Unit,
-1 as Supplier_Unit_Conversion,
-'' as Supplier_Lead_Time,
-'Y' as Update_When_Received,
-'' as Manufacturer_Item_Revision,
-'' as Country_Of_Origin,
-'' as Commodity_Code_Key,
-'' as Harmonized_Tariff_Code,
-'' as Cube_Length,
-'' as Cube_Width,
-'' as Cube_Height,
-'' as Cube_Unit
-
-/************************************
- *  plxSupplyItemBase
- ************************************
-	minRecordNumber numeric(18,0),
-	NSItemNumber varchar(50),
-	BEItemNumber varchar(50)
- *************************************/
---select count(*) from (
---select *	
---drop table plxSupplyItem
---into plxSupplyItem
---into plxSupplyItem
-from dbo.plxSupplyItemBase si
---)tst --10370 07/09 14:45
-inner join dbo.Parts p
-on si.RecordNumber=p.RecordNumber
---)tst --10370 07/09 14:45
-left outer join (
-	select * from btSupplyCode sc
-	where VendorName <> ''
-) sc
-on p.Vendor=sc.VendorName 
---select count(*) cnt from dbo.Parts where vendor = '' --517 07/09 14:45
-left join btMfgMap mm
-on p.Manufacturer=mm.plexMfg 
---order by si.BEItemNumber
---select count(*) cnt from dbo.Parts where manufacturer = '' --7082 07/09 14:45
---)tst  --10370 07/09 14:45
+	--select count(*) cnt from (
+	select 
+	si.BEItemNumber as "Item_No",
+	SUBSTRING(p.Description,1,50) as "Brief_Description",  -- Description field is varchar(60) so there could be some data loss
+	CASE
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN p.Description --000
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN p.Description + ', ' + 'Mfg#' + p.ManufacturerNumber --001
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer --010
+		WHEN ((p.VendorNumber is null) or (p.VendorNumber = ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN p.Description + ', ' + 'Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --011
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		then '#' + p.VendorNumber + ', ' + p.Description -- 100
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is null) or (p.Manufacturer = ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg#' + p.ManufacturerNumber --101
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is NULL) or (p.ManufacturerNumber = '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer  --110
+		WHEN ((p.VendorNumber is not null) and (p.VendorNumber <> ''))
+		and ((p.Manufacturer is not null) and (p.Manufacturer <> ''))
+		and ((p.ManufacturerNumber is not NULL) and (p.ManufacturerNumber <> '')) 
+		THEN '#' + p.VendorNumber + ', ' + p.Description + ', Mfg: ' + p.Manufacturer +', #' + p.ManufacturerNumber --111
+	end as Description,  -- Description field is on the ordering screen so make sure it has all the information needed to order the part.
+	-- used xxd on plex csv file and dbeaver binary viewer on em and both seem to use 0D0A combo for \n.
+	-- DBeaver exports NotesText unicode field as plain ascii text, but anywhere there is a \n, ie. 0D0A combo
+	-- we need to replace it.  If we don't the Plex upload process will interpret this as a completely new record to be uploaded.
+	-- So replace the \n (0x0D 0x0A) combo with 0x0D.  I tested with replacing the combo with 0x0A and the upload failed.
+	-- When Plex exports the notes column and it contains a \n it puts quotes around the field and inserts the 0x0D 0x0A ascii characters.
+	-- This seems like a hack but I don't see any way around it.
+	-- There are 31 records in which the NotesText field is > 200 characters.  
+	SUBSTRING(REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)),1,200) as Note, --
+	--SUBSTRING(Note,1,200) Note,  --Asking Kristen if this is ok it will truncate around 30 EM parts records notes field. 
+	-- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
+	--Test with '100988','708991','200800','100012','100011'
+	--NotesText as Note, 
+	'Maintenance' as item_type,
+	CASE
+		when ((p.CategoryID is null) or (ltrim(rtrim(p.CategoryID))) = '') then 'General'
+		when p.CategoryID = '-PLATE' then 'PLATE'  -- Kristen did not change this in EM 06-04 
+		else LTRIM(RTRIM(CategoryID))
+	end as Item_Group,
+	--select categoryid from dbo.Parts where CategoryID LIKE '%PLATE%'
+	--select distinct categoryid from parts order by categoryid	--192  looks like there are extra in plex such as welding
+	'General' as Item_Category,
+	'Low' as Item_Priority,
+	CASE
+		when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
+		else p.CurrentCost
+	end as Customer_Unit_Price,
+	'' as Average_Cost,
+	-- Standardize on units found in common_v_unit
+	-- Add units as needed and assign default
+	CASE 
+		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
+		when LTRIM(RTRIM(Units)) = 'Case' then 'case'
+		when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
+		when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
+		when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
+		when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
+		when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
+		when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
+		when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
+		when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
+		when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
+		when LTRIM(RTRIM(Units)) = 'Set' then 'set'
+		else 'Ea'
+	end as Inventory_Unit,
+	-- check 0000007 and other items
+	MinimumOnHand as Min_Quantity, 
+	/*
+	select numbered,description,minimumonhand,maxonhand from dbo.Parts
+	where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0)
+	-- only 2 items where min > max
+	select count(*) notZero
+	from
+	(
+	select numbered,description,minimumonhand,maxonhand from dbo.Parts
+	where (minimumOnHand is not null) and (MaxOnHand is not null)
+	and (minimumOnHand <> 0) and (MaxOnHand <> 0) 
+	)tst --7875
+	*/
+	CASE
+		when (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) then 0
+		else MaxOnHand
+	end as Max_Quantity,
+	-- purchasing_v_tax_code / did not put this in for MRO supply items
+	-- but before you update the item in plex it has to be filled with something
+	-- and accountant said I could use tax exempt.
+	-- Found that EM Parts are already marked as taxable 'Y' or 'N'
+	-- where taxable = 'N' --2044
+	-- where taxable = 'Y'--10619
+	-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
+	-- accountant also said this so I'm going to mark them all as Tax Exempt
+	-- 70	Tax Exempt - Labor / Industrial Processing
+	'Tax Exempt - Labor / Industrial Processing' as Tax_Code,
+	
+	-- I worked hard to fill the account_no with an account that could be used to catagorize items as electrical, pumps, and something
+	-- else I cant remember so that Pat could use the account field to keep track of the information he needs.  But was told to quit by Casey.
+	-- and leave it blank.
+	-- 70200-320-0000	Repairs & Maint - Machine Maint
+	'70200-320-0000' as Account_No,
+	/* This field seems to be the manufacturer_code 
+	 * If not configured to use Suppliers as Supply Item manufacturers, then this field,manufacturer_text varchar(25), contains the name of the Manufacturer.
+	 * All the Manufacturer fields are greater than varchar(25) so don't know why it says Manufacturer instead of Manufacturer_Code?
+	 */
+	case 
+		when mm.plexMfg is null then ''
+		else mm.plexMfg
+	end as Manufacturer,
+	--mm.plexVendor as Manufacturer,  
+	p.ManufacturerNumber as Manf_Item_No,
+	/* do manufacturer and vendor numbers look ok -- all varchar(50) so no truncation
+	select top 100 numbered, manufacturerNumber,vendornumber, description from dbo.Parts
+	*/
+	'' as Drawing_No,
+	'' as Item_Quantity,
+	'' as Location,
+	--sc.Supplier_Code,
+	case 
+		when Supplier_Code = 'UNKNOWN' or Supplier_Code is null then ''
+		else Supplier_Code
+	end Supplier_Code,  
+	/* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
+	VendorNumber Supplier_Part_No, 
+	'' as Supplier_Std_Purch_Qty,
+	'USD' as Currency,
+	CASE
+		when p.BillingPrice is NOT null AND BillingPrice > 0 then BillingPrice
+		else p.CurrentCost
+	end as Supplier_Std_Unit_Price,
+	CASE 
+		when LTRIM(RTRIM(Units)) is null or LTRIM(RTRIM(Units)) = '' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Box' then 'Box'
+		when LTRIM(RTRIM(Units)) = 'Case' then 'case'
+		when LTRIM(RTRIM(Units)) = 'Dozen' then 'dozen'
+		when LTRIM(RTRIM(Units)) = 'Each' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Electrical' then 'Ea'
+		when LTRIM(RTRIM(Units)) = 'Feet' then 'Feet'
+		when LTRIM(RTRIM(Units)) = 'Gallons' then 'Gallons'
+		when LTRIM(RTRIM(Units)) = 'INCHES' then 'inches'
+		when LTRIM(RTRIM(Units)) = 'Meters' then 'meters'
+		when LTRIM(RTRIM(Units)) = 'Per 100' then 'hundred'
+		when LTRIM(RTRIM(Units)) = 'Per Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Package' then 'Package'
+		when LTRIM(RTRIM(Units)) = 'Pounds' then 'lbs'
+		when LTRIM(RTRIM(Units)) = 'Quart' then 'quart'
+		when LTRIM(RTRIM(Units)) = 'Roll' then 'Roll'
+		when LTRIM(RTRIM(Units)) = 'Set' then 'set'
+		else 'Ea'
+	end as Supplier_Purchase_Unit,
+	1 as Supplier_Unit_Conversion,
+	'' as Supplier_Lead_Time,
+	'Y' as Update_When_Received,
+	'' as Manufacturer_Item_Revision,
+	'' as Country_Of_Origin,
+	'' as Commodity_Code_Key,
+	'' as Harmonized_Tariff_Code,
+	'' as Cube_Length,
+	'' as Cube_Width,
+	'' as Cube_Height,
+	'' as Cube_Unit
+	
+	/************************************
+	 *  plxSupplyItemBase
+	 ************************************
+		minRecordNumber numeric(18,0),
+		NSItemNumber varchar(50),
+		BEItemNumber varchar(50)
+	 *************************************/
+	--select count(*) from (
+	--select si.*	
+	from dbo.plxSupplyItemBase si
+	--)tst --10370 07/12A
+	inner join dbo.Parts p
+	on si.RecordNumber=p.RecordNumber
+	--)tst --10370 07/12A
+	left outer join (  
+	--If the EM parts record that was chosen does not have a vendor sc.Supplier_Code will be null
+	--Todo instead of picking a parts record by min record number choose the one with a vendor.
+	--It the EM parts record that was chosen has a vendor but it is not in Plex the sc.Supplier_Code 
+	--will be 'UNKNOWN'
+	--select count(*) cnt from dbo.Parts where vendor = '' or Vendor is null --520 07/12A
+		select * from btSupplyCode sc  
+		--where Supplier_Code ='UNKNOWN'  -- 22 07/12A EM Vendors with no Supplier Code in Plex
+		where VendorName <> ''            --319 07/12A The Supplier is not in EM 
+	) sc
+	on p.Vendor=sc.VendorName 
+	--select count(*) cnt from dbo.Parts where vendor = '' --517 07/12A
+	left outer join btMfgMap mm  --Every valid EM manufacturer is in plex but there are many EM parts without manufactuers
+	on p.Manufacturer=mm.plexMfg 
+	--select * from	btMfgMap mm order by emMfg  --Only contains valid manufacturers no nulls or '' records
+	--select count(*) cnt from dbo.Parts where manufacturer = '' or manufacturer is null --7102 07/12A
+	--)tst  --10370 07/12A	select * from btSupplyCode sc  
+)set1
+left outer join dbo.plxBigNote bn
+on set1.Item_No=bn.item_no
 
 
 /*
@@ -1364,6 +1424,7 @@ on p.Manufacturer=mm.plexMfg
  * 
  */
 
+
 /*
 Test: 5 
 Verify the count of EM supply items to upload equals the count in Plex. 
@@ -1372,13 +1433,33 @@ select
 count(*) 
 --top 100 *
 from plxSupplyItem 
---10370 07/09 14:45
+--10370 07/12A
 
 /*
-Test: 15 
-Verify that the description field is being formatted correctly 
-*/
+ * Test: 15 
+ * 
+ * Verify that the description field is being formatted correctly
+ * for EM part records with a notes_text field <= 200 characters. 
+ *  
+ * Testing has shown that there are no EM parts records with a valid
+ * Note_text field > 450 characters.  See issue: 1.
+ * 
+ * Verify EM parts with notes_text fields > 200 characters have been
+ * appended to the plxSupplyItems Description field.
+ * 
+ * Verify the plxSupplyItems Note field has been truncated to 200 characters.
+ * 
+ * Verify EM parts with notes_text fields > 200 look ok in Plex supply item
+ * detail screen
+ * 
+ * Verify there are no nulls in manufactuer,manufactuernumber,vendor
+ * 
+ */  
 
+/*
+ * Verify that the description field is being formatted correctly
+ * for EM part records with a notes_text field <= 200 characters. 
+ */
 select
 si.item_no,si.Description,p.Description,
 p.VendorNumber,
@@ -1394,7 +1475,7 @@ where si.item_no in
 'BE800300','BE999997','BE139987','BE000668','BE600005','BE999000','BE200703','BE650002' 
 )
 order by item_no
---pass 07/09 14:45
+--pass 07/12A
 --------------VendorNumber,Manufacturer,ManufactuerNumber 
 --000 800300 
 --001 999997  |            |            |02120             | 
@@ -1405,11 +1486,66 @@ order by item_no
 --110 200703  |800EPMJ3    |Allen Bradley|                  | 
 --111 650002AV|54041462    |Kendall Electric|SUPER33+          | 
 
+
 /*
-Test: 20 
-Verify that items with a newline in the notes field display correctly on the Supply Item detail screen. 
+ * Verify EM parts with notes_text fields > 200 characters have been
+ * appended to the plxSupplyItems Description field.  See 
+ * issue 1 for details.
+ * 
+ * Verify the plxSupplyItems Note field has been truncated to 200 characters.
+ * 
+ * Verify EM parts with notes_text fields > 200 look ok in Plex supply item
+ * detail screen
+ */
+select item_no,
+case
+	when note=substring(Note,1,200) then 'Pass'
+	else 'Fail'
+end PassFail,
+description,
+note
+from dbo.plxSupplyItem si
+where item_no in
+(
+select
+top 5 item_no
+--item_no,Note1to450
+from
+dbo.plxBigNote bn
+)
+--pass 07/12A
+/*  note_text > 
+where item_no
+(
+'BE000195'
+'BE000665'
+'BE000743'
+'BE100025'
+'BE100100'
+)
 */
 
+
+
+/*
+ * Test: 20 
+ * field: Note
+ * 
+ * Issue: 1
+ * How many EM part notes field will be truncated? 31
+ * Combine notes field with description field for parts with notes field over 200 characters.
+ * 
+ * Verify Note field has been trucated to 200 characters for EM parts records 
+ * with Notestext field > 200 characters and looks ok on the supply item detail screen.
+ * 
+ * Verify that items with a newline in the notes field display correctly on the Supply Item detail screen. 
+ * 
+ * 
+*/
+
+/*
+ * Verify that items with a newline in the notes field display correctly on the Supply Item detail screen. 
+ */
 select  
 --count(*) 
 --top 10 
@@ -1420,7 +1556,7 @@ in
 (
 'BE100988','BE708991','BE200800','BE100012','BE100011'
 )
---pass 07/09 14:45
+--pass 07/12A
 --where notestext like '%'+CHAR(10)+'%' --2503 
 --where notestext like '%'+char(13)+'%' --2503 
 --where notestext like '%'+char(13)+CHAR(10)+'%' -- 2503 --THESE ARE THE ASCII VALUES THAT GET STORED IN THE DATABASE (0x0D 0x0A) 
@@ -1455,7 +1591,7 @@ in
 'BE100988','BE708991','BE200800','BE100012','BE100011'
 )
 order by si.item_no
--- pass 07/09 14:45
+--pass 07/12A
 /*
 item_no |item_group     |CategoryID     
 --------|---------------|---------------
@@ -1475,7 +1611,7 @@ count(*)
 --top 1 numbered,categoryid
 from dbo.plxSupplyItem si
 where Item_Category <> 'General'
---pass 07/09 14:45
+--pass 07/12A
 
 /*
 Test: 40 
@@ -1502,7 +1638,7 @@ in
 (
 'BE000007','BE000002','BE000030','BE000001'
 )
---pass 07/09 14:45
+--pass 07/12A
 /*
 item_no |Customer_Unit_Price|BillingPrice|CurrentCost
 --------|-------------------|------------|-----------
@@ -1561,7 +1697,7 @@ from dbo.Parts
 --where LTRIM(RTRIM(Units)) = 'Pounds'
 --where LTRIM(RTRIM(Units)) = 'Quart'
 --where LTRIM(RTRIM(Units)) = 'Roll'
-where LTRIM(RTRIM(Units)) = 'Set'
+--where LTRIM(RTRIM(Units)) = 'Set'
 
 /*  
 numbered|units |
@@ -1588,16 +1724,39 @@ All		|     | 13
 */
 
 select  
-count(*) 
---top 10 
---si.item_no,
---si.inventory_unit,
---p.Units
+--count(*) 
+top 10 si.item_no,si.inventory_unit,p.Units
 from plxSupplyItem si
 inner join dbo.plxSupplyItemBase sib
 on si.Item_No=sib.BEItemNumber
 inner join dbo.Parts p
 on sib.RecordNumber=p.RecordNumber
+/*
+where item_no in 
+(
+--Plex/EM unit
+'BE000030',--set / Set
+'BE110000',--Ea / blank
+'BE200000',--hundred / Per 100
+'BE200020',--Ea / Electrical
+'BE200539', --meters / Meters
+'BE200570',--Feet / Feet
+'BE200603',--case / Case
+'BE450820',--Box / Box
+'BE500008',--Package / Per Package
+'BE500025',--Package / Package
+'BE650006', --Roll / Roll
+'BE700984',--dozen / Dozen
+'BE850014', --inches /Inches
+'BE800300',--quart / Quart
+'BE990003',--lbs / Pounds
+'BE999000',--Ea / Each
+'BE999002'--Gallons / Gallons
+)
+order by item_no
+--10370 Pass 07/12A
+*/
+/*
 where inventory_unit = 'Box' --6
 or inventory_unit = 'case' --2
 or inventory_unit = 'dozen'  --5
@@ -1612,9 +1771,10 @@ or inventory_unit = 'lbs'  --2
 or inventory_unit = 'quart'  --1
 or inventory_unit = 'Roll'  --10
 or inventory_unit = 'set'  --125
---10370 Pass 07/09 14:45
-
---where inventory_unit = '' or inventory_unit is null
+--10370 Pass 07/12A
+*/
+/*
+--where inventory_unit = '' or inventory_unit is null  --0
 --where inventory_unit = 'Box' --6
 --where p.Units = 'Box' --6
 --where inventory_unit = 'case' --2
@@ -1646,32 +1806,8 @@ or inventory_unit = 'set'  --125
 --where p.Units = 'Roll'  --10
 --where inventory_unit = 'set'  --125
 --where p.Units = 'Set'  --125
---10370 Pass 07/09 14:45
-/*
-where item_no in 
-(
---Plex/EM unit
-'BE000030',--set / Set
-'BE110000',--Ea / blank
-'BE200000',--hundred / Per 100
-'BE200020',--Ea / Electrical
-'BE200539', --meters / Meters
-'BE200570',--Feet / Feet
-'BE200603',--case / Case
-'BE450820',--Box / Box
-'BE500008',--Package / Per Package
-'BE500025',--Package / Package
-'BE650006', --Roll / Roll
-'BE700984',--dozen / Dozen
-'BE850014', --inches /Inches
-'BE800300',--quart / Quart
-'BE990003',--lbs / Pounds
-'BE999000',--Ea / Each
-'BE999002'--Gallons / Gallons
-)
---10370 Pass 07/09 14:45
+--10370 Pass 07/12A
 */
-order by item_no
 
 
 /*
@@ -1682,7 +1818,7 @@ Verify that Min_Quantity contains EM.MinimumOnHand.
 
 select numbered,MinimumOnHand
 from dbo.Parts
-where MinimumOnHand is null  -- 0
+--where MinimumOnHand is null  -- 0  07/12A
 where ltrim(rtrim(numbered))
 in
 (
@@ -1694,20 +1830,21 @@ select
 --count(*) 
 p.numbered,
 si.Item_No,
-si.Min_Quantity
+si.Min_Quantity,
 p.MinimumOnHand
 from plxSupplyItem si
---where Min_Quantity is null
+--where Min_Quantity is null --07/12A
 inner join dbo.plxSupplyItemBase sib
 on si.Item_No=sib.BEItemNumber
 inner join dbo.Parts p
 on sib.RecordNumber=p.RecordNumber
+--where si.Min_Quantity is null --07/12A
 where si.Item_No
 in
 (
 'BE100988','BE708991','BE200800','BE100012','BE100011'
 )
---Pass 07/09 14:45
+--Pass 07/12A
 /*
 numbered|MinimumOnHand
 --------|-------------
@@ -1720,7 +1857,7 @@ numbered|MinimumOnHand
 
 /*
 Test: 60 
-Verify that Max_Quantity is not null 
+Verify that when Max_Quantity is null Max_Quantity gets uploaded to plex correctly
 Verify that when EM.minimumOnHand > EM.maxOnHand then plex Max_Quantity gets set to 0
 Verify that in other cases that Max_Quantity gets set to EM.MaxOnHand
 CASE
@@ -1741,7 +1878,6 @@ numbered|RecordNumber|MinimumOnHand|MaxOnHand
 
 select Numbered,RecordNumber,MinimumOnHand,MaxOnHand
 from dbo.Parts
---where MaxOnHand is null
 where (minimumOnHand is not null) and (MaxOnHand is not null) and (minimumOnHand > MaxOnHand) and (MaxOnHand <> 0) 
 order by numbered
 
@@ -1765,18 +1901,19 @@ Min_Quantity,
 p.MaxOnHand,
 Max_Quantity
 from plxSupplyItem si
---where Min_Quantity is null
 inner join dbo.plxSupplyItemBase sib
 on si.Item_No=sib.BEItemNumber
 inner join dbo.Parts p
 on sib.RecordNumber=p.RecordNumber
+--where Max_Quantity is null --0 -- 07/12A
+--where si.item_no = 'BE800300'  -- Max_Quantity is null --07/12A
 where si.Item_No 
 in
 (
 'BE100988','BE200277','BE705334','BE705286','BE800300'
 )
 order by item_no
---Pass 07/09 14:45
+--Pass 07/12A
 /*
 
 Test: 65 
@@ -1793,8 +1930,9 @@ count(*)
 --item_no,
 --tax_code
 from plxSupplyItem  
---where tax_code = 'Tax Exempt - Labor / Industrial Processing'
+where tax_code = 'Tax Exempt - Labor / Industrial Processing'
 where tax_code <> 'Tax Exempt - Labor / Industrial Processing'
+--Pass 07/12A
 
 /*
 Test: 70 
@@ -1811,13 +1949,12 @@ count(*)
 from plxSupplyItem  
 --where account_no = '70200-320-0000' 
 where Account_No <> '70200-320-0000'
-
+--Pass 07/12A
 
 /*
 Test: 75 
 
-Not sure if this is the manufacturer_key, manufacturer_code, or Manufacturer_Name
-common_v_manufacturer field.
+Pretty sure this is the manufacturer_code in common_v_manufacturer field.
 
 Note on upload wiki:
 If not configured to use Suppliers as Supply Item manufacturers, 
@@ -1870,16 +2007,16 @@ from
 	on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
 	left outer join btMfgMap mm
 	on p.Manufacturer=mm.emMfg 
-	--where si.Manufacturer <> '' and si.Manufacturer is not null --2184 07/09 14:45
-	--where mm.emMfg is not null  --2184 07/09 14:45
-	--where si.Manufacturer = '' or si.Manufacturer is null       --8186 07/09 14:45
-	-- There are 5 manufacturers uploaded to plex count is 173
+	--where si.Manufacturer <> '' and si.Manufacturer is not null --2184 07/12A
+	--where mm.emMfg is not null  --2184 07/12A
+	where si.Manufacturer = '' or si.Manufacturer is null         --8186 --Pass 07/12A
+	-- There are 5 manufacturers uploaded to plex count is 173   --10370 --Pass 07/12A
 	-- that have no supply item's manufacturer assigned
 )tst
 
 select 
 count(*)
-from btMfgMap mm --173 07/09 14:45
+from btMfgMap mm --173 --Pass 07/12A
 
 /*
  * 3. Verify that 5 supply items with manufactures got uploaded correctly using the ‘supply items detail screen’
@@ -1906,7 +2043,7 @@ where si.Item_No in
 'BE700801', --Barksdale
 'BE706202', --MITSUBISHI ELECTRIC
 'BE701996'  --BOSCH-REXROTH
-)
+) --Pass 07/12A
 /*
 where si.Item_No in
 (
@@ -1941,7 +2078,7 @@ from
 	(p.Manufacturer is not null and p.Manufacturer <> '')
 	and mm.emMfg is null
 )tst
---214  07/09 14:45
+--214  --Pass 07/12A
 
 /*
  * Why aren't some of these manufacturer in plex
@@ -1976,7 +2113,7 @@ select
 --top 100
 DISTINCT p.Manufacturer
 --p.Numbered,p.Manufacturer,mm.emMfg
-from dbo.Parts p --398
+from dbo.Parts p --398 --Pass 07/12A
 )tst
 --order by Manufacturer
 
@@ -2013,10 +2150,9 @@ FROM
 	and emMfg is null
 	group by p.Manufacturer
 	HAVING count(*) > 5
-	order by count(*) desc
+	--order by count(*) desc
 )tst
---213
-order by p.Manufacturer
+--51 --Pass 07/12A
 
 /*
  *
@@ -2035,16 +2171,16 @@ select
 si.Item_No,si.Manufacturer,si.Manf_Item_No,p.ManufacturerNumber
 --sb.BEItemNumber, p.Manufacturer EM,si.Manufacturer Plex
 --distinct p.Manufacturer --168 distinct
-from dbo.plxSupplyItemBase sb  --10279
+from dbo.plxSupplyItemBase sb  --10370 --Pass 07/12A
 inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10279
+on sb.BEItemNumber=si.Item_No  --10370  --Pass 07/12A
 inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10279
+on sb.RecordNumber=p.RecordNumber --10370 --Pass 07/12A
 left outer join btMfgMap mm
 on p.Manufacturer=mm.emMfg 
---where si.Manf_Item_No = '' or si.Manf_Item_No is null     --4172 07/09 14:45
---where si.Manf_Item_No <> '' and si.Manf_Item_No is not null --6198 07/09 14:45
-)tst --4172
+--where si.Manf_Item_No = '' or si.Manf_Item_No is null     --4172 --Pass 07/12A
+--where si.Manf_Item_No <> '' and si.Manf_Item_No is not null --6198 --Pass 07/12A
+--)tst --4172
 where si.Item_No in
 (
 'BE200800', --Omron
@@ -2055,9 +2191,19 @@ where si.Item_No in
 )
 
 /*
+Item_No |Manufacturer             |Manf_Item_No |ManufacturerNumber
+--------|-------------------------|-------------|------------------
+BE700801|Barksdale                |E1H-H90      |E1H-H90           
+BE706202|MITSUBISHI ELECTRIC      |B40055-1     |B40055-1          
+BE100012|Okuma America Corporation|H0031-0021-16|H0031-0021-16     
+BE200800|Omron                    |D4C-1602     |D4C-1602          
+BE701996|BOSCH-REXROTH            |3842519117   |3842519117        
+ */
+
+/*
  *
  * Test: 85 
- * Verify that all but 14 supply items that have a vendor 
+ * Verify that all but 15 supply items that have a vendor 
  * also have a supplier code. 
  * 
  * 1. Verify that all but 15 supply items that have a vendor 
@@ -2149,75 +2295,46 @@ left outer join (
 ) sc
 on p.Vendor=sc.VendorName 
 where 
-p.Vendor <> ''
-and sc.Supplier_Code is null or sc.Supplier_Code ='' --14
---15 07/09 14:45
+p.Vendor <> '' and p.Vendor is not null
+and (sc.Supplier_Code is null or sc.Supplier_Code ='' )
+--15 --Pass 07/12A
 
 select 
 count(*) cnt
 from dbo.Parts p
 where p.Vendor is null or p.Vendor = ''
 /*
- * Verify the count of em.parts with no vendors --520
- * Verify the count of supply items with no supplier_code  --482
+ * Verify the count of em.parts with no vendors 
+ * Verify the count of supply items with no supplier_code  
+ * Verify the count of supply items with a supplier_code
  * 
  */
 
 select 
 count(*) cnt
 from dbo.Parts p
-where p.Vendor is null or p.Vendor = '' --520 07/09 14:45
+where p.Vendor is null or p.Vendor = '' --520 --Pass 07/12A
 
 select 
 --distinct si.Supplier_Code
 COUNT(*) cnt
 --top 100
 --item_no,p.QuantityOnHand, p.vendor,sc.Supplier_Code
-from dbo.plxSupplyItemBase sb --10370 07/09 14:45
+from dbo.plxSupplyItemBase sb --10370 --Pass 07/12A
 inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10370 07/09 14:45
+on sb.BEItemNumber=si.Item_No  --10370 --Pass 07/12A
 inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
+on sb.RecordNumber=p.RecordNumber --10370 --Pass 07/12A
 left outer join (
 	select * from btSupplyCode sc
 	where VendorName <> ''
 ) sc
 on p.Vendor=sc.VendorName 
 where 
-si.Supplier_Code = ''  or si.Supplier_Code is null  --0/482
-
-
-select * from dbo.btSupplyCode
-	where VendorName <> ''
-order by supplier_code
-
-
-select 
---distinct p.Vendor --21 07/09 14:45 
-p.Numbered,p.Vendor,p.site,p.Shelf,p.QuantityOnHand
-from dbo.plxSupplyItemBase sb --10370 07/09 14:45
-inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10370 07/09 14:45
-inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
-left outer join (
-	select * from btSupplyCode sc
-	where VendorName <> ''
-) sc
-on p.Vendor=sc.VendorName 
---where si.Item_No = 'BE001029'
-where si.Supplier_Code ='UNKNOWN'  --28 07/09 14:45
-order by vendor
-
-select 
-
-select sc.VendorName,sc.Supplier_Code,sc.Supplier_Status 
-from btSupplyCode sc
-where VendorName <> ''
---and sc.Supplier_Code = 'UNKNOWN'
-order by VendorName
-
-where sc.Supplier_Code = 'UNKNOWN'
+si.Supplier_Code <> ''  --9860  --Pass 07/12A
+--si.Supplier_Code = '' and sc.Supplier_Code <> 'UNKNOWN' --0 --Pass 07/12A
+--si.Supplier_Code = ''  --510 --Pass 07/12A
+--si.Supplier_Code is null  --0 --Pass 07/12A
 
 
 /* item_supplier.Supplier_Item_No is varchar(50) and so is vendorNumber so there should be no truncation */
@@ -2242,17 +2359,17 @@ where sc.Supplier_Code = 'UNKNOWN'
  */
 select 
 --distinct si.Supplier_Code
---COUNT(*) cnt
+COUNT(*) cnt
 --top 100
-item_no,si.Supplier_Part_No, p.VendorNumber
+--item_no,si.Supplier_Part_No, p.VendorNumber
 from dbo.plxSupplyItemBase sb --10370 07/09 14:45
 inner join dbo.plxSupplyItem si
 on sb.BEItemNumber=si.Item_No  --10370 07/09 14:45
 inner join dbo.Parts p
 on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
 where 
-si.Supplier_Part_No = '' or si.Supplier_Part_No is null      --664 07/09 14:45
---si.Supplier_Part_No <> '' and si.Supplier_Part_No is not null --9706 07/09 14:45
+--si.Supplier_Part_No = '' or si.Supplier_Part_No is null      --664 --Pass 07/12A
+si.Supplier_Part_No <> '' and si.Supplier_Part_No is not null --9706 --Pass 07/12A
 order by si.item_no
 /*
  * Verify that 5 supply item with a supplier_part_no were uploaded correctly 
@@ -2326,7 +2443,7 @@ where
 si.Currency <> 'USD'
 or si.Supplier_Std_Purch_Qty <> 0
 or si.Supplier_Unit_Conversion <> 1
---PASS: 07/09 14:45
+--Pass 07/12A
 
 /*
  *
@@ -2403,15 +2520,15 @@ on sb.BEItemNumber=si.Item_No  --10370 07/09 14:45
 inner join dbo.Parts p
 on sb.RecordNumber=p.RecordNumber --10370 07/09 14:45
 where 
---(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --00 --3829 07/09 14:45
---(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --01 --4955 07/09 14:45
---(p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --10 --42 07/09 14:45
---(p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --11 --1544 07/09 14:45
-(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --00 --3829 07/09 14:45
-or (p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --01 --4955 07/09 14:45
-or (p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --10 --42 07/09 14:45
-or (p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --11 --1544 07/09 14:45
---10370 07/09 14:45
+--(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --00 --3828 --Pass 07/12A
+--(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --01 --4954 --Pass 07/12A
+--(p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --10 --42 --Pass 07/12A
+--(p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --11 --1546 --Pass 07/12A
+(p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --00 
+or (p.BillingPrice is null or BillingPrice <= 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --01 
+or (p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is null or p.CurrentCost <= 0) --10 
+or (p.BillingPrice is not null or BillingPrice > 0) and (p.CurrentCost is not null and p.CurrentCost > 0) --11 
+--10370 --Pass 07/12A
 
 /*
  * Verify 5 parts with a billing price that this price is uploaded correctly. 
@@ -2421,15 +2538,12 @@ select
 --distinct si.Supplier_Code
 --COUNT(*) cnt
 --top 100
-item_no,
-si.Supplier_Code,
-p.BillingPrice,
-p.CurrentCost
-from dbo.plxSupplyItemBase sb --10279
+item_no,si.Supplier_Code,p.BillingPrice,p.CurrentCost
+from dbo.plxSupplyItemBase sb 
 inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10279
+on sb.BEItemNumber=si.Item_No  
 inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10279
+on sb.RecordNumber=p.RecordNumber --10370 --Pass 07/12A
 where 
 item_no in (
 --where p.BillingPrice is NOT null AND BillingPrice > 0 
@@ -2452,15 +2566,12 @@ select
 --distinct si.Supplier_Code
 --COUNT(*) cnt
 --top 100
-item_no,
-si.Supplier_Code,
-p.BillingPrice,
-p.CurrentCost
-from dbo.plxSupplyItemBase sb --10279
+item_no,si.Supplier_Code,p.BillingPrice,p.CurrentCost
+from dbo.plxSupplyItemBase sb 
 inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10279
+on sb.BEItemNumber=si.Item_No  
 inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10279
+on sb.RecordNumber=p.RecordNumber --10370 --Pass 07/12A
 where
 --p.BillingPrice is null or BillingPrice <= 0
 item_no in (
@@ -2481,15 +2592,12 @@ select
 --distinct si.Supplier_Code
 --COUNT(*) cnt
 --top 100
-item_no,
-si.Supplier_Code,
-p.BillingPrice,
-p.CurrentCost
-from dbo.plxSupplyItemBase sb --10279
+item_no,si.Supplier_Code,p.BillingPrice,p.CurrentCost
+from dbo.plxSupplyItemBase sb 
 inner join dbo.plxSupplyItem si
-on sb.BEItemNumber=si.Item_No  --10279
+on sb.BEItemNumber=si.Item_No  
 inner join dbo.Parts p
-on sb.RecordNumber=p.RecordNumber --10279
+on sb.RecordNumber=p.RecordNumber --10370 --Pass 07/12A
 where
 --(p.BillingPrice is null or BillingPrice <= 0)
 --and
@@ -2595,9 +2703,9 @@ on sib.RecordNumber=p.RecordNumber
 --where p.Units = 'Roll'  --10
 --where Supplier_Purchase_Unit = 'set'  --125
 --where p.Units = 'Set'  --125
---10370 Pass 07/09 14:45
+--10370 --Pass 07/12A
 /*
-where inventory_unit = 'Box' --6
+where Supplier_Purchase_Unit = 'Box' --6
 or Supplier_Purchase_Unit = 'case' --2
 or Supplier_Purchase_Unit = 'dozen'  --5
 or Supplier_Purchase_Unit = 'Ea' --9929
@@ -2611,7 +2719,7 @@ or Supplier_Purchase_Unit = 'lbs'  --2
 or Supplier_Purchase_Unit = 'quart'  --1
 or Supplier_Purchase_Unit = 'Roll'  --10
 or Supplier_Purchase_Unit = 'set'  --125
---10370 Pass 07/09 14:45
+--10370 Supplier_Purchase_Unit
 */
 
 
@@ -2636,7 +2744,7 @@ where item_no in
 'BE999000',--Ea / Each
 'BE999002'--Gallons / Gallons
 )
---10370 Pass 07/09 14:45
+--10370 Pass 07/12A
 
 order by item_no
 
@@ -2678,30 +2786,7 @@ Row# >=1 and Row# <= 100
  * Create Supply Item CSV files
  */
 
-/*
- * Issue: 1
- * How many EM part notes field will be truncated? 31
- * Combine notes field with description field for parts with notes field over 200 characters.
- */
 
-                                                      --10360
-select
-item_no,
---ltrim(rtrim(REPLACE(SUBSTRING(Note,201,450), CHAR(13), char(32)))), 
---ltrim(rtrim(SUBSTRING(Note,201,450))),
-SUBSTRING(Note,1,450) Note1to450
---into plxBigNote
-from
-dbo.plxSupplyItem si
-where 
--- Account for all the following cases to get every valid big note
-ltrim(rtrim(SUBSTRING(Note,201,450))) <> '' 
-and ltrim(rtrim(SUBSTRING(Note,201,450))) <> char(13)
-and ltrim(rtrim(SUBSTRING(Note,201,450))) not like char(09)+char(09)+char(09)+'%'
-and ltrim(rtrim(REPLACE(SUBSTRING(Note,201,450), CHAR(13), char(32)))) <> ''
-and SUBSTRING(Note,201,450) is not null
-
-select * from dbo.plxBigNote
 
 select count(*) cnt from dbo.plxSupplyItem  --10370 07/09 14:45
 
@@ -2742,38 +2827,6 @@ on si.Item_No=bn.item_no
 --where Row# >=9001 and Row# <= 9900  
 where Row# >=9901 and Row# <= 10800 
 
-/*
- * Test: Issue 1
- * Verify Description and Note fields in 5 items with big notes in plex
- * Verify items without a big note description is not changed.
- */
-
-
-select Row#, item_no,Supplier_Part_No,Supplier_Code,description,note
-FROM
-dbo.plxSupplyItem
-where item_no = 'BE705140'
-where item_no = 'BE101121' --1449 did not upload
---where item_no = 'BE101116' --1448  last item uploaded
---where Item_No = 'BE000195'
-
-select * 
---into btSupplyCode0711
-FROM
-dbo.btSupplyCode
---where Supplier_Code = 'GLOBAL%MACHINE'
-where Supplier_Code = 'WESTECH AUTOMATION'
---update dbo.btSupplyCode
-set Supplier_Code='WESTECH AUTOMATION'
-where Supplier_Code = 'WESTECH AUTOMATION SOLUTI'
-/*
-**COST OF NEW F/GOSIGER IS $3990.52 (with 10% DISCOUNT) 9/21/17 KT
-**COST OF NEW FROM KAMMERER: $2800.00/E  10/13/16 KT
-STOCK CONFIRMED: 7/9/19 KT
-
-1 REPAIRS ON PO 141011-00//000156
-1 NEW AND 1 REPAIR ON PO 141597-00//000159.  3/16/19 KT
-*/
 
 /*
  * Create Item Location CSV files
@@ -2789,600 +2842,12 @@ from dbo.plxItemLocation il
 where Row# >=1 and Row# <= 100
 
 
-/*
- * 
- * 
- * 
- * 
- *             Create Test Sets 
- * 
- * 
- * 
- * 
- */
 
-/* 
- * plxLocationTS
- * Test set for Plex location uploads.
- * 
- * Process 
- * 1. Create plxLocationTS. Query location records for all supply items and locations you want to test.  
- *    Join this  query to the plxLocation set to get a reduced set of all the location for 
- *    the supply items and locations you want to test. 
- * 
- * 2. Create plxItemLocationTS. Use location test set to reduce the plxItemLocation table with inner join clause
- *    on the location field.  
- * 
- * 3. Create plxSupplyItemTS. Use plxItemLocationTS set to reduce the plxSupplyItem set with inner join clause
- * 	  on the ItemNumber field.
- * 
- * Result:
- * The above process should ensure that every supply item in your test set should have all its location and 
- * ItemLocation records also
- */
- 
- 
- /*
-  * Per step 1 of the above proces make sure all locations for whatever items you wish to perform tests
-  * on is included in the plxLocationTS table.
-  * 1. Add up to 10 location records for each each plex site.
-  * 2. Add all location records for 5 parts which have a category of Electronics, Pumps, and Covers categories.
-  */
 
-/*
- *   Add up to 10 location records for each each plex site.
- */
---drop table plxLocationTS
-select * from dbo.plxLocationTS
-select count(*) from (
-select
-top 10
-row#,
-Location,
-building_code,
-location_type,  
-note,
-location_group
-into plxLocationTS
-from
-dbo.plxLocation
---)tst  --3319
-where SUBSTRING(location,1,2)='MD'
-order by location
 
-insert into dbo.plxLocationTS 
-select
-top 10
-row#,
-Location,
-building_code,
-location_type,  
-note,
-location_group
-from
-dbo.plxLocation
-where SUBSTRING(location,1,3)='MPB'
-order by location
-select * from dbo.btSiteMap order by emSite
 
-select 
-COUNT(*) 
-from dbo.plxLocationTS  
---65  All sites
 
---15 Pumps,Electronics,Covers
 
-/*
- * Add all locations for union of part set which includes 5 parts each 
- * with an item category of Electronic, Pumps, and Covers.
- */
-insert into dbo.plxLocationTS 
-select
-row#,
-l.Location,
-building_code,
-location_type,  
-note,
-location_group
-from dbo.plxLocation l
-inner join 
-(
-	select distinct location 
-	/*******************************
-	 * plxItemLocationBase
-	 * *****************************
-		RecordNumber numeric(18,0),
-		ItemNumber varchar(50),
-		NSItemNumber varchar(50),
-		BEItemNumber varchar(50),
-		BuildingCode varchar(50),
-		Location varchar(50),
-		QuantityOnHand numeric(18,5),	
-		Suffix varchar(2)
-	 ********************************/
-	--select base.recordnumber,location,vendor
-	from plxItemLocationBase base
-	inner join 
-	(
-	 	select top 5 recordnumber,numbered,vendor
-	 	from dbo.Parts p
-		where p.CategoryID = 'Electronics' and vendor <> ''
-		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
-		and shelf <> ''
-		and vendor <> ''
 
-		UNION
-	 	select top 5 recordnumber,numbered,vendor
-	 	from dbo.Parts p
-		where p.CategoryID = 'Pumps' and vendor <> ''
-		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
-		and shelf <> ''
-		and vendor <> ''
-		
-		UNION
-	 	select top 5 recordnumber,numbered,vendor
-	 	from dbo.Parts p
-		where p.CategoryID = 'Cover' and vendor <> ''
-		and (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K')
-		and shelf <> ''
-		and vendor <> ''
-	
-	)epc
-	on base.recordnumber=epc.recordnumber
-)c
-on l.location=c.location
 
-
-/* 
- *	Per step 2 of the Test set generation process above.
- * 
- *  Create plxItemLocationTS. Use location test set to reduce the plxItemLocation table with inner join clause
- *  on the location field.  
- * 
- */
-SELECT
-row#,Item_No,il.Location,Quantity,Building_Default,Transaction_Type
---drop table plxItemLocationTS
---into plxItemLocationTS
-from 
-dbo.plxItemLocation il
-inner join plxLocationTs ts -- reduce set by joining to the location test set table.
-on il.Location= ts.Location
-order by location,item_no
---163 
-
-
-/*
- * Per set# 3 of the above Test Set generation process create the plxSupplyItemTS table.
- * 
- * 3. Use plxItemLocationTS set to reduce the plxSupplyItem set with inner join clause
- * 	  on the ItemNumber field.
- */
-
-select 
-row#,
-si.Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
-Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
-Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
-Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
-Cube_Unit			
---drop table plxSupplyItemTS
---into plxSupplyItemTS
-from dbo.plxSupplyItem si
-inner JOIN plxItemLocationTS il
-on si.item_no=il.item_no
-
-
-/*
- * Validate that our test sets include all the records we need.
- * 
- * 1. Validate that each item location has exactly one location record.
- * 2. Validate that each item location record has exactly on supply item record.
- * 
- */
-select * 
-from plxItemLocationTS il 
---163
-inner join dbo.plxLocationTS l
-on il.Location=l.Location
---163
-
-select il.*
-from dbo.plxItemLocationTS il
-inner join dbo.plxSupplyItemTS si
-on il.item_no=si.item_no
---163
-
-select * 
-from plxItemLocationTS il 
---163
-inner join dbo.plxLocationTS l
-on il.Location=l.Location
---163
-inner join plxSupplyItemTS si
-on il.Item_No=si.item_no
---163
-
-
-
-/*
- * 
- * 
- * 			Test Upload section
- * 
- * 
- */
-
-/*
- * Quere to upload a range of locations
- */
-select  
-Location,building_code,location_type,note,location_group
-from dbo.plxLocationTS
---where row# >=1
---and row# <= 100
-order by location
-
-/*
- * Query to upload a range of supply items.
- */
-
-select
---top 1
-Item_No+'B',Brief_Description,Description,
---REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), ''), CHAR(10), '') as Note, --
---REPLACE(REPLACE(REPLACE(convert(varchar(max),Note), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
---'Line 1'+ char(13) + char(10) +'Line 2' + char(13)+char(10) + 'Line 3' Note,
---'Test' + char(10) + char(13) + 'Test' Note,
-Item_Type,Item_Group,Item_Category,
-Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
-Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
-Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
-Cube_Unit			
-from dbo.plxSupplyItemTS
-where 
-item_no = 'BE000412'
---where row# >=1
---and row# <= 100
-order by item_no
-select notestext from dbo.Parts where numbered like '%000001%'
-/*
- * Query to upload a range of item locations
- */
-select Item_No,Location,Quantity,Building_Default,Transaction_Type 
-from plxItemLocationTS  --
-where row# >=1
-and row# <= 100
-order by location,item_no
-
-
-/*
- * 
- * 
- * 			Production Upload section
- * 
- * 
- */
-
-
-/*
- * Quere to upload a range of locations
- */
-select select 
-Location,building_code,location_type,note,location_group
-from dbo.plxLocation
-where row# >=1
-and row# <= 100
-order by location
-
-/*
- * Query to upload a range of item locations
- */
-select Item_No,il.Location,Quantity,Building_Default,Transaction_Type 
-from plxItemLocation  --
-where row# >=1
-and row# <= 100
-order by location,item_no
-
-/*
- * Query to upload a range of supply items.
- */
-
-select
-Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
-Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
-Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
-Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
-Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
-Cube_Unit			
-from dbo.plxSupplyItem
-where row# >=1
-and row# <= 100
-order by item_no
-
-
-
-
-
-
-/*
- * 
- * 
- *  		Express Maintenance 
- * 
- * 			 Database
- * 
- * 			Cleanup Section
- * 
- */
-
-
-/*
- * How many parts have a site of Kendallville but do not have 
- * a 'K' suffix.  Ask Kristen about these.
- */
-
-select 
-Numbered,Description,Vendor,Site,Shelf
-from dbo.Parts p
-left outer join dbo.btSiteMap sm
-on p.Site=sm.emSite
-left outer join dbo.btSiteBuildingMap bm
-on sm.plxSite=bm.plxSite
-where 
-(RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite = 'MO')
-
-
-/*
- * Create a set of locations which have multiple parts assigned.
- */
-
-select count(*) cnt from (
-select Location, count(*) cnt 
-from plxItemLocation il
-group by Location
---having COUNT(*) > 10  --86
---having COUNT(*) > 5  --428
---having COUNT(*) > 4  --648
---having COUNT(*) > 3  --941
---having COUNT(*) > 2  --1311
-having COUNT(*) > 1  --1957
-and location not like '%YET%'
-)tst 
-
-/*
- * Create a set of locations which Kristen can look through
- * which have more than 10 parts assigned.
- */
-
-select set1.*
-from
-(
-select 
-ap.Location,
-ap.ItemNumber,
-p.Description,
-p.Vendor
-from plxAllPartsSetWithDups ap
-inner join dbo.Parts p
-on ap.RecordNumber=p.RecordNumber
-)set1
-inner join 
-(
-select Location 
---count(*) cnt
-from plxItemLocation 
-group by Location
-having COUNT(*) > 10  --86
-and location not like '%YET%'
-)set2
-on set1.location=set2.location
-order by Location
-
-
-/* 
- * Create a set of parts shelf length under 4 characters.
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* OBSOLETE
- * Does not look like we need this set use
- * the plxAllPartsSetWithDups table 
- * instead.  
- */
---drop table plxAllPartsSet
-create table plxAllPartsSet
-(
-	minRecordNumber numeric(18,0),
-	ItemNumber varchar(50),
-	NSItemNumber varchar(50),
-	BEItemNumber varchar(50),
-	suffix varchar(2)
-);
-select 
---top 100 *
-count(*) 
-from plxAllPartsSet
---11146
-
--- OBSELETE SET DONT USE. USE plxAllPartsSetWithDups instead.
--- This does not include the Kendallville parts and does NOT contain duplicate part numbers.
--- For part number duplicates all but the part number with the minimum record number have
--- been removed.
-insert into plxAllPartsSet (minRecordNumber,ItemNumber,NSItemNumber,BEItemNumber,suffix)
-(
-	--select COUNT(*) cntParts from (
-	select 
-	minRecordNumber,
-	ItemNumber,
-	NSItemNumber,
-	'BE' + NSItemNumber as BEItemNumber,
-	suffix
-	from
-	(
-		--select COUNT(*) cntParts from (
-		select 
-		min(RecordNumber) minRecordNumber,
-		ItemNumber,
-		case 
-			when ItemNumber like '%[A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -2) 
-			when ItemNumber like '%[^A-Z][A-Z]' then LEFT(ItemNumber, len(ItemNumber) -1) 
-			else ItemNumber
-		end as NSItemNumber,
-		case 
-			when ItemNumber like '%[A-Z][A-Z]' then right(ItemNumber,2) 
-			when ItemNumber like '%[^A-Z][A-Z]' then right(ItemNumber,1) 
-			else 'N' --none
-		end as suffix
-		from 
-		(
-			--select COUNT(*) cntParts from (
-			select 
-			ltrim(rtrim(Numbered)) ItemNumber, 
-			recordnumber
-			from dbo.Parts p
-			left outer join dbo.btSiteMap sm
-			on p.Site=sm.emSite
-			left outer join dbo.btSiteBuildingMap bm
-			on sm.plxSite=bm.plxSite
-			where (RIGHT(LTRIM(RTRIM(Numbered)),1) <> 'K'  and sm.plxSite <> 'MO') 
-			--)tst --11159
-		)set1 -- no kendallville parts
-		group by ItemNumber
-		--)tst --11146
-	)set2
-	--)tst --11146
-) --11146
-
-/*
- * OBSELETE DO NOT USE UNLESS UPDATE WITH QuantityOnHand field
- * plxAllPartsSet
- * 
-	MinRecordNumber numeric(18,0),
-	ItemNumber varchar(50),
-	NSItemNumber varchar(50),
-	BEItemNumber varchar(50),
-	suffix varchar(2)
- *
- * To be used for sets requiring all non-kenallville parts
- * and no duplicate part numbers.  For the part number duplicates
- * the one with the lowest record number has been chosen to 
- * represent the part for description and other non location 
- * related information.  Some part numbers are in both Kendallville
- * and non-Kendallville sites and neither have the 'K' suffix.  
- * For these parts only the ones with the non-Kendallville site 
- * are included in this set.
- */
-select count(*) from dbo.plxAllPartsSet
---11146
-
-
-/*
- * OBSOLETE
- * 
- * ITEM LOCATION SUB MODULE
- * Contains the fields other queries need.
- * 
-
-	minRecordNumber numeric(18,0),
-	ItemNumber varchar(50),
-	NSItemNumber varchar(50),
-	BEItemNumber varchar(50),
-	location varchar(50),
-	QuantityOnHand numeric(18,5),	
-	suffix varchar(2)
-
-
- *  * 
- * plxItemLocationSub is used to generate the plex supply item and 
- * supply item location upload sets.  It uses the plxAllPartsSetWithDups
- * set and adds the plxSite,building_code,location fields.
- * If duplicate part numbers have distinct locations then
- * they both will be in this set, but only the part number 
- * with the lowest record number will be included if the
- * duplicate part numbers have the same plxSite and EM shelf.
- * 
- * 
- */
-
-select
-count(*)
---top 100 * 
-from plxItemLocationSub
---11154
-
-select COUNT(*) cnt from (
-	select set2.*,p.QuantityOnHand
-	--drop table plxItemLocationSub
-	into plxItemLocationSub
-	from
-	(
-		select min(recordnumber) minRecordNumber, itemnumber,BEItemNumber,plxSite,building_code,location 
-		from (
-			--select COUNT(*) cnt from (
-			select 
-			ap.recordnumber,
-			ap.itemnumber,  
-			ap.BEItemNumber,
-			--quantityonhand,
-			sm.plxSite,
-			bm.building_code,
-			case 
-				when (Shelf = '' or Shelf is null) and (p.Site='' or p.site is null) then 'no location yet' --00
-				when (Shelf = '' or Shelf is null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+ 'no location yet' --01
-				when (Shelf <> '' and Shelf is not null) and (p.Site='' or p.site is null) then 'No site'+'-'+LTRIM(RTRIM(p.Shelf)) --10 ASK KRISTEN FOR SITE
-				when (Shelf <> '' and Shelf is not null) and (p.Site<>'' and p.site is not null) then sm.plxSite+'-'+LTRIM(RTRIM(p.Shelf)) --11
-				--else '???'
-			end location
-			from dbo.Parts p  --contains KendallVille parts. count: 12286
-			--select top 10 * from plxAllPartsSetWithDups
-			--select count(*) from plxAllPartsSetWithDups  --11159
-			inner join plxAllPartsSetWithDups ap
-			on p.RecordNumber=ap.recordnumber
-			-- we want the set created of all non-kendallville parts in EM
-			-- including duplicate parts which may or may not contain different locations.
-			left outer join dbo.btSiteMap sm
-			on p.Site=sm.emSite
-			left outer join dbo.btSiteBuildingMap bm
-			on sm.plxSite=bm.plxSite
-			--)tst --11159
-		)set1
-		/*
-		 * If duplicate part numbers have distinct locations then
-		 * they both will be in this set, but only the part number 
-		 * with the lowest record number will be included if the
-		 * duplicate part numbers have the same plxSite and EM shelf.
-		 */
-		group by itemnumber,BEItemNumber,plxSite,building_code,location
-	)set2
-	left outer join dbo.Parts p
-	on set2.minRecordNumber=p.RecordNumber
-)tstDistinct --11154
-
-select COUNT(*)
-from dbo.Parts
---12286
-select count(*) from plxAllPartsSetWithDups  --11159
-
+/
