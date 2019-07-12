@@ -2759,15 +2759,15 @@ order by item_no
  * 
  * 
  */
-select count(*) cnt from dbo.plxLocation     --3409 07/09 14:45
-select count(*) cnt from dbo.plxSupplyItem  --10370 07/09 14:45
-select count(*) cnt from dbo.plxItemLocation--11382 07/09 14:45
-											--25161 07/09 14:45
+select count(*) cnt from dbo.plxLocation     --3409 07/12A
+select count(*) cnt from dbo.plxSupplyItem  --10370 07/12A
+select count(*) cnt from dbo.plxItemLocation--11382 07/12A
+											--25161 07/12A
 /*
  * Create Location CSV files
  */
 
-select count(*) cnt from dbo.plxLocation  --3409 07/09 14:45
+select count(*) cnt from dbo.plxLocation  --3409 07/12A
 
 select
 Location,
@@ -2777,9 +2777,8 @@ note,
 location_group
 from dbo.plxLocation l
 where 
-Row# >=2101 and Row# <= 4100
-Row# >=101 and Row# <= 2100
-Row# >=1 and Row# <= 100
+Row# >2100 and Row# <= 4100
+Row# >=1 and Row# <= 2100
 --)tst  --3319
 
 /*
@@ -2788,16 +2787,12 @@ Row# >=1 and Row# <= 100
 
 
 
-select count(*) cnt from dbo.plxSupplyItem  --10370 07/09 14:45
+select count(*) cnt from dbo.plxSupplyItem  --10370 07/12A
 
 
 select 
 si.Item_No,Brief_Description,
-case
-	when bn.item_no is not NULL then Description + char(13) + bn.Note1to450
-	else Description
-end as Description,
-SUBSTRING(Note,1,200) Note,  -- 26 Notes are to big to fit in this field
+Description,Note,
 Item_Type,Item_Group,Item_Category,
 Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
 Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,si.Location,
@@ -2808,12 +2803,7 @@ Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
 Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
 Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
 Cube_Unit			
---drop table plxSupplyItemTS
---into plxSupplyItemTS
 from dbo.plxSupplyItem si
-left outer join dbo.plxBigNote bn
-on si.Item_No=bn.item_no
---where bn.item_no is not null
 --where Row# >=1 and Row# <= 900
 --where Row# >=901 and Row# <= 1800
 --where Row# >=1801 and Row# <= 2700
@@ -2832,14 +2822,16 @@ where Row# >=9901 and Row# <= 10800
  * Create Item Location CSV files
  */
 
-select count(*) cnt from dbo.plxItemLocation  --11382 07/09 14:45
+select count(*) cnt from dbo.plxItemLocation  --11382 07/12A
 
 SELECT
 Item_No,il.Location,Quantity,Building_Default,Transaction_Type
 --drop table plxItemLocationTS
 --into plxItemLocationTS
 from dbo.plxItemLocation il
-where Row# >=1 and Row# <= 100
+--where Row# >=1 and Row# <= 5000
+--where Row# >=5001 and Row# <= 10000
+where Row# >=10001 and Row# <= 15000
 
 
 
