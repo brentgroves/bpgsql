@@ -55,26 +55,26 @@ where item in
 -- drop table  station0524
 -- Make backup of station quantities table before changing it in Cribmaster. 
 select * 
-into station0628
+into station0729
 from STATION
---12654
+--12653
 --12624
 --verify backup of station
-select count(*) from station0628
---12654
+select count(*) from station0729
+--12653
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0628 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0729 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation0628  --13206
--- truncate table PlxSupplyItemLocation0416
+select count(*) from PlxSupplyItemLocation0729  --
+-- truncate table PlxSupplyItemLocation0726
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0628
-from 'c:\il0628GE12500.csv'
+Bulk insert PlxSupplyItemLocation0729
+from 'c:\il0729GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -82,64 +82,105 @@ with
 )
 
 select
-	count(*) 
-	from PlxSupplyItemLocation0628 --0
-
+	count(*)
+--top 100 * 
+from PlxSupplyItemLocation0729 --0
+select itemNumber from INVENTRY where itemnumber like 'BE%'
 /*
  * Set Cribmaster station with item numbers in this set to 0
  * Station0628 contains a backup of this table prior to
  * performing this change.
  */	
-left outer join STATION st --12614 / 11284
-on il.location=st.CribBin
-and il.item_no=st.Item
-left outer join INVENTRY inv
-on il.item_no=inv.ItemNumber
-where st.CribBin is null  --1922
-	
---update STATION 
-set BinQuantity = 0,
-Quantity = 0
-where
 
 
-
-inner	
-(
 select 
-il.item_no,il.location,il.quantity
-
---count(*) --236	
+--il.item_no,il.location,il.quantity
+--into nic0726
+count(*) --236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
---	from PlxSupplyItemLocation0418 
-	from PlxSupplyItemLocation0628 
+	from PlxSupplyItemLocation0726 
+	--from PlxSupplyItemLocation0628 
+	--from PlxSupplyItemLocation0418 
 ) il
-left outer join STATION st --12614 / 11284
+left outer join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
+--0726 13193 --0628 13206
 left outer join INVENTRY inv
 on il.item_no=inv.ItemNumber
-where st.CribBin is null  --1922
-and il.quantity = 0 --17
-)set1	
-	
-	
-select count(*)
-from
+where st.CribBin is null  
+--0726/2563  --0628/1921
+and il.quantity = 0 
+
+/*
+ * All these 644 locations have a quantity of 0 and a 01-002A01 default location
+ * 
+ */
+select
+n7.location
+--count(*) cnt
+--n7.* 
+from nic0726 n7
+left outer JOIN
+nic0628 n6
+on n7.item_no =n6.item_no
+and n7.location=n6.location
+where n6.item_no is null --644
+and n7.quantity <> 0 --0
+
+select 
+count(*)
+from PlxSupplyItemLocation0628 il
+--from PlxSupplyItemLocation0726 il
+where location = '01-002A01'
+--0726/2542 --0628/1900
+--642 more in july 
+
+/*
+ * If these item are in station in CM these station should be made to have 0 quantity.
+ * If make the station quantity 0 in this step and there happens to be another location
+ * for the same item number in plex the next step should increase the quantity if it has 
+ * the same quantity in CM but that probably wont happen.
+ */
+--select top 10 * from STATION0726
+--update STATION 
+set BinQuantity = 0,
+Quantity = 0
+where item in
 (
 	select
-		distinct item_no,location,quantity
-	--count(*) 
-	--*
-	from PlxSupplyItemLocation0628 --0
-)lv1
---13206
---12998
---12997
---12822
+	item
+	--count(*)cnt
+	--st.*
+	--inv.ItemNumber,st.CribBin,inv.Description1
+	--inv.InactiveItem,inv.AltVendorNo
+	from station st
+	inner join INVENTRY inv --12653
+	on st.Item=inv.ItemNumber --12650
+	where st.Item in
+	(
+		select 
+		--count(*) cnt
+		item_no
+		--item_no,quantity
+		--from PlxSupplyItemLocation0628 il
+		from PlxSupplyItemLocation0726 il
+		where location = '01-002A01' --2542
+		and quantity = 0  --2534
+	)
+	and st.Quantity <> 0  --0628/336 --0726/957
+)
+
+and inv.InactiveItem =0 --all but 6 are inactive
+
+/*
+ * If I make all these quantities in CM 0 how much cost difference will there be?
+ */
+
+select count(*) from station0726 --12653
 
 --Join these 2 tables on item number and location.
 --Set the station table’s quantity equal to PlxItemLocation.quantity value. 
@@ -147,24 +188,25 @@ from
 --update STATION 
 set BinQuantity = il.quantity,
 Quantity = il.quantity
---select 
+select 
 --il.item_no,il.location,il.quantity
---count(*) --1013  06/28
+count(*) --0726/903 --1013  06/28  --
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
+	--from PlxSupplyItemLocation0628 
+	from PlxSupplyItemLocation0726 
 --	from PlxSupplyItemLocation0418 
-	from PlxSupplyItemLocation0628 
 ) il
-inner join STATION st --12614 / 11284
-on il.location=st.CribBin
-and il.item_no=st.Item
+inner join STATION st 
+on il.location=st.CribBin   
+and il.item_no=st.Item --0726/10630 --0628/11285  --number of default locations have increased in plex by 644 from jun to jul
 inner join INVENTRY inv
 on il.item_no=inv.ItemNumber
 where
 --il.quantity < st.BinQuantity
-il.quantity <> st.BinQuantity	--1013 06/28
+il.quantity <> st.BinQuantity	--0726/903 --1013 06/28
 and inv.InactiveItem = 0  
 
 

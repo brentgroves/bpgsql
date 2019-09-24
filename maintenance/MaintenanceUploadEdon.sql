@@ -208,11 +208,7 @@ select * from dbo.plxItemLocationBase
 	--where QuantityOnHand < 0  or QuantityOnHand is null-- 0 --08/02  Null values make item location upload fail.
 
 
-select ilb.BEItemNumber,p.*
-from plxItemLocationBase ilb
-inner join dbo.Parts p
-on ilb.RecordNumber=p.RecordNumber
-where ilb.BEItemNumber = 'BE450599'	
+
 	
 /*
 beitemnumber|location     | |
@@ -438,6 +434,9 @@ and
 /*
  * Verify that if there is both a site and shelf in EM part record the plxItemLocationBase field is in the form of plxSite + shelf --11
  */
+
+--update dbo.plxItemLocationBase 
+--set Location=sm.plxSite + '-' + ltrim(RTRIM(fp.Shelf))
 
 select
 count(*) cnt
@@ -679,37 +678,23 @@ where BEItemNumber in
  * Verify 5 part number with multiple locations 
  * get uploaded to plex including quantities.
  */
-select 
---COUNT(*) cnt
---BEItemNumber
-RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
-from dbo.plxItemLocationBase  --11384  07/15A
-where BEItemNumber in
-(
-'BE200051',
-'BE201069',
-'BE451057',
-'BE000054', 
-'BE000091'
-) --5 --07/15A
-order by BEItemNumber
-START HERE
+--select count(*) cnt from (
+	SELECT
+	count(*) cnt
+	--BEItemNumber
+	from
+	(
+		select 
+		--COUNT(*) cnt
+		--BEItemNumber
+		RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
+		from dbo.plxItemLocationBase ilb 
+		where SUBSTRING(ilb.location,1,3)  = 'M11'  --812 08/02
+	)set1	
+	group by BEItemNumber  --812 
+	--HAVING count(*) > 1   --  0 08/02
+)tst  
 
-/* --07/15C
-RecordNumber|ItemNumber|BEItemNumber|location                 |QuantityOnHand
-------------|----------|------------|-------------------------|--------------
-       13424|000054AV  |BE000054    |M11-B-02-03              |       7.00000
-        9145|000054    |BE000054    |M5-09-05-04              |      13.00000
-         839|000091    |BE000091    |M5-19-05-05              |       2.00000
-       10986|000091E   |BE000091    |ME-B-6-4                 |       6.00000
-       14930|200051AV  |BE200051    |M11-COMP RM SHELF A-03-01|      14.00000
-         385|200051    |BE200051    |M5-23-07-05              |      15.00000
-       15358|200051E   |BE200051    |ME-A-5-4                 |       2.00000
-        5033|201069E   |BE201069    |ME-B-5-5                 |       3.00000
-        4985|201069    |BE201069    |M5-13-01-02              |       4.00000
-       12845|451057AV  |BE451057    |M11-B-03-04              |       4.00000
-       12822|451057    |BE451057    |MPB-C-4-2                |       4.00000         
- */
 
 /*
  * Verify 5 part number with single locations 
@@ -717,38 +702,33 @@ RecordNumber|ItemNumber|BEItemNumber|location                 |QuantityOnHand
  */
 
 select 
---count(*) cnt
-RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
-from dbo.plxItemLocationBase ilb
-where BEItemNumber in
-(
-select 
---count(*)cnt
-BEItemNumber
---RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
-from dbo.plxItemLocationBase  --11384  07/15C
-group by BEItemNumber 
---HAVING count(*) > 1 --  
-HAVING count(*) = 1  --  
-					 
-)  
-
-
-select 
 --COUNT(*) cnt
---BEItemNumber
+top 5 
 RecordNumber,ItemNumber,BEItemNumber,location,QuantityOnHand
-from dbo.plxItemLocationBase  --11384  07/15A
-where BEItemNumber in
-(
-'BE450911',
-'BE851211',
-'BE851132',
-'BE800318',
-'BE800357'
-) --5 --07/15C
+from dbo.plxItemLocationBase ilb 
+where SUBSTRING(ilb.location,1,3)  = 'M11'  --812 08/02
 order by BEItemNumber
 
+
+
+/*
+RecordNumber|ItemNumber|BEItemNumber|location           |QuantityOnHand|
+------------|----------|------------|-------------------|--------------|
+         503|000029AV  |BE000029    |M11-NO LOCATION YET|       8.00000|
+       13424|000054AV  |BE000054    |M11-B-02-03        |       7.00000|
+        1385|000119AV  |BE000119    |M11-NO LOCATION YET|       1.00000|
+       12540|000139AV  |BE000139    |M11-CAB B-04-04    |      14.00000|
+       12539|000140AV  |BE000140    |M11-D-11-04        |       5.00000|
+where item_no in
+(
+'BE000029',
+'BE000054',
+'BE000119',
+'BE000139',
+'BE000140'
+)
+       
+ */
 
 /*
  * plxLocation
@@ -799,11 +779,12 @@ from
 	select 
 	DISTINCT 	Location,BuildingCode 
 	--select DISTINCT Location --Should be the same set as distinct location, buildingcode 
-	from plxItemLocationBase base
+	from plxItemLocationBase ilb
+	where SUBSTRING(ilb.location,1,3)  = 'M11'  --382 08/02
 	--order by location
-	--)tst --3409  07/15c 
+	--)tst --382  08/02 
 )set1 
-)tst --3409  07/15C  
+)tst --382  08/12  
 --order by location 
 
 /*
@@ -837,7 +818,7 @@ select
 count(*) cnt
 --top 100 row#,Location,building_code,location_type,note,location_group
 from dbo.plxLocation l
---3409 07/15C 
+--382 08/15 
 
 /*
  * Verify count of locations with location_type of 'Maintenance' 
@@ -849,7 +830,7 @@ count(*) cnt
 --Location,building_code,location_type,note,location_group
 from dbo.plxLocation
 where location_type = 'Maintenance'
-and location_group = 'Maintenance Crib'  --3409 07/15C 
+and location_group = 'Maintenance Crib'  --382 08/02 
 
 /*
  * Verify 5 locations were created in correct format
@@ -859,24 +840,21 @@ and location_group = 'Maintenance Crib'  --3409 07/15C
  */
 select 
 --count(*) cnt
---top 100  
+top 100  
 bil.BEItemNumber,bil.Location,
 p.site,p.shelf
 from dbo.plxItemLocationBase bil
 inner join dbo.Parts p
 on bil.RecordNumber=p.RecordNumber
---3325
+
 where bil.Location in
 (
-'MM-AT MRO',
-'MD-A-1',
-'ME-A- TOP',
 'M11-A-02-03',
-'M5-0',
-'M8-A-1',
-'MPB-09-09-03',
-'M4-C-1'
-)  --07/15C
+'M11-A-02-04',
+'M11-A-02-05',
+'M11-A-03-02',
+'M11-A-03-02'
+)  --08/02
 
 select 
 --count(*) cnt
@@ -886,15 +864,12 @@ from dbo.plxLocation
 --3325
 where Location in
 (
-'MM-AT MRO',
-'MD-A-1',
-'ME-A- TOP',
 'M11-A-02-03',
-'M5-0',
-'M8-A-1',
-'MPB-09-09-03',
-'M4-C-1'
-) --07/15C 
+'M11-A-02-04',
+'M11-A-02-05',
+'M11-A-03-02',
+'M11-A-03-02'
+)  --08/02
 
 
 
