@@ -154,7 +154,6 @@ il.quantity <> st.BinQuantity --342,353, 455,406,384
  */
 
 select 
---il.item_no
 il.item_no,il.location,il.quantity
 --count(*) 
 from (
