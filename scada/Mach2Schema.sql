@@ -1,4 +1,4 @@
-DROP TABLE Facility;
+DROP TABLE if EXISTS Facility;
 CREATE TABLE mach2.Facility (
 	FacilityKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Name VARCHAR(50) NULL,
@@ -12,7 +12,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Facility info';
 
-DROP TABLE Plant;
+DROP TABLE IF EXISTS Plant;
 CREATE TABLE mach2.Plant (
 	PlantKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	FacilityKey MEDIUMINT NULL,
@@ -25,7 +25,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plant info';
 
-DROP TABLE CNC;
+DROP TABLE IF EXISTS CNC;
 CREATE TABLE mach2.CNC (
 	CNCKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	PlantKey MEDIUMINT NULL,
@@ -38,7 +38,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='CNC info';
 
-DROP TABLE PlexJob;
+DROP TABLE IF EXISTS PlexJob;
 CREATE TABLE mach2.PlexJob (
 	PlexJobKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Name varchar(50) NULL,
@@ -49,7 +49,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex Job info';
 
-DROP TABLE PlexPart;
+DROP TABLE IF EXISTS PlexPart;
 CREATE TABLE mach2.PlexPart (
 	PlexPartKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Name varchar(50) NULL,
@@ -60,7 +60,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex Part info';
 
-DROP TABLE PlexJobParts;
+DROP TABLE IF EXISTS PlexJobParts;
 CREATE TABLE mach2.PlexJobParts (
 	PlexJobPartsKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	PlexJobKey MEDIUMINT,
@@ -74,7 +74,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex Job Parts';
 
-DROP TABLE PlexWorkCenterGroup;
+DROP TABLE IF EXISTS PlexWorkCenterGroup;
 CREATE TABLE mach2.PlexWorkCenterGroup (
 	PlexWorkCenterGroupKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Name varchar(50) NULL,
@@ -85,7 +85,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex workcenter group info';
 
-DROP TABLE PlexWorkCenter;
+DROP TABLE IF EXISTS PlexWorkCenter;
 CREATE TABLE mach2.PlexWorkCenter (
 	PlexWorkCenterKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	PlexWorkCenterGroupKey MEDIUMINT,
@@ -99,7 +99,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex workcenter info';
 
-DROP TABLE PlexWorkCenterGroupWorkCenters;
+DROP TABLE IF EXISTS PlexWorkCenterGroupWorkCenters;
 CREATE TABLE mach2.PlexWorkCenterGroupWorkCenters (
 	PlexWorkCenterGroupWorkCentersKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	PlexWorkCenterGroupKey MEDIUMINT,
@@ -111,7 +111,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Plex workcenter group workcenters';
 
-DROP TABLE Mach2WorkCenter;
+DROP TABLE IF EXISTS Mach2WorkCenter;
 CREATE TABLE mach2.Mach2WorkCenter (
 	Mach2WorkCenterKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Mach2WorkCenterGroupKey MEDIUMINT,
@@ -127,7 +127,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Mach2 workcenter info';
 
-DROP TABLE Mach2WorkCenterGroup;
+DROP TABLE IF EXISTS Mach2WorkCenterGroup;
 CREATE TABLE mach2.Mach2WorkCenterGroup (
 	Mach2WorkCenterGroupKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	PlexWorkCenterGroupKey MEDIUMINT,
@@ -139,7 +139,7 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Mach2 workcenter group info';
 
-DROP TABLE Mach2WorkCenterGroupWorkCenters;
+DROP TABLE IF EXISTS Mach2WorkCenterGroupWorkCenters;
 CREATE TABLE mach2.Mach2WorkCenterGroupWorkCenters (
 	Mach2WorkCenterGroupWorkCentersKey MEDIUMINT NOT NULL AUTO_INCREMENT,
 	Mach2WorkCenterGroupKey MEDIUMINT,
@@ -151,11 +151,53 @@ DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_general_ci
 COMMENT='Mach2 workcenter group workcenters';
 
-DROP TABLE ProdVrsTest;
+DROP TABLE IF EXISTS Control_Panel_Setup_Containers_Get;
+CREATE TABLE Control_Panel_Setup_Containers_Get(
+  Control_Panel_Setup_Containers_Get_Key MEDIUMINT NOT NULL AUTO_INCREMENT,
+  TransDate datetime DEFAULT NULL,
+  ProdServer bool NULL,
+  Part_No varchar(50) NULL,
+  Name varchar(50) NULL,
+  Multiple bool NULL,
+  Container_Note varchar(50) NULL,
+  Cavity_Status_Key MEDIUMINT NULL,
+  Container_Status varchar(50) NULL,
+  Defect_Type varchar(50) NULL,
+  Serial_No varchar(50) NULL,
+  Setup_Container_Key MEDIUMINT NULL,
+  Count MEDIUMINT NULL,
+  Part_Count MEDIUMINT NULL,
+  Part_Key MEDIUMINT NULL,
+  Part_Operation_Key MEDIUMINT NULL,
+  Standard_Container_Type varchar(50) NULL,
+  Container_Type_Key MEDIUMINT NULL,
+  Parent_Part varchar(50) NULL,
+  Parent varchar(50) NULL,
+  Cavity_No varchar(50) NULL,
+  Master_Unit_Key MEDIUMINT NULL,
+  Workcenter_Printer_Key MEDIUMINT NULL,
+  Master_Unit_No varchar(50) NULL,
+  Physical_Printer_Name varchar(50) NULL,
+  Container_Count MEDIUMINT NULL,
+  Container_Quantity MEDIUMINT NULL,
+  Default_Printer varchar(50) NULL,
+  Default_Printer_Key MEDIUMINT NULL,
+  Class_Key MEDIUMINT NULL,
+  Quantity MEDIUMINT NULL,
+  Companion Bool NULL,	 
+  Container_Type varchar(50) NULL,
+  Container_Type_Description varchar(50) NULL,
+  Sort_Order MEDIUMINT NULL,
+  PRIMARY KEY (Control_Panel_Setup_Containers_Get_Key)
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Control_Panel_Setup_Containers_Get_Key historian';
+
+ 
+select * from Control_Panel_Setup_Containers_Get
+DROP TABLE IF EXISTS ProdVrsTest;
 CREATE TABLE ProdVrsTest (
   ProdVrsTestKey MEDIUMINT NOT NULL AUTO_INCREMENT,
   Mach2WorkCenterKey varchar(10) NULL,
-  DateTime datetime DEFAULT NULL,
+  TransDate datetime DEFAULT NULL,
   P1PartKey MEDIUMINT,
   P1ProdQuantity INT DEFAULT NULL,
   P1TestQuantity INT DEFAULT NULL,
