@@ -153,45 +153,46 @@ COMMENT='Mach2 workcenter group workcenters';
 
 DROP TABLE IF EXISTS Control_Panel_Setup_Containers_Get;
 CREATE TABLE Control_Panel_Setup_Containers_Get(
-  Control_Panel_Setup_Containers_Get_Key MEDIUMINT NOT NULL AUTO_INCREMENT,
+  Control_Panel_Setup_Containers_Get_Key INT NOT NULL AUTO_INCREMENT,
   TransDate datetime DEFAULT NULL,
   ProdServer bool NULL,
   Part_No varchar(50) NULL,
   Name varchar(50) NULL,
   Multiple bool NULL,
   Container_Note varchar(50) NULL,
-  Cavity_Status_Key MEDIUMINT NULL,
+  Cavity_Status_Key INT NULL,
   Container_Status varchar(50) NULL,
   Defect_Type varchar(50) NULL,
   Serial_No varchar(50) NULL,
-  Setup_Container_Key MEDIUMINT NULL,
+  Setup_Container_Key INT NULL,
   Count MEDIUMINT NULL,
   Part_Count MEDIUMINT NULL,
-  Part_Key MEDIUMINT NULL,
-  Part_Operation_Key MEDIUMINT NULL,
+  Part_Key INT NULL,
+  Part_Operation_Key INT NULL,
   Standard_Container_Type varchar(50) NULL,
-  Container_Type_Key MEDIUMINT NULL,
+  Container_Type_Key INT NULL,
   Parent_Part varchar(50) NULL,
   Parent varchar(50) NULL,
   Cavity_No varchar(50) NULL,
-  Master_Unit_Key MEDIUMINT NULL,
-  Workcenter_Printer_Key MEDIUMINT NULL,
+  Master_Unit_Key INT NULL DEFAULT 0,
+  Workcenter_Printer_Key INT NULL,
   Master_Unit_No varchar(50) NULL,
   Physical_Printer_Name varchar(50) NULL,
   Container_Count MEDIUMINT NULL,
   Container_Quantity MEDIUMINT NULL,
   Default_Printer varchar(50) NULL,
-  Default_Printer_Key MEDIUMINT NULL,
-  Class_Key MEDIUMINT NULL,
-  Quantity MEDIUMINT NULL,
-  Companion Bool NULL,	 
+  Default_Printer_Key INT NULL,
+  Class_Key INT NULL,
+  Quantity INT NULL,
+  Companion bool NULL,	 
   Container_Type varchar(50) NULL,
-  Container_Type_Description varchar(50) NULL,
+  Container_Type_Description varchar(100) NULL,
   Sort_Order MEDIUMINT NULL,
   PRIMARY KEY (Control_Panel_Setup_Containers_Get_Key)
 )  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Control_Panel_Setup_Containers_Get_Key historian';
 
- 
+
+//delete from Control_Panel_Setup_Containers_Get
 select * from Control_Panel_Setup_Containers_Get
 DROP TABLE IF EXISTS ProdVrsTest;
 CREATE TABLE ProdVrsTest (

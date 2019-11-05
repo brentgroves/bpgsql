@@ -1,6 +1,7 @@
 select * 
-into station1022
+into station1105
 from STATION
+--12675
 --12674
 --12668
 --12666
@@ -8,21 +9,21 @@ from STATION
 --12653
 --12624
 --verify backup of station
-select top 100 * from station1022
+select top 100 * from station1105
 --12653
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation1022 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation1105 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation1022  --
+select count(*) from PlxSupplyItemLocation1105  --
 -- truncate table PlxSupplyItemLocation0730
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation1022
-from 'c:\il1022GE12500.csv'
+Bulk insert PlxSupplyItemLocation1105
+from 'c:\il1105GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -32,7 +33,7 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation1022 --0
+from PlxSupplyItemLocation1105 --0
 --13245
 --13242
 --13232
@@ -51,13 +52,13 @@ from PlxSupplyItemLocation1022 --0
 select 
 il.item_no
 --il.item_no,il.location,il.quantity
---into nic1022 --Plex supply items with the default location and a quantity = 0
---count(*) --236	
+into nic1105 --Plex supply items with the default location and a quantity = 0
+--count(*) --2561,236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation1022 
+	from PlxSupplyItemLocation1105 
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -74,7 +75,8 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic1022
+	from nic1105
+	--2561
 	--2562
 	--2560
 	--2553
@@ -89,19 +91,19 @@ and il.quantity = 0
  * There are only 1965 of these items in CM.
  */
 --update STATION 
-set BinQuantity = 0,
-Quantity = 0
---select 
---count(*) cnt --1972,1970
+--set BinQuantity = 0,
+--Quantity = 0
+select 
+count(*) cnt --1972,1970
 --	item
 	from STATION st
 	where 
 	item in 
 	(
 	select item_no
-	from nic1022
+	from nic1105
 	)
-	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --13,12, 10, 8,9,10
+	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --12,13,12, 10, 8,9,10
 	--and (st.BinQuantity=0 and st.Quantity = 0 )  --1960,1963
 
 
@@ -117,16 +119,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation1022 
+	from PlxSupplyItemLocation1105 
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity --342,353, 455,406,384	
---il.quantity > st.BinQuantity --120,138,131,61
---il.quantity < st.BinQuantity --222,311,215, 316,275,105
+il.quantity <> st.BinQuantity --472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --177,120,138,131,61
+--il.quantity < st.BinQuantity --295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389
