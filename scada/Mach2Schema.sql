@@ -155,6 +155,7 @@ DROP TABLE IF EXISTS Control_Panel_Setup_Containers_Get;
 CREATE TABLE Control_Panel_Setup_Containers_Get(
   Control_Panel_Setup_Containers_Get_Key INT NOT NULL AUTO_INCREMENT,
   TransDate datetime DEFAULT NULL,
+  PCN varchar(50) NULL,
   ProdServer bool NULL,
   Part_No varchar(50) NULL,
   Name varchar(50) NULL,
@@ -193,7 +194,10 @@ CREATE TABLE Control_Panel_Setup_Containers_Get(
 
 
 //delete from Control_Panel_Setup_Containers_Get
-select * from Control_Panel_Setup_Containers_Get
+select ProdServer,part_no,Quantity,Container_Status,Serial_No  from Control_Panel_Setup_Containers_Get
+where ProdServer = 1
+order by Part_No,Container_Status
+
 DROP TABLE IF EXISTS ProdVrsTest;
 CREATE TABLE ProdVrsTest (
   ProdVrsTestKey MEDIUMINT NOT NULL AUTO_INCREMENT,
