@@ -157,6 +157,7 @@ CREATE TABLE Control_Panel_Setup_Containers_Get(
   TransDate datetime DEFAULT NULL,
   PCN varchar(50) NULL,
   ProdServer bool NULL,
+  Cycle_Counter_Shift_SL int NULL,
   Part_No varchar(50) NULL,
   Name varchar(50) NULL,
   Multiple bool NULL,
