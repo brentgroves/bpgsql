@@ -33,14 +33,16 @@ CREATE TABLE DS13318(
   Default_Printer_Key INT NULL,
   Class_Key INT NULL,
   Quantity INT NULL,
-  Companion bool NULL,	 
+  Companion bool NULL,
+  Hourly bool null,
   Container_Type varchar(50) NULL,
   Container_Type_Description varchar(100) NULL,
   Sort_Order MEDIUMINT NULL,
   PRIMARY KEY (DS13318_Key)
 )  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Control_Panel_Setup_Containers_Get_Key historian';
 
-
+ALTER TABLE ds13318
+drop column Cycle_Counter_Shift_SL;
 select 
 count(*)
 /*

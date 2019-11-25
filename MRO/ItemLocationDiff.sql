@@ -1,7 +1,8 @@
---drop table station1112
+--drop table station1119
 select * 
-into station1119
+into station1125
 from STATION
+--12677
 --12676
 --12673
 --12675
@@ -12,22 +13,22 @@ from STATION
 --12653
 --12624
 --verify backup of station
-select top 100 * from station1119
+select top 100 * from station1125
 --12653
 -- Upload the item_location table into PlxSupplyItemLocation table.
---drop table dbo.PlxSupplyItemLocation1105
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation1119 (
+--drop table dbo.PlxSupplyItemLocation1119
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation1125 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
-select count(*) from PlxSupplyItemLocation1119  --
+select count(*) from PlxSupplyItemLocation1125  --
 -- truncate table PlxSupplyItemLocation0730
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation1119
-from 'c:\il1119GE12500.csv'
+Bulk insert PlxSupplyItemLocation1125
+from 'c:\il1125GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -37,7 +38,8 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation1119 --0
+from PlxSupplyItemLocation1125 --0
+--13258
 --13256
 --13254
 --13245
@@ -55,18 +57,18 @@ from PlxSupplyItemLocation1119 --0
  * Plex '01-002A01' Item locations with quantity = 0: 2534
  * Plex '01-002A01' Item locations with quantity <> 0: 7
  */
---drop table dbo.nic1112
+--drop table dbo.nic1119
 
 select 
 il.item_no
 --il.item_no,il.location,il.quantity
-into nic1119 --Plex supply items with the default location and a quantity = 0
---count(*) --2563,2562,2561,236	
+into nic1125 --Plex supply items with the default location and a quantity = 0
+--count(*) --2563,2563,2562,2561,236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation1119 
+	from PlxSupplyItemLocation1125 
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -83,7 +85,7 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic1119
+	from nic1125
 	--2563
 	--2562
 	--2561
@@ -111,9 +113,9 @@ Quantity = 0
 	item in 
 	(
 	select item_no
-	from nic1119
+	from nic1125
 	)
-	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --13,15,12,13,12, 10, 8,9,10
+	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --13,13,15,12,13,12, 10, 8,9,10
 	--and (st.BinQuantity=0 and st.Quantity = 0 )  --1960,1963
 
 
@@ -129,16 +131,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation1119 
+	from PlxSupplyItemLocation1125 
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity --416,417,472, 342,353, 455,406,384	
---il.quantity > st.BinQuantity --171,172,177,120,138,131,61
---il.quantity < st.BinQuantity --245,245,295,222,311,215, 316,275,105
+il.quantity <> st.BinQuantity --376,416,417,472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --140,171,172,177,120,138,131,61
+--il.quantity < st.BinQuantity --236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389
