@@ -39,16 +39,16 @@ CREATE TABLE DS13318(
   PRIMARY KEY (DS13318_Key)
 )  ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Control_Panel_Setup_Containers_Get_Key historian';
 
-ALTER TABLE DS13318
-drop column Hourly;
-select *
-/*count(*)
- *TransDate,Part_no,Serial_No,ProdServer,Cycle_Counter_Shift_SL,Quantity,Container_Status 
- */
+DROP PROCEDURE DS13318;
  
+CREATE PROCEDURE DS13318 (
+    IN  transDate VARCHAR(25)
+)
+BEGIN
+select 
+TransDate,Part_no,Serial_No,ProdServer,Quantity,Container_Status 
 from DS13318
-/*where ProdServer = 1*/
-order by TransDate,Part_no,Serial_no
-/*
- * 40
- */
+where TransDate = transDate 
+order by TransDate,Part_no,Serial_no;
+END;
+
