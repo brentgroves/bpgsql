@@ -3,89 +3,27 @@
 -- DROP TABLE master.dbo.CommandLog GO
 
 CREATE TABLE Kors.dbo.HourlyOEEValues (
-	ID int IDENTITY(1,1) NOT NULL,
+	ID int IDENTITY (1,1) NOT NULL,
 	Workcenter_Code varchar(50),
-	Job_No varchar(20),
-	Part_No varchar(100),
-	Description varchar(50),
-	
-	DatabaseName sysname COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	SchemaName sysname COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	ObjectName sysname COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	ObjectType char(2) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	IndexName sysname COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	IndexType tinyint NULL,
-	StatisticsName sysname COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	PartitionNumber int NULL,
-	ExtendedInfo xml NULL,
-	Command nvarchar COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	CommandType nvarchar(60) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	StartTime datetime NOT NULL,
-	EndTime datetime NULL,
-	ErrorNumber int NULL,
-	ErrorMessage nvarchar COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	CONSTRAINT PK_CommandLog PRIMARY KEY (ID)
+	Job_number varchar(20),
+	Part_number varchar(60),
+	Workcenter_status varchar(50),
+	Data_hour INT,
+	Hourly_planned_production_count INT,
+	Hourly_actual_production_count INT,
+	Cumulative_planned_production_count INT,
+	Cumulative_actual_production_count INT,
+	scrap_count INT,
+	Downtime_minutes INT,
+	Date_time_stamp DATETIME,
+	Transaction_number BIGINT
 ) GO
   
-/*
- * Workcenter_Status is in part_v_workcenter_status.description
- */
 
-
-
-
-Data hour 
-
-INT 
-
-4 
-
-Hourly planned production count 
-
-INT 
-
-4 
-
-Hourly actual production count 
-
-INT 
-
-4 
-
-Cumulative planned production count 
-
-INT 
-
-4 
-
-Cumulative actual production count 
-
-INT 
-
-4 
-
-Scrap count 
-
-INT 
-
-4 
-
-Downtime minutes 
-
-INT 
-
-4 
-
-Date/time stamp 
-
-DATETIME 
-
-  
-
-Transaction number 
-
-BIGINT 
-
-8 
+declare @dt datetime; 
+set @dt = '2014-07-02 14:29';
+INSERT INTO Kors.dbo.HourlyOEEValues 
+(Workcenter_Code, Job_number, Part_number, Workcenter_status, Data_hour, Hourly_planned_production_count, Hourly_actual_production_count, Cumulative_planned_production_count, Cumulative_actual_production_count, scrap_count, Downtime_minutes, Date_time_stamp, Transaction_number) 
+VALUES(' VSC_4', '1210', '4140', 'Production', 10, 41, 38, 834,582, 0, 0,'2014-07-02 14:29', 0); 
 
   
