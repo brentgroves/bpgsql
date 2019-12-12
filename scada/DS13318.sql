@@ -1,6 +1,6 @@
 
 
-CALL DS13318('2019-12-02 09:15');
+delete from DS13318 d
 CALL DS13318('2019-12-15 09:00');
 
 select TransDate,Part_no,Serial_No,ProdServer,Quantity,Container_Status from DS13318 where TransDate = '2019-12-15 09:00'
