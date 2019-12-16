@@ -1,13 +1,11 @@
 -- Drop table
 
--- DROP TABLE master.dbo.CommandLog GO
-
+-- drop TABLE Kors.dbo.HourlyOEEValues
 CREATE TABLE Kors.dbo.HourlyOEEValues (
 	ID int IDENTITY (1,1) NOT NULL,
 	Workcenter_Code varchar(50),
 	Job_number varchar(20),
 	Part_number varchar(60),
-	Workcenter_status varchar(50),
 	Data_hour INT,
 	Hourly_planned_production_count INT,
 	Hourly_actual_production_count INT,
@@ -15,9 +13,8 @@ CREATE TABLE Kors.dbo.HourlyOEEValues (
 	Cumulative_actual_production_count INT,
 	scrap_count INT,
 	Downtime_minutes INT,
-	Date_time_stamp DATETIME,
-	Transaction_number BIGINT
-) GO
+	Date_time_stamp DATETIME
+) 
 
 select * from hourlyoeevalues
 declare @dt datetime;
@@ -30,7 +27,6 @@ CREATE PROCEDURE InsertHourlyOEEValues
 	@Workcenter_Code varchar(50),
 	@Job_number varchar(20),
 	@Part_number varchar(60),
-	@Workcenter_status varchar(50),
 	@Data_hour INT,
 	@Hourly_planned_production_count INT,
 	@Hourly_actual_production_count INT,
@@ -38,8 +34,7 @@ CREATE PROCEDURE InsertHourlyOEEValues
 	@Cumulative_actual_production_count INT,
 	@scrap_count INT,
 	@Downtime_minutes INT,
-	@Date_time_stamp DATETIME,
-	@Transaction_number BIGINT
+	@Date_time_stamp DATETIME
 AS
 BEGIN
     -- SET NOCOUNT ON added to prevent extra result sets from
@@ -51,10 +46,10 @@ DECLARE @MyTableVar table( ID int,
                            Workcenter_Code varchar(50));
    
 INSERT INTO Kors.dbo.HourlyOEEValues
-(Workcenter_Code, Job_number, Part_number, Workcenter_status, Data_hour, Hourly_planned_production_count, Hourly_actual_production_count, Cumulative_planned_production_count, Cumulative_actual_production_count, scrap_count, Downtime_minutes, Date_time_stamp, Transaction_number)
+(Workcenter_Code, Job_number, Part_number, Data_hour, Hourly_planned_production_count, Hourly_actual_production_count, Cumulative_planned_production_count, Cumulative_actual_production_count, scrap_count, Downtime_minutes, Date_time_stamp)
 OUTPUT INSERTED.ID, INSERTED.Workcenter_Code
 into @MyTableVar
-VALUES(@Workcenter_Code, @Job_number, @Part_number, @Workcenter_status, @Data_hour, @Hourly_planned_production_count, @Hourly_actual_production_count, @Cumulative_planned_production_count, @Cumulative_actual_production_count, @scrap_count, @Downtime_minutes, @Date_time_stamp, @Transaction_number);
+VALUES(@Workcenter_Code, @Job_number, @Part_number, @Data_hour, @Hourly_planned_production_count, @Hourly_actual_production_count, @Cumulative_planned_production_count, @Cumulative_actual_production_count, @scrap_count, @Downtime_minutes, @Date_time_stamp);
 --values (' VSC_5', '1210', '4140', 'Production', 10, 41, 38, 834,582, 0, 0,'2014-07-02 14:29', 0)
 
 --Display the result set of the table variable.
