@@ -12,7 +12,7 @@ CREATE TABLE Kors.dbo.HourlyOEEValues (
 	Cumulative_planned_production_count INT,
 	Cumulative_actual_production_count INT,
 	scrap_count INT,
-	Downtime_minutes INT,
+	Downtime_minutes float,
 	Date_time_stamp DATETIME
 ) 
 
@@ -33,7 +33,7 @@ CREATE PROCEDURE InsertHourlyOEEValues
 	@Cumulative_planned_production_count INT,
 	@Cumulative_actual_production_count INT,
 	@scrap_count INT,
-	@Downtime_minutes INT,
+	@Downtime_minutes float,
 	@Date_time_stamp DATETIME
 AS
 BEGIN
@@ -59,7 +59,7 @@ SELECT ID, Workcenter_Code FROM @MyTableVar;
 
 END;
 
-exec InsertHourlyOEEValues ' VSC_5', '1210', '4140', 'Production', 10, 41, 38, 834,582, 0, 0,'2014-07-02 14:29', 0
+exec InsertHourlyOEEValues ' VSC_5', '1210', '4140', 10, 41, 38, 834,582, 0, 0,'2014-07-02 14:29'
 select * from HourlyOEEValues h
 --1011
 delete from HourlyOEEValues h
