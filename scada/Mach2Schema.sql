@@ -90,3 +90,36 @@ BEGIN
 END;
 call test1
 SELECT CONVERT_TZ('2004-01-01 12:00:00','+00:00','+10:00');
+
+CREATE TABLE DS13318(
+  DS13318_Key INT NOT NULL AUTO_INCREMENT,
+  TransDate datetime DEFAULT NULL,
+  PCN varchar(50) NULL,
+  ProdServer bool NULL,
+  Workcenter varchar(50) NULL,
+  CNC varchar(25) NULL,
+  
+--drop table users  
+create table users (
+	id int unsigned not null auto_increment primary key, 
+	email varchar(255),
+    password varchar(255),
+    userName varchar(255),
+    isAdmin boolean,
+    roles json, 
+    createdAt timestamp,
+	updatedAt timestamp
+)
+
+show variables like 'sql_mode' ; 
+
+-- took out NO_ZERO_IN_DATE,NO_ZERO_DATE  because when creating a model with knex and two timestamp columns this setting gives an erro
+set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+
+-- does not work with feathers knex.
+--set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+
+select * from users
+insert into users (createdAt, email, isAdmin, password, roles, updatedAt, userName) 
+values ('2020-01-02T15:12:03.650Z', 'user2@buschegroup.com', true, 
+'$2a$10$F7dnH4S6/q3PuxSLJ5pyAu8XTpgguITn1GNag2UKBa8F29cCeVvwG','["Admin", "Manager", "Quality"]', '2020-01-02T15:12:03.650Z', 'Brent') 

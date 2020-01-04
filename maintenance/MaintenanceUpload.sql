@@ -1555,6 +1555,17 @@ from
 )set1
 left outer join dbo.plxBigNote bn
 on set1.Item_No=bn.item_no
+
+
+SELECT 
+top 10
+p.ManufacturerNumber,p.numbered
+FROM parts p
+
+--where p.numbered like '%850711%'
+--where p.ManufacturerNumber = '640528301'
+where p.ManufacturerNumber like '%90640037%'
+
 --10371 07/15A
 
 /*
