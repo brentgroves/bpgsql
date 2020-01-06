@@ -151,8 +151,22 @@ from dbo.bePoItems  --2125
 ) set1
 --where endBENumber = 0
 select
-*
+--*
 --count(*) 
---top 10 *
+top 100 *
 from dbo.beStockedOrders  --2125
 order by benumber,fcreate
+
+
+/*************************************************************************
+ * Put BE Number into Plex format
+ * 
+ */
+
+/**************************************************************************
+ * Are these numbers in Plex?
+ */
+
+/********************************
+ * Transform Numbers
+ *///////////////
