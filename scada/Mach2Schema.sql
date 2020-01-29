@@ -120,6 +120,7 @@ set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION
 --set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 
 select * from users
+select * from messages
 insert into users (createdAt, email, isAdmin, password, roles, updatedAt, userName) 
 values ('2020-01-02T15:12:03.650Z', 'user2@buschegroup.com', true, 
 '$2a$10$F7dnH4S6/q3PuxSLJ5pyAu8XTpgguITn1GNag2UKBa8F29cCeVvwG','["Admin", "Manager", "Quality"]', '2020-01-02T15:12:03.650Z', 'Brent') 

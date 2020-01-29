@@ -70,35 +70,41 @@ select * from messages
 --drop table users
 
 
+
 -- Drop table
 
 -- DROP TABLE Kors.dbo.messages GO
 
 /*
-
+--Moved all Feathers services to mysql including authentication
 -- Drop table
 
 -- DROP TABLE Kors.dbo.users GO
 
-CREATE TABLE Kors.dbo.users (
-	id int IDENTITY(1,1) NOT NULL,
-	email nvarchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	password nvarchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	createdAt datetime2(7) NULL,
-	updatedAt datetime2(7) NULL,
-	CONSTRAINT PK__users__3213E83F75DF73F6 PRIMARY KEY (id)
-) GO
- CREATE  UNIQUE NONCLUSTERED INDEX users_email_unique ON dbo.users (  email ASC  )  
-	 WHERE  ([email] IS NOT NULL)
-	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 100  ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
-	 ON [PRIMARY ]  GO
-declare @dt datetime;
-set @dt = '2014-07-02 14:29';
+MySQL
+show variables like 'sql_mode' ; 
+The problem is because of sql_modes. Please check your current sql_modes by command:
+show variables like 'sql_mode' ; 
+And remove the sql_mode "NO_ZERO_IN_DATE,NO_ZERO_DATE" to make it work. This is the default sql_mode in mysql new versions.
+You can set sql_mode globally as root by command:
+set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
 
-INSERT INTO Kors.dbo.users
-(email, password, createdAt, updatedAt)
-VALUES('', '', '', '');
-select * from users
+
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `userName` varchar(255) DEFAULT NULL,
+  `firstName` varchar(255) DEFAULT NULL,
+  `lastName` varchar(255) DEFAULT NULL,
+  `isAdmin` tinyint(1) DEFAULT NULL,
+  `roles` json DEFAULT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+
 
  */
 
