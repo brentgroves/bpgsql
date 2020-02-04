@@ -100,17 +100,22 @@ CREATE TABLE DS13318(
   CNC varchar(25) NULL,
   
 --drop table users  
-create table users (
-	id int unsigned not null auto_increment primary key, 
-	email varchar(255),
-    password varchar(255),
-    userName varchar(255),
-    isAdmin boolean,
-    roles json, 
-    createdAt timestamp,
-	updatedAt timestamp
-)
-
+/*
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `userName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `firstName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `lastName` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `isAdmin` tinyint(1) DEFAULT NULL,
+  `roles` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT NULL,
+  `updatedAt` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+*/
 show variables like 'sql_mode' ; 
 
 -- took out NO_ZERO_IN_DATE,NO_ZERO_DATE  because when creating a model with knex and two timestamp columns this setting gives an erro
@@ -118,7 +123,7 @@ set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION
 
 -- does not work with feathers knex.
 --set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
-
+select * from test
 select * from users
 select * from messages
 insert into users (createdAt, email, isAdmin, password, roles, updatedAt, userName) 

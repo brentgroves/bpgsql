@@ -16,7 +16,14 @@ CREATE TABLE Kors.dbo.HourlyOEEValues (
 	Date_time_stamp DATETIME
 ) 
 
-select * from hourlyoeevalues
+
+select 
+*
+into 
+oee 
+from hourlyoeevalues
+
+
 declare @dt datetime;
 set @dt = '2014-07-02 14:29';
 INSERT INTO Kors.dbo.HourlyOEEValues
