@@ -19,8 +19,7 @@ CREATE TABLE Kors.dbo.HourlyOEEValues (
 
 select 
 *
-into 
-oee 
+--into MyHourlyOEEValues 
 from hourlyoeevalues
 
 
