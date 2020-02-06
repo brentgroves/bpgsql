@@ -123,8 +123,12 @@ set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION
 
 -- does not work with feathers knex.
 --set global sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
-select * from test
-select * from users
+select * from test OFFSET 10 ROWS;
+select * from mstest OFFSET 10 ROWS;
+
+SELECT *  FROM test LIMIT 2,2 OFFSET 10 ROWS ONLY;
+
+select * from users 
 select * from messages
 insert into users (createdAt, email, isAdmin, password, roles, updatedAt, userName) 
 values ('2020-01-02T15:12:03.650Z', 'user2@buschegroup.com', true, 
