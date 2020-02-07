@@ -29,4 +29,10 @@ EXEC	@return_value = [dbo].[Sproc200206] @start_date,@end_date,@report_name
 SELECT	'Return Value' = @return_value
 
 GO
+
 select * from rpt0207558
+
+SELECT * 
+FROM rpt0207558
+ORDER BY id 
+OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY;
