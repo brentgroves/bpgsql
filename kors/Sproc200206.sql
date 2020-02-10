@@ -13,7 +13,7 @@ BEGIN
 	IF OBJECT_ID(@table_name) IS NOT NULL
     	EXEC ('DROP Table ' + @table_name)
 
-    EXEC('select top(10) * into ' + @table_name + ' from HourlyOEEValues')
+    EXEC('select top(1000) * into ' + @table_name + ' from HourlyOEEValues')
     
     SELECT @record_count = @@ROWCOUNT;
 --EXEC('select * from ' + @report_name)
@@ -35,10 +35,10 @@ select '@record_count' = @record_count
 SELECT	'Return Value' = @return_value
 
 GO
---drop table rpt02080
-select * from rpt02080
+--drop table rpt02100
+select * from rpt02100 order by id
 
 SELECT * 
-FROM rpt0207558
+FROM rpt02100
 ORDER BY id 
-OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY;
+OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
