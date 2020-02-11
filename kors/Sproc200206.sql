@@ -36,9 +36,50 @@ SELECT	'Return Value' = @return_value
 
 GO
 --drop table rpt02100
-select * from rpt02100 order by id
+select * from rpt02110 order by id
 
-SELECT * 
-FROM rpt02100
+DECLARE	@return_value int,
+@start_date DATETIME,
+@end_date DATETIME,
+@table_name varchar(12),
+@record_count int;
+--2004-05-23T14:25:10
+set @start_date ='2020-02-04T00:00:00';
+set @end_date ='2020-02-05T00:00:00';
+set @table_name = 'rpt02080'
+--Select “Valid Years are: ” & DatePart(“yyyy”, orderDate) WHERE DatePart(“yyyy”,orderDate) > 2001
+
+SELECT 
+m,d,h
+from
+(
+	SELECT 
+	--distinct Data_hour 
+	DATEPART(month, Date_time_stamp ) m,
+	DATEPART(day, Date_time_stamp ) d, 
+	DATEPART(hour, Date_time_stamp ) h 
+	FROM HourlyOEEValues 
+	where Date_time_stamp BETWEEN @start_date and @end_date
+)s1
+group by m,d,h
+
+GROUP BY DATEPART(month, Date_time_stamp ),DATEPART(day, Date_time_stamp ), DATEPART(hour, Date_time_stamp )
+having Date_time_stamp BETWEEN @start_date and @end_date
+order by DATEPART(month, Date_time_stamp ),DATEPART(day, Date_time_stamp ), DATEPART(hour, Date_time_stamp ) 
+
+
+SELECT 
+--distinct Data_hour 
+distinct Date_time_stamp 
+FROM HourlyOEEValues 
+where Date_time_stamp BETWEEN @start_date and @end_date
+order by Data_time_stamp 
+
+SELECT 
+Data_hour,Date_time_stamp 
+FROM HourlyOEEValues 
+group by Data_hour,Date_time_stamp 
+having Date_time_stamp BETWEEN @start_date and @end_date
+order by Data_hour 
 ORDER BY id 
 OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
