@@ -20,12 +20,12 @@ CREATE TABLE Kors.dbo.HourlyOEEValues (
 select 
 --top(100)
 *
---into hourlyoeevalues0207 
+--into hourlyoeevalues0213 
 from hourlyoeevalues
 select 
---top(100) *
-count(*) cnt --14808
-from hourlyoeevalues0207
+top(100) *
+--count(*) cnt --14808
+from hourlyoeevalues0213
 
 declare @dt datetime;
 set @dt = '2014-07-02 14:29';
