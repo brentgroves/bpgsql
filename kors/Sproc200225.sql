@@ -29,10 +29,11 @@ GO
 --drop table rpt02210
 select * from rpt02210 order by primary_key
 --drop table rpt02080
-select top(10) * from rpt02080 order by primary_key 
-
+select top(10) * from rpt02080 order by id
+--THIS IS NOT DONE.  WE NEED 2 SPROCS 
+-- ONE LIKE SPROC200206 FOR THE TABLE AND ONE LIKE SPROC200221 FOR THE CHARTS
 --drop PROCEDURE  sproc200206
-CREATE PROCEDURE Sproc200206
+CREATE PROCEDURE Sproc200225
 	@start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
@@ -45,7 +46,7 @@ SET NOCOUNT ON;
 IF OBJECT_ID(@table_name) IS NOT NULL
 	EXEC ('DROP Table ' + @table_name)
 
-/* TESTING ONLY
+--/* TESTING ONLY
 DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
@@ -53,37 +54,29 @@ DECLARE @start_date DATETIME,
 set @start_date ='2020-02-09T00:00:00';
 set @end_date ='2020-02-15T23:59:59';
 set @table_name = 'rpt0213test'
-*/ -- END TESTING ONLY
+--*/ -- END TESTING ONLY
 	
 Declare @start_year char(4)
 Declare @start_week int
 Declare @end_year char(4)
 Declare @end_week int
-Declare @start_of_week_for_start_date datetime
-Declare @end_of_week_for_end_date datetime
+Declare @start_of_month_for_start_date datetime
+Declare @end_of_month_for_end_date datetime
 
 set @start_year = DATEPART(YEAR,@Start_Date)
-set @start_week = DATEPART(WEEK,@Start_Date)
+set @start_week = DATEPART(MONTH,@Start_Date)
 set @end_year = DATEPART(YEAR,@End_Date)
-set @end_week = DATEPART(WEEK,@End_Date)
+set @end_week = DATEPART(MONTH,@End_Date)
 
 
-set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
-set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
+set @start_of_month_for_start_date = DATEADD(mm, DATEDIFF(mm, 0, @Start_Date), 0)
+set @end_of_month_for_end_date = DATEADD (dd, -1, DATEADD(mm, DATEDIFF(mm, 0, @End_date) + 1, 0))
 
-set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
-set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
+set @end_of_month_for_end_date = DATEADD(day, 1, @end_of_month_for_end_date);
+set @end_of_month_for_end_date = DATEADD(second,-1,@end_of_month_for_end_date);
+select @start_of_month_for_start_date,@end_of_month_for_end_date
 
-/* may be necessary if multiple calls are done on the same connection
-decdrop table #resultslare @sqlDropPK nvarchar(4000)
-declare @PKTable nvarchar(50)
-set @PKTable = quotename(@table_name + 'PK')
---select @PKTable
-set @sqlDropPK = N'DROP Table ' + @PKTable 
---select @sqlDropPK
-IF OBJECT_ID(@PKTable) IS NOT NULL
-EXEC sp_executesql @sqlDropPK
-*/
+
 --drop table #primary_key
 create table #primary_key
 (
@@ -250,4 +243,3 @@ insert into #results (primary_key,start_week,end_week,part_number,workcenter_cod
 END;
 
 select * from rpt0213test
-
