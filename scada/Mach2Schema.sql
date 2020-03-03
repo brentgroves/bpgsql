@@ -81,7 +81,7 @@ order by ps.TransDate,ps.Part_no,ps.Serial_no,ps.Container_Status;
 
 END;
 
-
+select * from DS13318 d2 
 CALL DS13318('2019-12-15 09:00');
 drop PROCEDURE test1
 CREATE PROCEDURE test1 ()
