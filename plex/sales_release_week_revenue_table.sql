@@ -48,9 +48,9 @@ set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
 --select @start_of_current_week,@end_of_previous_week
 
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
---set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
 set @end_of_week_for_end_date =  DATEADD(wk, 15,@start_of_week_for_start_date)
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
+--set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
 
 --BUG FIX ADDED 23 HOURS AND 59 MINS TO END DATE
 --set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
@@ -62,10 +62,7 @@ set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
 
 --@Start_Date must be less at least 2 weeks for comparison to make sense
-IF @start_of_week_for_start_date > @end_of_week_for_end_date
-BEGIN
-  RETURN
-END
+
 create table #sales_release_week_volume_revenue
 (
   primary_key int,
@@ -93,25 +90,54 @@ exec sproc300758_11728751_1687505 @start_of_current_week,@end_of_week_for_end_da
 
 insert into #sales_release_week_volume_revenue (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
 exec sproc300758_11728751_1685871 @start_of_current_week,@end_of_week_for_end_date --sales_release_week_low_volume_revenue_releases
-
-
+/*
+select year_week_fmt,revenue  
+from #sales_release_week_volume_revenue vr
+where year_week_fmt = '2020-07 (Shipped)'
+*/
 --select * from  #sales_release_week_volume_revenue
 
 
 create table #primary_key
 (
   primary_key int,
-  year_week_fmt varchar(20),
+  part_key int,
+  part_no varchar (113)
 )
 
-insert into #primary_key (primary_key,year_week_fmt)
-select 
-ROW_NUMBER() OVER (ORDER BY year_week_fmt),
-year_week_fmt 
-from #sales_release_week_volume_revenue 
-group by year_week_fmt
+insert into #primary_key (primary_key,part_key,part_no)
+select 1,2684943, 'H2GC 5K652 AB'
+union
+select 2,2684942, 'H2GC 5K651 AB'
+union
+select 3,2794706, '10103355_Rev_A'
+union
+select 4,2794731, '10103353_Rev_A'
+union
+select 5,2793953, 'AA96128_Rev_B'
+union
+select 6,2807625, '727110F'
+union
+select 7,2794748, '10103357_Rev_A'
+union
+select 8,2794752, '10103358_Rev_A'
+union
+select 9,99999, 'Other'
 
---select * from #primary_key
+
+create table #year_week
+(
+  id INT PRIMARY KEY IDENTITY,
+  year_week int
+)
+
+insert into #year_week (year_week)
+select distinct year_week
+from #sales_release_week_volume_revenue
+order by year_week
+
+
+--select * from #year_week
 /* 
 --This must be hard coded since plex sde does not allow dynamic queries
 -- These are the top 20 revenu parts
@@ -138,7 +164,156 @@ group by year_week_fmt
 19	2017707_Rev_J	2795740	125648.64
 20	10035421_Rev_A	2795852	124891.20
 */
+--select top(1) year_week,year_week_fmt
+--from #sales_release_week_volume_revenue 
+--where year_week_fmt like '%Ship%'
 
+select pk.part_no,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 1
+)week1,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 2
+)week2,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 3
+)week3,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 4
+)week4,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 5
+)week5,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 6
+)week6,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 7
+)week7,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 8
+)week8,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 9
+)week9,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 10
+)week10,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 11
+)week11,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 12
+)week12,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 13
+)week13,
+(
+select revenue  
+from 
+#sales_release_week_volume_revenue vr
+inner join #year_week yw
+on vr.year_week=yw.year_week
+where part_no = pk.part_no
+--and year_week_fmt = '2020-08 (Shipped)'
+and yw.id = 14
+)week14
+from 
+#primary_key pk
+
+
+/*
 select pk.year_week_fmt,
 (
 select revenue  
@@ -193,4 +368,4 @@ where part_no = 'Other'
 and year_week_fmt = pk.year_week_fmt
 ) [Other]
 from #primary_key pk
-
+*/

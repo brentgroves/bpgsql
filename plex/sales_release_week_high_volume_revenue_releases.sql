@@ -164,11 +164,13 @@ create table #primary_key
   part_key int
 )
 /*
-case     
-when DATEPART(WEEK,sr.ship_date) < 10 then CONVERT(varchar(10),DATEPART(YEAR,sr.ship_date)) + '-0' + CONVERT(varchar(10),DATEPART(WEEK,sr.ship_date)) + '-Shipped'
-else CONVERT(varchar(10),DATEPART(YEAR,sr.ship_date)) + '-' + CONVERT(varchar(10),DATEPART(WEEK,sr.ship_date)), + '-')
-end year_week_fmt,
+Use the ‘Forecast’ sales release to calculate current and future week revenue. 
+You must filter for release type = ‘Forecast’ in this case since there are ‘ship_schedule’ 
+sales release items that you do not want to include in this estimate.  The idea is that the 
+future weeks sum of ‘Forecast’ sales release should be a good estimate of what the quantity_shipped sum will equal.    
 
+Use ‘Ship_schedule’ sales release to calculate revenue for previous weeks revenue; Since all sales releases with 
+a shipped_quantity are of type ‘ship_schedule’ you do not need to check the sales release type only sum the quantity_shipped. 
 */
 
 insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week,part_key)
@@ -191,36 +193,33 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
 
   from 
   (
-    select 
-    year_week,
-    year_week_fmt,
-    start_week,
-    end_week,
-    part_key
-    
-    from
-    (
-      select
-      DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
-      case     
-      when DATEPART(WEEK,sr.ship_date) < 10 then CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-0' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Releases)'
-      else CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Releases)'
-      end year_week_fmt,
-      DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6) start_week, 
-      DATEADD(second,-1,DATEADD(day, 1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 5))) end_week, 
-      pl.part_key
-      from sales_v_release sr
-      left outer join sales_v_po_line pl --1 to 1
-      on sr.po_line_key=pl.po_line_key 
-      left outer join sales_v_po po  -- 1 to 1
-      on pl.po_key = po.po_key  
-      where ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
-      and pl.part_key in (select * from #filter)
-    )sa
+    select
+    DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
+    case     
+    when DATEPART(WEEK,sr.ship_date) < 10 then CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-0' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Releases)'
+    else CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Releases)'
+    end year_week_fmt,
+    DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6) start_week, 
+    DATEADD(second,-1,DATEADD(day, 1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 5))) end_week, 
+    pl.part_key
+    from sales_v_release sr
+    inner join sales_v_release_type rt
+    on sr.release_type_key=rt.release_type_key  --1 to 1
+    inner join sales_v_release_status rs
+    on sr.release_status_key = rs.release_status_key  --1 to 1
+    inner join sales_v_po_line pl --1 to 1
+    on sr.po_line_key=pl.po_line_key 
+    inner join sales_v_po po  -- 1 to 1
+    on pl.po_key = po.po_key  
+    where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
+    and pl.part_key in (select * from #filter)
+    and rt.release_type ='Forecast'
+    and rs.release_status != 'Canceled'
   )s1 
   group by year_week,year_week_fmt,start_week,end_week,part_key
 
 )
+--select * from #primary_key  --26
 /*
 1	2684943
 2	2684942
@@ -233,20 +232,7 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
 --2684943,2684942,2794731,2794706,2793953,2807625,2794748,2794752
 */
 --select * from #primary_key
-/*
 
-create table #volume_revenue_info
-(
-  week varchar(20),
-  [H2GC 5K652 AB] decimal (18,2),
-  [H2GC 5K651 AB] decimal (18,2),
-  [10103355_Rev_A] decimal (18,2),
-  [10103353_Rev_A] decimal (18,2),
-  [AA96128_Rev_B] decimal (18,2),
-  [Other] decimal (18,2)
-)
-
-*/
 
 --select count(*) #primary_key from #primary_key  --169
 --select top(1) * from #primary_key
@@ -264,8 +250,7 @@ create table #volume_revenue_info
 --	93	Pending	1  --??
 
 --2684943,2684942,2794731,2794706,2793953,2807625,2794748,2794752
-
-
+    --1/1/2020-5/1/2020 - Open sales release items {4325}
 
 create table #set2group
 (
@@ -287,26 +272,29 @@ insert into #set2group (primary_key,quantity,price)
     pl.part_key,
     sr.quantity,
     pr.price
-    from sales_v_release sr  
+    from sales_v_release sr
+    inner join sales_v_release_type rt
+    on sr.release_type_key=rt.release_type_key  --1 to 1
     inner join sales_v_release_status rs
-    on sr.release_status_key = rs.release_status_key
-    inner join sales_v_po_line pl 
-    on sr.po_line_key=pl.po_line_key --1 to 1
-    inner join sales_v_po po  
-    on pl.po_key = po.po_key  --1 to 1
+    on sr.release_status_key = rs.release_status_key  --1 to 1
+    inner join sales_v_po_line pl --1 to 1
+    on sr.po_line_key=pl.po_line_key 
+    inner join sales_v_po po  -- 1 to 1
+    on pl.po_key = po.po_key  
     inner join sales_v_price pr
     on pl.po_line_key=pr.po_line_key
     where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
     and pl.part_key in (select * from #filter)
-    and rs.release_status not in ('Canceled','Closed')
-   -- ans
---    and ss.shipper_status='Shipped' and pl.part_key in (2684943,2684942,2794731,2794706,2793953,2807625,2794748,2794752)
+    and rt.release_type ='Forecast'
+    and rs.release_status != 'Canceled'
   )sl
   inner join #primary_key pk
   on pk.year_week=sl.year_week
   and pk.part_key=sl.part_key
 
 )
+--select top(100) * from #set2group
+--order by primary_key
 
 /*
 --select release_type from sales_v_release_type
@@ -404,20 +392,19 @@ insert into #sales_release_week_high_volume_revenue_releases (primary_key,part_k
     case 
     when p.revision = '' then p.part_no
     else p.part_no + '_Rev_' + p.revision 
-    end part_no,  --The report says 10025543 RevD I can't find the Rev word
-    p.name,
+    end part_no, 
     case
       when vr.volume is null then 0
       else vr.volume
-    end volume,  -- NOT VALIDATED
+    end volume, 
     case
       when vr.revenue is null then 0
       else vr.revenue
     end revenue
     from #primary_key pk
-    left outer join part_v_part p -- 1 to 1
+    inner join part_v_part p -- 1 to 1
     on pk.part_key=p.part_key 
-    left outer join #volume_revenue vr
+    inner join #volume_revenue vr
     on pk.primary_key=vr.primary_key
   )s1
   

@@ -1,9 +1,10 @@
+-- Next: Could add a @Parts_To_Display parameter and work it into the #filter
 -- Reports: SalesReleaseVolumeRevenue
 -- release_status: Any 
 -- release_type: Any. 
 -- Quantity shipped: from sales_release.quantity_shipped field.
 -- Revenue and Volume: shipper_status='Shipped'
--- Primary Key: year_week,year_week_fmt,start_week,end_week,customer_no,part_key 
+-- Primary Key: year_week,year_week_fmt,start_week,end_week,part_key 
 -- Order: customer_code,part_no,year_week
 /*
 UPDATE FOR CHARLES 
@@ -163,20 +164,15 @@ create table #primary_key
   end_week datetime,
   part_key int
 )
-/*
-case     
-when DATEPART(WEEK,sr.ship_date) < 10 then CONVERT(varchar(10),DATEPART(YEAR,sr.ship_date)) + '-0' + CONVERT(varchar(10),DATEPART(WEEK,sr.ship_date)) + '-Shipped'
-else CONVERT(varchar(10),DATEPART(YEAR,sr.ship_date)) + '-' + CONVERT(varchar(10),DATEPART(WEEK,sr.ship_date)), + '-')
-end year_week_fmt,
 
-*/
-
+--The primary_key should contain all parts with sales release items even if they don't have any quantity shipped.
+--If quantity shipped is 0 for a part it still should be included in the report.
 insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week,part_key)
 (
   select 
   --top 10
   ROW_NUMBER() OVER (
-    ORDER BY year_week,part_key
+    ORDER BY year_week
   ) primary_key,
   year_week,
   year_week_fmt,
@@ -191,36 +187,44 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
 
   from 
   (
-    select 
-    year_week,
-    year_week_fmt,
-    start_week,
-    end_week,
-    part_key
-    
-    from
-    (
-      select
-      DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
-      case     
-      when DATEPART(WEEK,sr.ship_date) < 10 then CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-0' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Shipped)'
-      else CONVERT(varchar(4),DATEPART(YEAR,sr.ship_date)) + '-' + CONVERT(varchar(2),DATEPART(WEEK,sr.ship_date)) + ' (Shipped)'
-      end year_week_fmt,
-      DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6) start_week, 
-      DATEADD(second,-1,DATEADD(day, 1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 5))) end_week, 
-      pl.part_key
-      from sales_v_release sr
-      left outer join sales_v_po_line pl --1 to 1
-      on sr.po_line_key=pl.po_line_key 
-      left outer join sales_v_po po  -- 1 to 1
-      on pl.po_key = po.po_key  
-      where ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
-      and pl.part_key in (select * from #filter)
-    )sa
+    select
+    --BUG: THIS WAS SR.SHIP_DATE SHOULD BE SH.SHIP_DATE
+    DATEPART(YEAR,sh.ship_date) * 100 + DATEPART(WEEK,sh.ship_date) year_week,
+    case     
+    when DATEPART(WEEK,sh.ship_date) < 10 then CONVERT(varchar(4),DATEPART(YEAR,sh.ship_date)) + '-0' + CONVERT(varchar(2),DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+    else CONVERT(varchar(4),DATEPART(YEAR,sh.ship_date))  + '-' +  CONVERT(varchar(2),DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+    end year_week_fmt,
+    DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6) start_week, 
+    DATEADD(second,-1,DATEADD(day, 1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 5))) end_week,
+    pl.part_key
+--set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
+--set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);    
+    --as Num2   DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
+    from sales_v_release sr
+    left outer join sales_v_po_line pl --1 to 1
+    on sr.po_line_key=pl.po_line_key 
+    left outer join sales_v_po po  -- 1 to 1
+    on pl.po_key = po.po_key  
+    inner join sales_v_shipper_line sl 
+    on sr.release_key=sl.release_key --1 to many
+    inner join sales_v_shipper sh 
+    on sl.shipper_key=sh.shipper_key   --1 to 1
+    inner join sales_v_shipper_status ss --1 to 1
+    on sh.shipper_status_key=ss.shipper_status_key  --
+    --BUG: THIS WAS SR.SHIP_DATE SHOULD BE SH.SHIP_DATE
+    where sh.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
+    and ss.shipper_status='Shipped' and pl.part_key in (select * from #filter)
+    --where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
+    --and pl.part_key not in (select * from #filter)
   )s1 
-  group by year_week,year_week_fmt,start_week,end_week,part_key
+  group by year_week,year_week_fmt,start_week,end_week,part_key  -- sales release to shipper_line is a 1 to many relationship so make sure these records are distinct
 
+  --BUG: The primary key was based upon the sr.ship_date and the set to group was based on the sh.ship_date 
+  --so some records could be dropped. Changed the primary key and set to group both to be based upon sh.ship_date
 )
+
+--select * from #primary_key
+
 /*
 1	2684943
 2	2684942
@@ -280,7 +284,11 @@ insert into #set2group (primary_key,quantity,price)
   from
   (
     select
-    DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
+    --BUG: THIS WAS SR.SHIP_DATE SHOULD BE SH.SHIP_DATE
+    --We normally determine volume from the sales release item quantity_shipped column,
+    -- but since we need to include the price we charged the customer we need to get 
+    -- the quantity and price from the shipper_line.
+    DATEPART(YEAR,sh.ship_date) * 100 + DATEPART(WEEK,sh.ship_date) year_week,
     pl.part_key,
     sl.quantity,
     sl.price
@@ -295,7 +303,8 @@ insert into #set2group (primary_key,quantity,price)
     on sl.shipper_key=sh.shipper_key   --1 to 1
     inner join sales_v_shipper_status ss --1 to 1
     on sh.shipper_status_key=ss.shipper_status_key  --
-    where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
+    --BUG: THIS WAS SR.SHIP_DATE SHOULD BE SH.SHIP_DATE
+    where sh.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
     and ss.shipper_status='Shipped' and pl.part_key in (select * from #filter)
 --    and ss.shipper_status='Shipped' and pl.part_key in (2684943,2684942,2794731,2794706,2793953,2807625,2794748,2794752)
   )sl
@@ -305,8 +314,7 @@ insert into #set2group (primary_key,quantity,price)
 
 )
 
---select count(*) #set2groupC from #set2group  --324
---select top(100) * from #set2group
+
 create table #volume_revenue
 (
   primary_key int,
@@ -316,7 +324,7 @@ create table #volume_revenue
 )
 
 
---isert top 5 revenue parts.
+
 insert into #volume_revenue (primary_key,volume,revenue)
 (
 
@@ -380,20 +388,20 @@ insert into #sales_release_week_high_volume_revenue (primary_key,part_key,year_w
     case 
     when p.revision = '' then p.part_no
     else p.part_no + '_Rev_' + p.revision 
-    end part_no,  --The report says 10025543 RevD I can't find the Rev word
+    end part_no,  
     p.name,
     case
       when vr.volume is null then 0
       else vr.volume
-    end volume,  -- NOT VALIDATED
+    end volume,  
     case
       when vr.revenue is null then 0
       else vr.revenue
     end revenue
     from #primary_key pk
-    left outer join part_v_part p -- 1 to 1
+    inner join part_v_part p -- 1 to 1  
     on pk.part_key=p.part_key 
-    left outer join #volume_revenue vr
+    inner join #volume_revenue vr
     on pk.primary_key=vr.primary_key
   )s1
   
