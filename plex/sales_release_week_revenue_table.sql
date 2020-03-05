@@ -5,24 +5,7 @@
 -- Revenue and Volume: shipper_status='Shipped'
 -- Primary Key: year_week,year_week_fmt,start_week,end_week,customer_no,part_key 
 -- Order: customer_code,part_no,year_week
-/*
-UPDATE FOR CHARLES 
-short column, for color styling in intelliplex
-add dash to separate year/week
-*/
---//////////////////////////////////////////////////////////
---Check Parameters
---/////////////////////////////////////////////////////////
---SELECT DATEADD(YEAR,-2,GETDATE()) 
-IF @Start_Date < DATEADD(YEAR,-5,GETDATE())
-BEGIN
-  --PRINT 'ERROR'
-  RETURN
-END
-
-
-
-
+Declare @Start_Date datetime
 Declare @start_year char(4)
 Declare @start_week int
 Declare @end_year char(4)
@@ -35,12 +18,16 @@ Declare @current_year char(4)
 Declare @current_week int
 
 
-set @start_year = DATEPART(YEAR,@Start_Date)
-set @start_week = DATEPART(WEEK,@Start_Date)
 --set @end_year = DATEPART(YEAR,@End_Date)
 --set @end_week = DATEPART(WEEK,@End_Date)
 set @current_year = DATEPART(YEAR,getdate())
 set @current_week = DATEPART(WEEK,getdate())
+
+--No matter what day is the start of the year this date is in the first ISO week
+set @Start_Date = '1/7/' + @current_year
+
+set @start_year = DATEPART(YEAR,@Start_Date)
+set @start_week = DATEPART(WEEK,@Start_Date)
 
 set @start_of_current_week = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @current_year) + (@current_week-1), 6)  --start of week
 set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
@@ -48,7 +35,7 @@ set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
 --select @start_of_current_week,@end_of_previous_week
 
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
-set @end_of_week_for_end_date =  DATEADD(wk, 15,@start_of_week_for_start_date)
+set @end_of_week_for_end_date =  DATEADD(wk, 14,@start_of_week_for_start_date)
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
 
@@ -122,7 +109,31 @@ select 7,2794748, '10103357_Rev_A'
 union
 select 8,2794752, '10103358_Rev_A'
 union
-select 9,99999, 'Other'
+select 9,2794182, 'A52092_Rev_T'
+union
+select 10,2811382, '68400221AA_Rev_08'
+union
+select 11,2820236, '10103353CX_Rev_A'
+union
+select 12,2800943, '18190-RNO-A012-S10_Rev_02'
+union
+select 13,2820251, '10103355CX_Rev_A'
+union
+select 14,2793937, 'R558149_Rev_E'
+union
+select 15,2794044, 'A92817_Rev_B'
+union
+select 16,2795919, 'R559324RX1_Rev_A'
+union
+select 17,2803944, '26088054_Rev_07B'
+union
+select 18,2795866, '10046553_Rev_N'
+union
+select 19,2795740, '2017707_Rev_J'
+union
+select 20,2795852, '10035421_Rev_A'
+union
+select 21,99999, 'Other'
 
 
 create table #year_week

@@ -5,24 +5,8 @@
 -- Revenue and Volume: shipper_status='Shipped'
 -- Primary Key: year_week,year_week_fmt,start_week,end_week,customer_no,part_key 
 -- Order: customer_code,part_no,year_week
-/*
-UPDATE FOR CHARLES 
-short column, for color styling in intelliplex
-add dash to separate year/week
-*/
---//////////////////////////////////////////////////////////
---Check Parameters
---/////////////////////////////////////////////////////////
---SELECT DATEADD(YEAR,-2,GETDATE()) 
-IF @Start_Date < DATEADD(YEAR,-5,GETDATE())
-BEGIN
-  --PRINT 'ERROR'
-  RETURN
-END
 
-
-
-
+Declare @Start_Date datetime
 Declare @start_year char(4)
 Declare @start_week int
 Declare @end_year char(4)
@@ -34,13 +18,18 @@ Declare @end_of_previous_week datetime
 Declare @current_year char(4)
 Declare @current_week int
 
+set @current_year = DATEPART(YEAR,getdate())
+set @current_week = DATEPART(WEEK,getdate())
+
+--No matter what day is the start of the year this date is in the first ISO week
+set @Start_Date = '1/7/' + @current_year
+
 
 set @start_year = DATEPART(YEAR,@Start_Date)
 set @start_week = DATEPART(WEEK,@Start_Date)
+--select @start_year,@start_week
 --set @end_year = DATEPART(YEAR,@End_Date)
 --set @end_week = DATEPART(WEEK,@End_Date)
-set @current_year = DATEPART(YEAR,getdate())
-set @current_week = DATEPART(WEEK,getdate())
 
 set @start_of_current_week = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @current_year) + (@current_week-1), 6)  --start of week
 set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
@@ -49,7 +38,7 @@ set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
 
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
 --set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
-set @end_of_week_for_end_date =  DATEADD(wk, 15,@start_of_week_for_start_date)
+set @end_of_week_for_end_date =  DATEADD(wk, 14,@start_of_week_for_start_date)
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
 --BUG FIX ADDED 23 HOURS AND 59 MINS TO END DATE
@@ -57,7 +46,7 @@ set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
 --/* testing 0
---select @start_of_week_for_start_date, @end_of_week_for_end_date
+--select @start_of_week_for_start_date,  @end_of_previous_week, @start_of_current_week,@end_of_week_for_end_date
 --*/ end testing 0 
 
 
@@ -185,12 +174,70 @@ select revenue
 from #sales_release_week_volume_revenue vr
 where part_no = '10103358_Rev_A'
 and year_week_fmt = pk.year_week_fmt
-) [10103358_Rev_A],
-(
+) [10103358_Rev_A],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = 'A52092_Rev_T'
+and year_week_fmt = pk.year_week_fmt
+) [A52092_Rev_T],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '68400221AA_Rev_08'
+and year_week_fmt = pk.year_week_fmt
+) [68400221AA_Rev_08],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '10103353CX_Rev_A'
+and year_week_fmt = pk.year_week_fmt
+) [10103353CX_Rev_A],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '18190-RNO-A012-S10_Rev_02'
+and year_week_fmt = pk.year_week_fmt
+) [18190-RNO-A012-S10_Rev_02],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '10103355CX_Rev_A'
+and year_week_fmt = pk.year_week_fmt
+) [10103355CX_Rev_A],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = 'R558149_Rev_E'
+and year_week_fmt = pk.year_week_fmt
+) [R558149_Rev_E],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = 'A92817_Rev_B'
+and year_week_fmt = pk.year_week_fmt
+) [A92817_Rev_B],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = 'R559324RX1_Rev_A'
+and year_week_fmt = pk.year_week_fmt
+) [R559324RX1_Rev_A],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '26088054_Rev_07B'
+and year_week_fmt = pk.year_week_fmt
+) [26088054_Rev_07B],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '10046553_Rev_N'
+and year_week_fmt = pk.year_week_fmt
+) [10046553_Rev_N],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '2017707_Rev_J'
+and year_week_fmt = pk.year_week_fmt
+) [2017707_Rev_J],(
+select revenue  
+from #sales_release_week_volume_revenue vr
+where part_no = '10035421_Rev_A'
+and year_week_fmt = pk.year_week_fmt
+) [10035421_Rev_A],(
 select revenue  
 from #sales_release_week_volume_revenue vr
 where part_no = 'Other'
 and year_week_fmt = pk.year_week_fmt
 ) [Other]
 from #primary_key pk
-

@@ -120,7 +120,6 @@ union
 select 2794748	as part_key
 union
 select 2794752	as part_key
-/*
 union
 select 2794182	as part_key
 union
@@ -147,7 +146,7 @@ union
 select 2794752	as part_key
 union
 select 2795852	as part_key
-*/
+
 
 )
 --select * from #filter
@@ -189,10 +188,16 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
   (
     select
     --BUG: THIS WAS SR.SHIP_DATE SHOULD BE SH.SHIP_DATE
-    DATEPART(YEAR,sh.ship_date) * 100 + DATEPART(WEEK,sh.ship_date) year_week,
+    DATEPART(YEAR,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6)) * 100 + 
+    DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6)) year_week,
     case     
-    when DATEPART(WEEK,sh.ship_date) < 10 then CONVERT(varchar(4),DATEPART(YEAR,sh.ship_date)) + '-0' + CONVERT(varchar(2),DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
-    else CONVERT(varchar(4),DATEPART(YEAR,sh.ship_date))  + '-' +  CONVERT(varchar(2),DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+    when 
+      DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6)) < 10 then    
+      CONVERT(varchar(4),DATEPART(YEAR,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6))) 
+      + '-0' + CONVERT(varchar(2),DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6))) + ' (Shipped)'  
+    else 
+      CONVERT(varchar(4),DATEPART(YEAR,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6))) 
+      + '-' + CONVERT(varchar(2),DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6))) + ' (Shipped)'  
     end year_week_fmt,
     DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6) start_week, 
     DATEADD(second,-1,DATEADD(day, 1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 5))) end_week,
@@ -288,7 +293,8 @@ insert into #set2group (primary_key,quantity,price)
     --We normally determine volume from the sales release item quantity_shipped column,
     -- but since we need to include the price we charged the customer we need to get 
     -- the quantity and price from the shipper_line.
-    DATEPART(YEAR,sh.ship_date) * 100 + DATEPART(WEEK,sh.ship_date) year_week,
+    DATEPART(YEAR,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6)) * 100 + 
+    DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sh.ship_date))) + (DATEPART(WEEK,sh.ship_date)-1), 6)) year_week,
     pl.part_key,
     sl.quantity,
     sl.price
@@ -416,7 +422,7 @@ select
 --distinct part_key
 from #sales_release_week_high_volume_revenue
 --order by revenue desc
-order by year_week,part_no
+order by part_no,year_week
 
 --revenue
 --2971958
