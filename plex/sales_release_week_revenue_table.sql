@@ -30,6 +30,10 @@ set @start_year = DATEPART(YEAR,@Start_Date)
 set @start_week = DATEPART(WEEK,@Start_Date)
 
 set @start_of_current_week = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @current_year) + (@current_week-1), 6)  --start of week
+--WHAT DATE DOES THIS CORRESPOND TO IN PREVIOUS YEAR?
+
+
+
 set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
 
 --select @start_of_current_week,@end_of_previous_week
@@ -44,7 +48,7 @@ set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
 --/* testing 0
---select @start_of_week_for_start_date, @end_of_week_for_end_date
+--select @start_of_week_for_start_date, @start_of_current_week,@end_of_previous_week, @end_of_week_for_end_date
 --*/ end testing 0 
 
 
@@ -93,47 +97,49 @@ create table #primary_key
 )
 
 insert into #primary_key (primary_key,part_key,part_no)
-select 1,2684943, 'H2GC 5K652 AB'
+select 1,2684943, 'H2GC 5K652 AB'  --1
 union
-select 2,2684942, 'H2GC 5K651 AB'
+select 2,2684942, 'H2GC 5K651 AB'  --2
 union
-select 3,2794706, '10103355_Rev_A'
+select 3,2794731, '10103353_Rev_A'  --3
 union
-select 4,2794731, '10103353_Rev_A'
+select 4,2794706, '10103355_Rev_A'  --4
 union
-select 5,2793953, 'AA96128_Rev_B'
+select 5,2793953, 'AA96128_Rev_B'  --5
 union
-select 6,2807625, '727110F'
+select 6,2807625, '727110F'  --6
 union
-select 7,2794748, '10103357_Rev_A'
+select 7,2794748, '10103357_Rev_A'  --7
 union
-select 8,2794752, '10103358_Rev_A'
+select 8,2794752, '10103358_Rev_A'  --8
 union
-select 9,2794182, 'A52092_Rev_T'
+select 9,2794182, 'A52092_Rev_T'  --9
 union
-select 10,2811382, '68400221AA_Rev_08'
+select 10,2820236, '10103353CX_Rev_A'  --10
 union
-select 11,2820236, '10103353CX_Rev_A'
+select 11,2811382, '68400221AA_Rev_08'  --11
 union
-select 12,2800943, '18190-RNO-A012-S10_Rev_02'
+select 12,2800943, '18190-RNO-A012-S10_Rev_02'  --12
 union
-select 13,2820251, '10103355CX_Rev_A'
+select 13,2820251, '10103355CX_Rev_A'  --13
 union
-select 14,2793937, 'R558149_Rev_E'
+select 14,2793937, 'R558149_Rev_E'  --14
 union
-select 15,2794044, 'A92817_Rev_B'
+select 15,2794044, 'A92817_Rev_B'  --15
 union
-select 16,2795919, 'R559324RX1_Rev_A'
+select 16,2795919, 'R559324RX1_Rev_A'  --16
 union
-select 17,2803944, '26088054_Rev_07B'
+select 17,2795866, '10046553_Rev_N'  --17
 union
-select 18,2795866, '10046553_Rev_N'
+select 18,2803944, '26088054_Rev_07B'  --18
 union
-select 19,2795740, '2017707_Rev_J'
+select 19,2795740, '2017707_Rev_J'  --19
 union
-select 20,2795852, '10035421_Rev_A'
+select 20,2795739, '2017710_Rev_J'  --20
 union
 select 21,99999, 'Other'
+
+
 
 
 create table #year_week
@@ -149,32 +155,40 @@ order by year_week
 
 
 --select * from #year_week
+
 /* 
 --This must be hard coded since plex sde does not allow dynamic queries
 -- These are the top 20 revenu parts
 --	top 20 part revenue from 20200101 to 20200303
-	part_no,part_key,revenue
-1	H2GC 5K652 AB	2684943	1662323.05
-2	H2GC 5K651 AB	2684942	1658554.70
-3	10103355_Rev_A	2794706	1093006.08
-4	10103353_Rev_A	2794731	1082629.44
-5	AA96128_Rev_B	2793953	711030.65
-6	727110F	2807625	493896.52
-7	10103357_Rev_A	2794748	328521.60
-8	10103358_Rev_A	2794752	320981.76
-9	A52092_Rev_T	2794182	258307.20
-10	68400221AA_Rev_08	2811382	253344.42
-11	10103353CX_Rev_A	2820236	230835.84
-12	18190-RNO-A012-S10_Rev_02	2800943	227278.80
-13	10103355CX_Rev_A	2820251	221961.60
-14	R558149_Rev_E	2793937	212013.12
-15	A92817_Rev_B	2794044	187650.00
-16	R559324RX1_Rev_A	2795919	176837.92
-17	26088054_Rev_07B	2803944	154415.10
-18	10046553_Rev_N	2795866	148300.32
-19	2017707_Rev_J	2795740	125648.64
-20	10035421_Rev_A	2795852	124891.20
+
+
+	part_no	part_key	revenue
+1	H2GC 5K652 AB	2684943	1770503.43
+2	H2GC 5K651 AB	2684942	1766723.02
+3	10103353_Rev_A	2794731	1134512.64
+4	10103355_Rev_A	2794706	1133359.68
+5	AA96128_Rev_B	2793953	760716.65
+6	727110F	2807625	470113.32
+7	10103357_Rev_A	2794748	343601.28
+8	10103358_Rev_A	2794752	334984.32
+9	A52092_Rev_T	2794182	277641.60
+10	10103353CX_Rev_A	2820236	264720.00
+11	68400221AA_Rev_08	2811382	259226.38
+12	18190-RNO-A012-S10_Rev_02	2800943	256015.20
+13	10103355CX_Rev_A	2820251	240986.88
+14	R558149_Rev_E	2793937	214091.68
+15	A92817_Rev_B	2794044	202662.00
+16	R559324RX1_Rev_A	2795919	191594.72
+17	10046553_Rev_N	2795866	167388.48
+18	26088054_Rev_07B	2803944	158389.50
+19	2017707_Rev_J	2795740	149811.84
+20	2017710_Rev_J	2795739	148435.20
+
+
+
 */
+
+
 --select top(1) year_week,year_week_fmt
 --from #sales_release_week_volume_revenue 
 --where year_week_fmt like '%Ship%'
