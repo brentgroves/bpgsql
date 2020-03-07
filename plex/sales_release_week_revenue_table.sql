@@ -23,23 +23,29 @@ Declare @current_week int
 set @current_year = DATEPART(YEAR,getdate())
 set @current_week = DATEPART(WEEK,getdate())
 
---No matter what day is the start of the year this date is in the first ISO week
-set @Start_Date = '1/7/' + @current_year
+set @Start_Date = '1/1/' + @current_year
 
 set @start_year = DATEPART(YEAR,@Start_Date)
 set @start_week = DATEPART(WEEK,@Start_Date)
 
-set @start_of_current_week = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @current_year) + (@current_week-1), 6)  --start of week
---WHAT DATE DOES THIS CORRESPOND TO IN PREVIOUS YEAR?
-
-
+if DATEPART(WEEK,getdate()) = 1
+set @start_of_current_week = datefromparts(DATEPART(YEAR,getdate()), 1, 1)
+else
+set @start_of_current_week = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @current_year) + (@current_week-1), 6)  --start of current week
 
 set @end_of_previous_week = DATEADD(second,-1,@start_of_current_week)
 
 --select @start_of_current_week,@end_of_previous_week
 
+
+if DATEPART(WEEK,@Start_Date) = 1
+set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1, 1)
+else
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
-set @end_of_week_for_end_date =  DATEADD(wk, 14,@start_of_week_for_start_date)
+
+
+--ADJUST END DATE FOR 4TH QUARTER BASED UPON THE NUMBER OF WEEKS IN THE YEAR
+set @end_of_week_for_end_date =  DATEADD(wk, 12,@start_of_week_for_start_date)
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
 
@@ -48,7 +54,7 @@ set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
 --/* testing 0
---select @start_of_week_for_start_date, @start_of_current_week,@end_of_previous_week, @end_of_week_for_end_date
+--select @start_of_week_for_start_date,  @end_of_previous_week, @start_of_current_week,@end_of_week_for_end_date
 --*/ end testing 0 
 
 
@@ -97,49 +103,47 @@ create table #primary_key
 )
 
 insert into #primary_key (primary_key,part_key,part_no)
-select 1,2684943, 'H2GC 5K652 AB'  --1
+select 1,2684943, 'H2GC 5K652 AB'
 union
-select 2,2684942, 'H2GC 5K651 AB'  --2
+select 2,2684942, 'H2GC 5K651 AB'
 union
-select 3,2794731, '10103353_Rev_A'  --3
+select 3,2794731, '10103353_Rev_A'
 union
-select 4,2794706, '10103355_Rev_A'  --4
+select 4,2794706, '10103355_Rev_A'
 union
-select 5,2793953, 'AA96128_Rev_B'  --5
+select 5,2793953, 'AA96128_Rev_B'
 union
-select 6,2807625, '727110F'  --6
+select 6,2807625, '727110F'
 union
-select 7,2794748, '10103357_Rev_A'  --7
+select 7,2794748, '10103357_Rev_A'
 union
-select 8,2794752, '10103358_Rev_A'  --8
+select 8,2794752, '10103358_Rev_A'
 union
-select 9,2794182, 'A52092_Rev_T'  --9
+select 9,2794182, 'A52092_Rev_T'
 union
-select 10,2820236, '10103353CX_Rev_A'  --10
+select 10,2820236, '10103353CX_Rev_A'
 union
-select 11,2811382, '68400221AA_Rev_08'  --11
+select 11,2811382, '68400221AA_Rev_08'
 union
-select 12,2800943, '18190-RNO-A012-S10_Rev_02'  --12
+select 12,2800943, '18190-RNO-A012-S10_Rev_02'
 union
-select 13,2820251, '10103355CX_Rev_A'  --13
+select 13,2820251, '10103355CX_Rev_A'
 union
-select 14,2793937, 'R558149_Rev_E'  --14
+select 14,2793937, 'R558149_Rev_E'
 union
-select 15,2794044, 'A92817_Rev_B'  --15
+select 15,2794044, 'A92817_Rev_B'
 union
-select 16,2795919, 'R559324RX1_Rev_A'  --16
+select 16,2795919, 'R559324RX1_Rev_A'
 union
-select 17,2795866, '10046553_Rev_N'  --17
+select 17,2795866, '10046553_Rev_N'
 union
-select 18,2803944, '26088054_Rev_07B'  --18
+select 18,2803944, '26088054_Rev_07B'
 union
-select 19,2795740, '2017707_Rev_J'  --19
+select 19,2795740, '2017707_Rev_J'
 union
-select 20,2795739, '2017710_Rev_J'  --20
+select 20,2795739, '2017710_Rev_J'
 union
 select 21,99999, 'Other'
-
-
 
 
 create table #year_week
@@ -155,13 +159,7 @@ order by year_week
 
 
 --select * from #year_week
-
-/* 
---This must be hard coded since plex sde does not allow dynamic queries
--- These are the top 20 revenu parts
---	top 20 part revenue from 20200101 to 20200303
-
-
+/*
 	part_no	part_key	revenue
 1	H2GC 5K652 AB	2684943	1770503.43
 2	H2GC 5K651 AB	2684942	1766723.02
@@ -183,8 +181,6 @@ order by year_week
 18	26088054_Rev_07B	2803944	158389.50
 19	2017707_Rev_J	2795740	149811.84
 20	2017710_Rev_J	2795739	148435.20
-
-
 
 */
 
@@ -323,20 +319,10 @@ on vr.year_week=yw.year_week
 where part_no = pk.part_no
 --and year_week_fmt = '2020-08 (Shipped)'
 and yw.id = 13
-)week13,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 14
-)week14
+)week13
 from 
 #primary_key pk
-
+--ON 4TH QUARTER THERE MAY BE 14 WEEKS
 
 /*
 select pk.year_week_fmt,

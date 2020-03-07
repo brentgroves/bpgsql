@@ -66,85 +66,7 @@ BEGIN
   RETURN
 END
 
-/* 
---This must be hard coded since plex sde does not allow dynamic queries
--- These are the top 20 revenu parts
---	top 20 part revenue from 20200101 to 20200303
-	part_no	part_key	revenue
-1	H2GC 5K652 AB	2684943	1770503.43
-2	H2GC 5K651 AB	2684942	1766723.02
-3	10103353_Rev_A	2794731	1134512.64
-4	10103355_Rev_A	2794706	1133359.68
-5	AA96128_Rev_B	2793953	760716.65
-6	727110F	2807625	470113.32
-7	10103357_Rev_A	2794748	343601.28
-8	10103358_Rev_A	2794752	334984.32
-9	A52092_Rev_T	2794182	277641.60
-10	10103353CX_Rev_A	2820236	264720.00
-11	68400221AA_Rev_08	2811382	259226.38
-12	18190-RNO-A012-S10_Rev_02	2800943	256015.20
-13	10103355CX_Rev_A	2820251	240986.88
-14	R558149_Rev_E	2793937	214091.68
-15	A92817_Rev_B	2794044	202662.00
-16	R559324RX1_Rev_A	2795919	191594.72
-17	10046553_Rev_N	2795866	167388.48
-18	26088054_Rev_07B	2803944	158389.50
-19	2017707_Rev_J	2795740	149811.84
-20	2017710_Rev_J	2795739	148435.20
 
-*/
-
-create table #filter
-(
-  part_key int
-)
---When does the sum of high revenue parts roughly equal 'other' parts?
---best match revenue @separator = 7 , top 7 aprox = sum of all other parts.
---When does the sum of volume of these high revenue parts roughly equal 'other' parts?
---best match volume @separator = 20
-insert into #filter (part_key)
-(
-select 2684943 as part_key  --1
-union
-select 2684942	as part_key  --2
-union
-select 2794731	as part_key  --3
-union
-select 2794706	as part_key  --4
-union
-select 2793953	as part_key  --5
-union
-select 2807625	as part_key  --6
-union
-select 2794748	as part_key  --7
-union
-select 2794752	as part_key  --8
-union
-select 2794182	as part_key  --9
-union
-select 2820236	as part_key  --10
-union
-select 2811382	as part_key  --11
-union
-select 2800943	as part_key  --12
-union
-select 2820251	as part_key  --13
-union
-select 2793937	as part_key  --14
-union
-select 2794044	as part_key  --15
-union
-select 2795919	as part_key  --16
-union
-select 2795866	as part_key  --17
-union
-select 2803944	as part_key  --18
-union
-select 2795740	as part_key  --19
-union
-select 2795739	as part_key  --20
-)
---select * from #filter
 
 /*
 primary_key: Determine primary key of result set.
@@ -218,7 +140,6 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
     inner join sales_v_po po  -- 1 to 1
     on pl.po_key = po.po_key  
     where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
-    and pl.part_key in (select * from #filter)
     and rt.release_type ='Forecast'
     and rs.release_status != 'Canceled'
   )s1 
@@ -290,7 +211,6 @@ insert into #set2group (primary_key,quantity,price)
     inner join sales_v_price pr
     on pl.po_line_key=pr.po_line_key
     where sr.ship_date between @start_of_week_for_start_date and @end_of_week_for_end_date
-    and pl.part_key in (select * from #filter)
     and rt.release_type ='Forecast'
     and rs.release_status != 'Canceled'
   )sl
@@ -358,7 +278,7 @@ insert into #volume_revenue (primary_key,volume,revenue)
 Final set: Join of all intermediate sets.
 */
 
-create table #sales_release_week_high_volume_revenue_releases
+create table #sales_release_week_volume_revenue_releases
 (
   primary_key int,
   part_key int,
@@ -373,7 +293,7 @@ create table #sales_release_week_high_volume_revenue_releases
 )
 
 
-insert into #sales_release_week_high_volume_revenue_releases (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
+insert into #sales_release_week_volume_revenue_releases (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
 (
   select
   primary_key,
@@ -419,14 +339,32 @@ insert into #sales_release_week_high_volume_revenue_releases (primary_key,part_k
 --select count(*) #sales_release_week_high_volume_revenue from #sales_release_week_high_volume_revenue
 --select top(100) * from #sales_release_weekly 
 --where qty_loaded > 0
+create table #sales_release_week_volume_revenue_rank
+(
+  primary_key int,
+  part_key int,
+  part_no varchar (113),
+  volume  decimal,   
+  revenue decimal (18,2),
+  volume_revenue_rank int
+)
+insert into #sales_release_week_volume_revenue_rank (primary_key,part_key,part_no,volume,revenue, volume_revenue_rank)
+exec sproc300758_11728751_1684867 @start_of_week_for_start_date, @end_of_week_for_end_date
 
+select vr.*
+from #sales_release_week_volume_revenue_releases vr
+inner join #sales_release_week_volume_revenue_rank rk
+on vr.part_key=rk.part_key
+order by rk.volume_revenue_rank, year_week  
+
+/*
 select
 *
 --distinct part_key
-from #sales_release_week_high_volume_revenue_releases
+from #sales_release_week_volume_revenue_releases
 --order by revenue desc
 order by year_week,part_no
-
+*/
 --revenue
 --2971958
 --2309176
