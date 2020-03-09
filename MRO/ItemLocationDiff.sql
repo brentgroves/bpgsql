@@ -1,10 +1,11 @@
---drop table station0210
+--drop table station0302
 -- I messed up and called 1223 files 1213.
 select * 
-into station0217
+into station0309
 from STATION
 
-select count(*) cnt from station0217
+select count(*) cnt from station0309
+--12682
 --12679
 --12696
 --12696
@@ -24,10 +25,10 @@ select count(*) cnt from station0217
 --12653
 --12624
 --verify backup of station
-select top 100 * from station0217
+select top 100 * from station0309
 -- Upload the item_location table into PlxSupplyItemLocation table.
---drop table dbo.PlxSupplyItemLocation0210
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0217 (
+--drop table dbo.PlxSupplyItemLocation0302
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0309 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
@@ -35,11 +36,11 @@ CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0217 (
 --update purchasing.dbo.item set Description=Brief_Description + ', ' + Description where Brief_Description <> Description
 -- Verify table was created and has zero records
 --drop table PlxSupplyItemLocation1125
-select count(*) from PlxSupplyItemLocation0217  --
+select count(*) from PlxSupplyItemLocation0309  --
 -- truncate table PlxSupplyItemLocation0730
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0217
-from 'c:\il0217GE12500.csv'
+Bulk insert PlxSupplyItemLocation0309
+from 'c:\il0309GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -49,7 +50,8 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation0217 --0
+from PlxSupplyItemLocation0309 --0
+--13365
 --13340
 --13338
 --13325
@@ -64,46 +66,24 @@ from PlxSupplyItemLocation0217 --0
 --13260
 --13258
 --13256
---13254Bulk insert PlxSupplyItemLocation0217
-from 'c:\il0217GE12500.csv'
-with
-(
-	fieldterminator = ',',
-	rowterminator = '\n'
-)
-
-select
-count(*)
---top 1000 * 
-from PlxSupplyItemLocation0217 --0
---13340
---13245
---13242
---13232
---13222
---13221
---13220
---13215
---13204
---13196
 /*
  * Item locations in plex but not in CM: 2563
  * Plex Item locations not in CM not having location '01-002A01': 22
  * Plex '01-002A01' Item locations with quantity = 0: 2534
  * Plex '01-002A01' Item locations with quantity <> 0: 7
  */
---drop table dbo.nic0210
+--drop table dbo.nic0302
 
 select 
 il.item_no
 --il.item_no,il.location,il.quantity
---into nic0217 --Plex supply items with the default location and a quantity = 0
---count(*) --2590,2591,2595,2585,2580,2578,2581,2578,2578,2577,2581,2563,2563,2563,2562,2561,236	
+into nic0309 --Plex supply items with the default location and a quantity = 0
+--count(*) --2591,2590,2591,2595,2585,2580,2578,2581,2578,2578,2577,2581,2563,2563,2563,2562,2561,236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0217 
+	from PlxSupplyItemLocation0309 
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -120,7 +100,8 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic0217
+	from nic0309
+	--2591
 	--2590
 	--2591
 	--2595
@@ -160,9 +141,9 @@ Quantity = 0
 	item in 
 	(
 	select item_no
-	from nic0217
+	from nic0309
 	)
-	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --14,19,14,13,12,11,12,12,12, 12, 12,12,12,13,13,15,12,13,12, 10, 8,9,10
+	and (st.BinQuantity<>0 or st.Quantity <> 0 ) --12,14,19,14,13,12,11,12,12,12, 12, 12,12,12,13,13,15,12,13,12, 10, 8,9,10
 --	and (st.BinQuantity=0 and st.Quantity = 0 )  --1919,1960,1963
 
 --Join these 2 tables on item number and location.
@@ -177,16 +158,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0217
+	from PlxSupplyItemLocation0309
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity --381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
---il.quantity > st.BinQuantity --95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
---il.quantity < st.BinQuantity --286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
+il.quantity <> st.BinQuantity --351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
+--il.quantity < st.BinQuantity --244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389

@@ -1,3 +1,5 @@
+--https://www.mssqltips.com/sqlservertip/1019/crosstab-queries-using-pivot-in-sql-server/
+
 USE tempdb;
 CREATE TABLE ProductSales
 ( SalesPerson varchar(20),

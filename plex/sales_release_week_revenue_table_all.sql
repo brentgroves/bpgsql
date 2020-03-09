@@ -16,6 +16,8 @@ Declare @start_of_current_week datetime
 Declare @end_of_previous_week datetime
 Declare @current_year char(4)
 Declare @current_week int
+Declare @previous_quarter_start_date datetime
+Declare @previous_quarter_end_date datetime
 
 
 --set @end_year = DATEPART(YEAR,@End_Date)
@@ -43,6 +45,10 @@ set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1,
 else
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
 
+set @previous_quarter_start_date =  DATEADD(wk, -13,@start_of_week_for_start_date)
+set @previous_quarter_end_date =  DATEADD(wk, 13,@previous_quarter_start_date)
+
+--select @previous_quarter_start_date,@previous_quarter_end_date
 
 --ADJUST END DATE FOR 4TH QUARTER BASED UPON THE NUMBER OF WEEKS IN THE YEAR
 set @end_of_week_for_end_date =  DATEADD(wk, 12,@start_of_week_for_start_date)
@@ -58,7 +64,123 @@ set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 --*/ end testing 0 
 
 
+
+--select DATEPART(wk,@start_of_current_week),DATEPART(wk,@end_of_week_for_end_date);
+
+--MUST BE CHANGED FOR WW1
+create table #sales_release_week_volume_revenue_rank
+(
+  primary_key int,
+  part_key int,
+  part_no varchar (113),
+  volume  decimal,   
+  revenue decimal (18,2),
+  volume_revenue_rank int
+)
+
+if @current_week = 1 
+begin
+insert into #sales_release_week_volume_revenue_rank (primary_key,part_key,part_no,volume,revenue, volume_revenue_rank)
+exec sproc300758_11728751_1684867 @previous_quarter_start_date, @previous_quarter_end_date
+end
+else
+begin
+insert into #sales_release_week_volume_revenue_rank (primary_key,part_key,part_no,volume,revenue, volume_revenue_rank)
+exec sproc300758_11728751_1684867 @start_of_week_for_start_date, @end_of_previous_week
+end
+--select * from #sales_release_week_volume_revenue_rank
+
+/*
+PREPARE TO CREATE AVERAGE SET
+*/
+
+
+create table #week_start_end
+(
+  week int,
+  start_week datetime,
+  end_week datetime
+);
+
+
+with cte_days_of_year(day_of_year) as
+(
+  select datefromparts(@start_year, 1, 1) day_of_year --1/1/2020 12:00:00 AM
+  union all
+  select dateadd(day, 1, day_of_year)
+  from cte_days_of_year
+  where day_of_year < datefromparts(@start_year, 12, 31)
+)
+
+insert into #week_start_end
+select 
+datepart(week,day_of_year) week,
+min(day_of_year) start_week,
+max(day_of_year) end_week
+from cte_days_of_year
+group by datepart(week,day_of_year)
+option (maxrecursion 400);
+
+--select * from #week_start_end
+
+
+create table #primary_key_average
+(
+  primary_key int IDENTITY(1,1) PRIMARY KEY,
+  year_week int,
+  year_week_fmt varchar(20),
+  start_week datetime,
+  end_week datetime,
+);
+
+
+with cte_weeks(year_week,week) as
+(
+  select @start_year*100 + DATEPART(wk,@start_of_current_week) year_week, 
+  DATEPART(wk,@start_of_current_week) week
+  union all
+  select year_week +1,week + 1
+  from cte_weeks
+  where week < DATEPART(wk,@end_of_week_for_end_date)
+)
+insert into #primary_key_average(year_week,year_week_fmt,start_week,end_week)
+select 
+w.year_week,
+w.year_week_fmt,
+se.start_week,
+se.end_week
+from
+(
+  select 
+  year_week,
+  week,
+      case     
+  --    when DATEPART(WEEK,sh.ship_date) < 10 then convert(varchar,DATEPART(YEAR,sh.ship_date)) +'-0' + convert(varchar,DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+      when week < 10 then 'W0' + convert(varchar,week) + '-Avg'
+      else 
+       'W' + convert(varchar,week) + '-Avg'
+  --    convert(varchar,DATEPART(YEAR,sh.ship_date)) +'-' + convert(varchar,DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+      end year_week_fmt
+  
+  from cte_weeks 
+)w
+inner join #week_start_end se
+on w.week=se.week
+
 --@Start_Date must be less at least 2 weeks for comparison to make sense
+create table #sales_release_volume_revenue_average
+(
+  primary_key int,
+  part_key int,
+  part_no varchar (113),
+  volume decimal,
+  revenue decimal(18,2),
+)
+
+
+insert into #sales_release_volume_revenue_average (primary_key,part_key,part_no,volume,revenue)
+exec sproc300758_11728751_1691271 @start_of_week_for_start_date, @end_of_previous_week  --sales_release_week_volume_revenue_shipped_all
+
 
 create table #sales_release_week_volume_revenue
 (
@@ -75,32 +197,32 @@ create table #sales_release_week_volume_revenue
 )
 
 
---The ranking fluctuates so if you want to display the top 10 revenue producing parts on chart then pass a 20 to the sproc.
+
+if @current_week != 1
+begin
 insert into #sales_release_week_volume_revenue (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
-exec sproc300758_11728751_1681826 @start_of_week_for_start_date, @end_of_previous_week  --sales_release_week_high_volume_revenue_shipped
+exec sproc300758_11728751_1691892 @start_of_week_for_start_date, @end_of_previous_week  --sales_release_week_volume_revenue_shipped_all
+end
 
 insert into #sales_release_week_volume_revenue (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
-exec sproc300758_11728751_1686509 @start_of_week_for_start_date, @end_of_previous_week  --sales_release_week_low_volume_revenue_shipped
+exec sproc300758_11728751_1691965 @start_of_current_week,@end_of_week_for_end_date  --sales_release_week_volume_revenue_releases_all
 
 insert into #sales_release_week_volume_revenue (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
-exec sproc300758_11728751_1687505 @start_of_current_week,@end_of_week_for_end_date  --sales_release_week_high_volume_revenue_releases
-
-insert into #sales_release_week_volume_revenue (primary_key,part_key,year_week,year_week_fmt,start_week,end_week,part_no,volume,revenue)
-exec sproc300758_11728751_1685871 @start_of_current_week,@end_of_week_for_end_date --sales_release_week_low_volume_revenue_releases
-/*
-select year_week_fmt,revenue  
-from #sales_release_week_volume_revenue vr
-where year_week_fmt = '2020-07 (Shipped)'
-*/
+select 
+av.primary_key,
+av.part_key,
+pk.year_week,
+pk.year_week_fmt,
+pk.start_week,
+pk.end_week,
+av.part_no,
+av.volume,
+av.revenue
+from #sales_release_volume_revenue_average av
+cross apply #primary_key_average pk
 --select * from  #sales_release_week_volume_revenue
 
 
-create table #primary_key
-(
-  primary_key int,
-  part_key int,
-  part_no varchar (113)
-)
 
 /*
 THANK YOU GOD 
@@ -110,281 +232,40 @@ WITH AN AUTO IDENTITY COLUMN
 
 */
 
-insert into #primary_key (primary_key,part_key,part_no)
-select 1,2684943, 'H2GC 5K652 AB'
-union
-select 2,2684942, 'H2GC 5K651 AB'
-union
-select 3,2794731, '10103353_Rev_A'
-union
-select 4,2794706, '10103355_Rev_A'
-union
-select 5,2793953, 'AA96128_Rev_B'
-union
-select 6,2807625, '727110F'
-union
-select 7,2794748, '10103357_Rev_A'
-union
-select 8,2794752, '10103358_Rev_A'
-union
-select 9,2794182, 'A52092_Rev_T'
-union
-select 10,2820236, '10103353CX_Rev_A'
-union
-select 11,2811382, '68400221AA_Rev_08'
-union
-select 12,2800943, '18190-RNO-A012-S10_Rev_02'
-union
-select 13,2820251, '10103355CX_Rev_A'
-union
-select 14,2793937, 'R558149_Rev_E'
-union
-select 15,2794044, 'A92817_Rev_B'
-union
-select 16,2795919, 'R559324RX1_Rev_A'
-union
-select 17,2795866, '10046553_Rev_N'
-union
-select 18,2803944, '26088054_Rev_07B'
-union
-select 19,2795740, '2017707_Rev_J'
-union
-select 20,2795739, '2017710_Rev_J'
-union
-select 21,99999, 'Other'
 
 
-create table #year_week
-(
-  id INT PRIMARY KEY IDENTITY,
-  year_week int
-)
-
-insert into #year_week (year_week)
-select distinct year_week
-from #sales_release_week_volume_revenue
-order by year_week
 
 
---select * from #year_week
-/*
-	part_no	part_key	revenue
-1	H2GC 5K652 AB	2684943	1770503.43
-2	H2GC 5K651 AB	2684942	1766723.02
-3	10103353_Rev_A	2794731	1134512.64
-4	10103355_Rev_A	2794706	1133359.68
-5	AA96128_Rev_B	2793953	760716.65
-6	727110F	2807625	470113.32
-7	10103357_Rev_A	2794748	343601.28
-8	10103358_Rev_A	2794752	334984.32
-9	A52092_Rev_T	2794182	277641.60
-10	10103353CX_Rev_A	2820236	264720.00
-11	68400221AA_Rev_08	2811382	259226.38
-12	18190-RNO-A012-S10_Rev_02	2800943	256015.20
-13	10103355CX_Rev_A	2820251	240986.88
-14	R558149_Rev_E	2793937	214091.68
-15	A92817_Rev_B	2794044	202662.00
-16	R559324RX1_Rev_A	2795919	191594.72
-17	10046553_Rev_N	2795866	167388.48
-18	26088054_Rev_07B	2803944	158389.50
-19	2017707_Rev_J	2795740	149811.84
-20	2017710_Rev_J	2795739	148435.20
-
-*/
+--select @current_week
+if @current_week = 11 
+begin
+  select vr.*
+  from
+  (
+    select part_no,[W01-Shipped],[W02-Shipped],[W03-Shipped],[W04-Shipped],[W05-Shipped],[W06-Shipped],[W07-Shipped],[W08-Shipped],[W09-Shipped],[W10-Shipped],[W11-Avg],[W11-Forecast],[W12-Avg],[W12-Forecast],[W13-Avg],[W13-Forecast]
+    from
+    (
+      select part_no,year_week_fmt,revenue  
+      from 
+      #sales_release_week_volume_revenue 
+    ) vr
+    pivot
+    (
+      sum(revenue) for year_week_fmt in ([W01-Shipped],[W02-Shipped],[W03-Shipped],[W04-Shipped],[W05-Shipped],[W06-Shipped],[W07-Shipped],[W08-Shipped],[W09-Shipped],[W10-Shipped],[W11-Avg],[W11-Forecast],[W12-Avg],[W12-Forecast],[W13-Avg],[W13-Forecast]) 
+    ) ct
+  )vr
+  inner join #sales_release_week_volume_revenue_rank rk
+  on vr.part_no=rk.part_no
+  order by rk.volume_revenue_rank
+  
+  --order by part_no
+  
+--inner join #sales_release_week_volume_revenue_rank rk
+--on 
+--order by part_no
+end
 
 
 --select top(1) year_week,year_week_fmt
 --from #sales_release_week_volume_revenue 
 --where year_week_fmt like '%Ship%'
-
-select pk.part_no,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 1
-)week1,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 2
-)week2,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 3
-)week3,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 4
-)week4,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 5
-)week5,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 6
-)week6,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 7
-)week7,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 8
-)week8,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 9
-)week9,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 10
-)week10,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 11
-)week11,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 12
-)week12,
-(
-select revenue  
-from 
-#sales_release_week_volume_revenue vr
-inner join #year_week yw
-on vr.year_week=yw.year_week
-where part_no = pk.part_no
---and year_week_fmt = '2020-08 (Shipped)'
-and yw.id = 13
-)week13
-from 
-#primary_key pk
---ON 4TH QUARTER THERE MAY BE 14 WEEKS
-
-/*
-select pk.year_week_fmt,
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = 'H2GC 5K652 AB'
-and year_week_fmt = pk.year_week_fmt
-) [H2GC_5K652_AB],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = 'H2GC 5K651 AB'
-and year_week_fmt = pk.year_week_fmt
-) [H2GC_5K651_AB],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = '10103355_Rev_A'
-and year_week_fmt = pk.year_week_fmt
-) [10103355_Rev_A],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = '10103353_Rev_A'
-and year_week_fmt = pk.year_week_fmt
-) [10103353_Rev_A],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = 'AA96128_Rev_B'
-and year_week_fmt = pk.year_week_fmt
-) [AA96128_Rev_B],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = '727110F'
-and year_week_fmt = pk.year_week_fmt
-) [727110F],(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = '10103357_Rev_A'
-and year_week_fmt = pk.year_week_fmt
-) [10103357_Rev_A],(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = '10103358_Rev_A'
-and year_week_fmt = pk.year_week_fmt
-) [10103358_Rev_A],
-(
-select revenue  
-from #sales_release_week_volume_revenue vr
-where part_no = 'Other'
-and year_week_fmt = pk.year_week_fmt
-) [Other]
-from #primary_key pk
-*/

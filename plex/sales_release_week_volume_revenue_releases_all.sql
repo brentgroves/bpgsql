@@ -115,12 +115,14 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,start_week,end_week
     --DATEPART(YEAR,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6)) * 100 + 
     --DATEPART(isowk,DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6)) year_week,
     DATEPART(YEAR,sr.ship_date) * 100 + DATEPART(WEEK,sr.ship_date) year_week,
-    case     
-    when DATEPART(WEEK,sr.ship_date) < 10 then convert(varchar,DATEPART(YEAR,sr.ship_date)) +'-0' + convert(varchar,DATEPART(WEEK,sr.ship_date)) + ' (Release)'
-    else 
-    convert(varchar,DATEPART(YEAR,sr.ship_date)) +'-' + convert(varchar,DATEPART(WEEK,sr.ship_date)) + ' (Releases)'
-    end year_week_fmt,
 
+    case     
+--    when DATEPART(WEEK,sh.ship_date) < 10 then convert(varchar,DATEPART(YEAR,sh.ship_date)) +'-0' + convert(varchar,DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+    when DATEPART(WEEK,sr.ship_date) < 10 then 'W0' + convert(varchar,DATEPART(WEEK,sr.ship_date)) + '-Forecast'
+    else 
+     'W' + convert(varchar,DATEPART(WEEK,sr.ship_date)) + '-Forecast'
+--    convert(varchar,DATEPART(YEAR,sh.ship_date)) +'-' + convert(varchar,DATEPART(WEEK,sh.ship_date)) + ' (Shipped)'
+    end year_week_fmt,
     case 
     when DATEPART(WEEK,sr.ship_date) = 1 then datefromparts(DATEPART(YEAR,sr.ship_date), 1, 1)
     else DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + CONVERT(varchar, DATEPART(YEAR,sr.ship_date))) + (DATEPART(WEEK,sr.ship_date)-1), 6) 
@@ -339,23 +341,9 @@ insert into #sales_release_week_volume_revenue_releases (primary_key,part_key,ye
 --select count(*) #sales_release_week_high_volume_revenue from #sales_release_week_high_volume_revenue
 --select top(100) * from #sales_release_weekly 
 --where qty_loaded > 0
-create table #sales_release_week_volume_revenue_rank
-(
-  primary_key int,
-  part_key int,
-  part_no varchar (113),
-  volume  decimal,   
-  revenue decimal (18,2),
-  volume_revenue_rank int
-)
-insert into #sales_release_week_volume_revenue_rank (primary_key,part_key,part_no,volume,revenue, volume_revenue_rank)
-exec sproc300758_11728751_1684867 @start_of_week_for_start_date, @end_of_week_for_end_date
 
 select vr.*
 from #sales_release_week_volume_revenue_releases vr
-inner join #sales_release_week_volume_revenue_rank rk
-on vr.part_key=rk.part_key
-order by rk.volume_revenue_rank, year_week  
 
 /*
 select
@@ -363,7 +351,7 @@ select
 --distinct part_key
 from #sales_release_week_volume_revenue_releases
 --order by revenue desc
-order by year_week,part_no
+--order by year_week,part_no
 */
 --revenue
 --2971958
