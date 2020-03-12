@@ -110,6 +110,7 @@ from sales_release_week_revenue_ww
 
 select * 
 from sales_release_week_revenue_ww10 
-ORDER BY primary_key OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
-
+ORDER BY primary_key OFFSET 1 ROWS FETCH NEXT 10 ROWS ONLY
+select *
+from sales_release_week_revenue_ww10 primary_key
 */
