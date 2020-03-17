@@ -14,6 +14,7 @@ CREATE TABLE m2mdata01.dbo.ToolingTransLog (
 
 --///////////////////////////////////////////////////////////////////////////////////
 -- Determines item quantities issued within the last month in Plant 3 and 6
+-- I DID NOT ADD THIS SPROC YET
 --///////////////////////////////////////////////////////////////////////////////////
 create PROCEDURE [dbo].[bpItemQtyIssuedMonthPlant_3_and_6] 
 AS
@@ -194,10 +195,6 @@ BEGIN
 --	where Plt3_Qty != 0 and Plt6_Qty != 0  --19
 
 	
-	select * 
-	into btItemQtyIssuedMonth 
-	from 
-	bfItemQtyIssued(@startDateParam,@endDateParam)
 end;
 
 
