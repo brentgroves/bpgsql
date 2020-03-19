@@ -13,7 +13,7 @@ with
 	fieldterminator = ',',
 	rowterminator = '\n'
 )
-
+select * from bt_plex_pn
 /*
 select 
 --count(*) 
