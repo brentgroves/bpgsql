@@ -13,7 +13,10 @@ with
 	fieldterminator = ',',
 	rowterminator = '\n'
 )
-select * from bt_plex_pn
+select 
+part_no_rev,part_key 
+from bt_plex_pn
+select part_no FPARTNO, revision frev, 'A' FCSTSCODE, part_key from bt_plex_pn
 /*
 select 
 --count(*) 
