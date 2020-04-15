@@ -6,22 +6,22 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-03-29T00:00:00';
 --select @start_date
-set @end_date ='2020-02-15T23:59:59';
+set @end_date ='2020-04-18T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt02210';
+set @table_name = 'rpt04010';
 EXEC	@return_value = [dbo].[Sproc200221] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count 
-select * from rpt02210
+select * from rpt04010
 --drop table #primary_key
 --drop table #set2group
 --drop table #results
 
 GO
-select * from rpt02080 order by primary_key
---drop table rpt02080
-select top(10) * from rpt02080 order by id
+select * from rpt04010 order by primary_key
+--drop table rpt04010
+select top(10) * from rpt04010 order by id
 
 --drop PROCEDURE  sproc200221
 CREATE PROCEDURE Sproc200221
@@ -199,5 +199,5 @@ EXEC sp_executesql @sql
 SELECT @record_count = @@ROWCOUNT;
 --select @record_count
 END; 
-select * from rpt0221test
+select * from rpt0401test
 

@@ -17,19 +17,19 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-03-29T00:00:00';
 --select @start_date
-set @end_date ='2020-02-15T23:59:59';
+set @end_date ='2020-04-18T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt02080';
+set @table_name = 'rpt04010';
 EXEC	@return_value = [dbo].[Sproc200206] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count 
 
 GO
---drop table rpt02210
-select * from rpt02210 order by primary_key
+--drop table rpt04010
+select * from rpt04010 order by primary_key
 --drop table rpt02080
-select top(10) * from rpt02080 order by id
+select top(10) * from rpt04010 order by id
 --THIS IS NOT DONE.  WE NEED 2 SPROCS 
 -- ONE LIKE SPROC200206 FOR THE TABLE AND ONE LIKE SPROC200221 FOR THE CHARTS
 --drop PROCEDURE  sproc200206
@@ -46,7 +46,7 @@ SET NOCOUNT ON;
 IF OBJECT_ID(@table_name) IS NOT NULL
 	EXEC ('DROP Table ' + @table_name)
 
---/* TESTING ONLY
+/* TESTING ONLY
 DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
@@ -54,7 +54,7 @@ DECLARE @start_date DATETIME,
 set @start_date ='2020-02-09T00:00:00';
 set @end_date ='2020-02-15T23:59:59';
 set @table_name = 'rpt0213test'
---*/ -- END TESTING ONLY
+*/ -- END TESTING ONLY
 	
 Declare @start_year char(4)
 Declare @start_week int

@@ -7,8 +7,8 @@ having Date_time_stamp BETWEEN @start_date and @end_date
 order by Data_hour 
 ORDER BY id 
 OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
+select * from HourlyOEEValues h
 
-select count(*) cnt from MyHourlyOEEValues mho 
 DECLARE	@return_value int,
 @start_date DATETIME,
 @end_date DATETIME,
@@ -17,20 +17,20 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-03-29T00:00:00';
 --select @start_date
-set @end_date ='2020-02-15T23:59:59';
+set @end_date ='2020-04-18T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt02080';
+set @table_name = 'rpt04010';
 EXEC	@return_value = [dbo].[Sproc200206] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count 
 
 GO
---drop table rpt02210
-select * from rpt02210 order by primary_key
---drop table rpt02080
-select top(10) * from rpt02080 order by primary_key 
-
+--drop table rpt04010
+select * from rpt04010 order by primary_key
+--drop table rpt04010
+select top(10) * from rpt04010 order by primary_key 
+select * from hourlyoeevalues
 --drop PROCEDURE  sproc200206
 CREATE PROCEDURE Sproc200206
 	@start_date DATETIME,
@@ -50,9 +50,9 @@ DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
-set @start_date ='2020-02-09T00:00:00';
-set @end_date ='2020-02-15T23:59:59';
-set @table_name = 'rpt0213test'
+set @start_date ='2020-03-29T00:00:00';
+set @end_date ='2020-04-04T23:59:59';
+set @table_name = 'rpt0401test'
 */ -- END TESTING ONLY
 	
 Declare @start_year char(4)
@@ -74,6 +74,7 @@ set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) 
 set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
+--select @start_of_week_for_start_date,@end_of_week_for_end_date
 /* may be necessary if multiple calls are done on the same connection
 decdrop table #resultslare @sqlDropPK nvarchar(4000)
 declare @PKTable nvarchar(50)
@@ -121,7 +122,7 @@ insert into #primary_key(primary_key,year_week,start_week,end_week,part_number,w
 
 --drop table #set2group
 --select count(*) #primary_key from #primary_key  --16
---select top(100) * from #primary_key
+select top(100) * from #primary_key
 --FORMAT ( @d, 'd', 'en-US' ) 
 create table #set2group
 (
