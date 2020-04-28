@@ -54,7 +54,9 @@ BEGIN
 -- Table variable   
 DECLARE @MyTableVar table( ID int,
                            Workcenter_Code varchar(50));
-   
+--https://www.sqlservercentral.com/articles/the-output-clause-for-insert-and-delete-statements
+-- We use the OUTPUT INTO syntax to store the results in a table variable. With this approach, 
+-- we have access to the set of rows that were inserted during the execution of the query that can be used later for the next steps with in the same execution.   
 INSERT INTO Kors.dbo.HourlyOEEValues
 (Workcenter_Code, Job_number, Part_number, Data_hour, Hourly_planned_production_count, Hourly_actual_production_count, Cumulative_planned_production_count, Cumulative_actual_production_count, scrap_count, Downtime_minutes, Date_time_stamp)
 OUTPUT INSERTED.ID, INSERTED.Workcenter_Code

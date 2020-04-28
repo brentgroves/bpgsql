@@ -7,8 +7,8 @@ having Date_time_stamp BETWEEN @start_date and @end_date
 order by Data_hour 
 ORDER BY id 
 OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
-select * from HourlyOEEValues h
 
+select count(*) cnt from MyHourlyOEEValues mho 
 DECLARE	@return_value int,
 @start_date DATETIME,
 @end_date DATETIME,
@@ -28,11 +28,12 @@ select @record_count
 GO
 --drop table rpt04010
 select * from rpt04010 order by primary_key
---drop table rpt04010
-select top(10) * from rpt04010 order by primary_key 
-select * from hourlyoeevalues
+--drop table rpt02080
+select top(10) * from rpt04010 order by id
+--THIS IS NOT DONE.  WE NEED 2 SPROCS 
+-- ONE LIKE SPROC200206 FOR THE TABLE AND ONE LIKE SPROC200221 FOR THE CHARTS
 --drop PROCEDURE  sproc200206
-CREATE PROCEDURE Sproc200206
+CREATE PROCEDURE Sproc200225
 	@start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
@@ -45,47 +46,40 @@ SET NOCOUNT ON;
 IF OBJECT_ID(@table_name) IS NOT NULL
 	EXEC ('DROP Table ' + @table_name)
 
-/* TESTING ONLY
+--/* TESTING ONLY
 DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
-set @start_date ='2020-03-29T00:00:00';
-set @end_date ='2020-04-04T23:59:59';
-set @table_name = 'rpt0401test'
-*/ -- END TESTING ONLY
+set @start_date ='2020-02-09T00:00:00';
+set @end_date ='2020-02-15T23:59:59';
+set @table_name = 'rpt0213test'
+--*/ -- END TESTING ONLY
 	
 Declare @start_year char(4)
 Declare @start_week int
 Declare @end_year char(4)
 Declare @end_week int
-Declare @start_of_week_for_start_date datetime
-Declare @end_of_week_for_end_date datetime
+Declare @start_of_month_for_start_date datetime
+Declare @end_of_month_for_end_date datetime
 
 set @start_year = DATEPART(YEAR,@Start_Date)
-set @start_week = DATEPART(WEEK,@Start_Date)
+set @start_week = DATEPART(MONTH,@Start_Date)
 set @end_year = DATEPART(YEAR,@End_Date)
-set @end_week = DATEPART(WEEK,@End_Date)
+set @end_week = DATEPART(MONTH,@End_Date)
 
 
-set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
-set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
+set @start_of_month_for_start_date = DATEADD(mm, DATEDIFF(mm, 0, @Start_Date), 0)
+set @end_of_month_for_end_date = DATEADD (dd, -1, DATEADD(mm, DATEDIFF(mm, 0, @End_date) + 1, 0))
 
-set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
-set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
+set @end_of_month_for_end_date = DATEADD(day, 1, @end_of_month_for_end_date);
+set @end_of_month_for_end_date = DATEADD(second,-1,@end_of_month_for_end_date);
+select @start_of_month_for_start_date,@end_of_month_for_end_date
 
---select @start_of_week_for_start_date,@end_of_week_for_end_date
-/* may be necessary if multiple calls are done on the same connection
-decdrop table #resultslare @sqlDropPK nvarchar(4000)
-declare @PKTable nvarchar(50)
-set @PKTable = quotename(@table_name + 'PK')
---select @PKTable
-set @sqlDropPK = N'DROP Table ' + @PKTable 
---select @sqlDropPK
-IF OBJECT_ID(@PKTable) IS NOT NULL
-EXEC sp_executesql @sqlDropPK
-*/
---drop table #primary_key
+--NOT NEEDED IN PRODUCTION. BUT NEEDED FOR DBEAVER DEBUGGING
+IF OBJECT_ID('tempdb.dbo.#primary_key', 'U') IS NOT NULL
+	EXEC ('DROP Table #primary_key')
+	
 create table #primary_key
 (
   primary_key int,
@@ -122,8 +116,11 @@ insert into #primary_key(primary_key,year_week,start_week,end_week,part_number,w
 
 --drop table #set2group
 --select count(*) #primary_key from #primary_key  --16
-select top(100) * from #primary_key
+--select top(100) * from #primary_key
 --FORMAT ( @d, 'd', 'en-US' ) 
+IF OBJECT_ID('tempdb.dbo.#set2group', 'U') IS NOT NULL
+	EXEC ('DROP Table #set2group')
+
 create table #set2group
 (
 	primary_key int,
@@ -162,9 +159,10 @@ and pk.workcenter_code=hv.Workcenter_Code
 )
 --select top(100) * from #set2group 
 --select count(*) #set2group from #set2group  --1404
---drop table #primary_key
---drop table #set2group
---drop table #results
+
+IF OBJECT_ID('tempdb.dbo.#results', 'U') IS NOT NULL
+	EXEC ('DROP Table #results')
+	
 create table #results
 (
   primary_key int,
@@ -233,7 +231,7 @@ insert into #results (primary_key,start_week,end_week,part_number,workcenter_cod
 			on sg.primary_key = pk.primary_key
 		)s1
 )
-	--select * from #results 
+	select * from #results 
 	--DECLARE @table_name varchar(12),
 	--	@record_count INT
 	--set @table_name = 'rpt0213test'
@@ -251,4 +249,3 @@ insert into #results (primary_key,start_week,end_week,part_number,workcenter_cod
 END;
 
 select * from rpt0213test
-
