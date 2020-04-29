@@ -1,145 +1,92 @@
--- https://stackoverflow.com/questions/10351065/how-to-get-depth-in-mysql-store-procedure-recursion
-SET max_sp_recursion_depth=1000;
-WITH RECURSIVE cte_random (n,y) 
-AS (
-      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y
-      UNION ALL
-      SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
-      FROM cte_random 
-      WHERE n < 1000
-    )
--- SELECT n,y 
--- FROM cte_random;
--- select * from HourlyOEEValues ho order by id
 
-update HourlyOEEValues hv
-inner join cte_random rv
-on hv.ID - 6 = rv.n
-set Hourly_actual_production_count = 
-case 
-when rv.n = 0 and Hourly_planned_production_count = 1 then 0
-when rv.n = 1 and Hourly_planned_production_count = 1 then 0
-when rv.n = 2 and Hourly_planned_production_count = 1 then 2
-when rv.n = 3 and Hourly_planned_production_count = 1 then 1
-when rv.n = 4 and Hourly_planned_production_count = 1 then 1
-when rv.n = 5 and Hourly_planned_production_count = 1 then 1
-when rv.n = 6 and Hourly_planned_production_count = 1 then 1
-when rv.n = 7 and Hourly_planned_production_count = 1 then 1
-when rv.n = 8 and Hourly_planned_production_count = 1 then 1
-when rv.n = 9 and Hourly_planned_production_count = 1 then 1
-when rv.n = 0 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 1.1
-when rv.n = 1 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 1.0
-when rv.n = 2 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.9
-when rv.n = 3 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
-when rv.n = 4 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
-when rv.n = 5 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
-when rv.n = 6 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
-when rv.n = 7 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.75
-when rv.n = 8 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.65
-when rv.n = 9 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.50
-else 999
-end 
-
--- select count(*) from Kors.HourlyOEEValues  --384
-
-SET max_sp_recursion_depth=1000;
-WITH RECURSIVE cte_random (n,y) 
-AS (
-      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y
-      UNION ALL
-      SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
-      FROM cte_random 
-      WHERE n < 1000
-    )
--- SELECT n,y 
--- FROM cte_random;
--- select * from HourlyOEEValues ho order by id
+select DISTINCT Date_time_stamp  
+from HourlyOEEValues 
+select count(*) from HourlyOEEValues -- 480
 
 update HourlyOEEValues 
 set Cumulative_planned_production_count = Hourly_planned_production_count * (Data_hour - 6)
 
 
+-- https://stackoverflow.com/questions/10351065/how-to-get-depth-in-mysql-store-procedure-recursion
 SET max_sp_recursion_depth=1000;
+
 WITH RECURSIVE cte_random (n,y) 
 AS (
-      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y
+      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
       UNION ALL
       SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
       FROM cte_random 
       WHERE n < 1000
     )
+    
+    
 -- SELECT n,y 
 -- FROM cte_random;
 -- select * from HourlyOEEValues ho order by id
- 
- 
-update HourlyOEEValues hv
-inner join cte_random rv
-on hv.ID - 6 = rv.n
--- set scrap_count = rv.randomnumber
-set Downtime_minutes = 
-case 
-when rv.y = 0 then 0
-when rv.y = 1 then 15
-when rv.y = 2 then 30
-when rv.y = 3 then 45
-when rv.y = 4 then 60
-when rv.y = 5 then 0
-when rv.y = 6 then 0
-when rv.y = 7 then 0
-when rv.y = 8 then 0
-when rv.y = 9 then 0
-end 
-
-
-SET max_sp_recursion_depth=1000;
-WITH RECURSIVE cte_random (n,y) 
-AS (
-      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y
-      UNION ALL
-      SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
-      FROM cte_random 
-      WHERE n < 1000
-    )
--- SELECT n,y 
--- FROM cte_random;
--- select * from HourlyOEEValues ho order by id
- 
- 
+-- select id from HourlyOEEValues order by id
 
 update HourlyOEEValues hv
 inner join cte_random rv
-on hv.ID - 6 = rv.n
-set scrap_count = 
+on hv.ID = rv.n
+set hv.Hourly_actual_production_count = 
 case 
-when rv.y = 0 then 0
-when rv.y = 1 then FLOOR(hv.Hourly_actual_production_count * .01)
-when rv.y = 2 then FLOOR(hv.Hourly_actual_production_count * .03)
-when rv.y = 3 then FLOOR(hv.Hourly_actual_production_count * .03)
-when rv.y = 4 then FLOOR(hv.Hourly_actual_production_count * .05)
-when rv.y = 5 then 0
-when rv.y = 6 then 0
-when rv.y = 7 then 0
-when rv.y = 8 then 0
-when rv.y = 9 then 0
+when rv.y = 0 and Hourly_planned_production_count = 1 then 0
+when rv.y = 1 and Hourly_planned_production_count = 1 then 0
+when rv.y = 2 and Hourly_planned_production_count = 1 then 2
+when rv.y = 3 and Hourly_planned_production_count = 1 then 1
+when rv.y = 4 and Hourly_planned_production_count = 1 then 1
+when rv.y = 5 and Hourly_planned_production_count = 1 then 1
+when rv.y = 6 and Hourly_planned_production_count = 1 then 1
+when rv.y = 7 and Hourly_planned_production_count = 1 then 1
+when rv.y = 8 and Hourly_planned_production_count = 1 then 1
+when rv.y = 9 and Hourly_planned_production_count = 1 then 1
+when rv.y = 0 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 1.1
+when rv.y = 1 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 1.0
+when rv.y = 2 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.9
+when rv.y = 3 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
+when rv.y = 4 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
+when rv.y = 5 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
+when rv.y = 6 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.85
+when rv.y = 7 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.75
+when rv.y = 8 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.65
+when rv.y = 9 and Hourly_planned_production_count <> 1 then Hourly_planned_production_count * 0.50
+-- else 999
 end 
+
 
 select 
-Workcenter_Code, 
+Workcenter_Code,
 Part_number,
 Data_hour,
-Hourly_actual_production_count,
-Cumulative_actual_production_count 
-from HourlyOEEValues hv
-where hv.Date_time_stamp = '2020-03-29 14:29:00'
-and Workcenter_Code = 'VSC_3'
+Hourly_planned_production_count, 
+Cumulative_planned_production_count,
+Hourly_actual_production_count, 
+Cumulative_actual_production_count
+from HourlyOEEValues  hv 
+where hv.Date_time_stamp = '2020-04-12 14:29:00'
+and hv.Workcenter_Code = 'VSC_1'
+order by Workcenter_Code, Data_hour 
 
 
+update HourlyOEEValues hv
+inner join 
+(
+	select Date_time_stamp,Workcenter_Code,Data_hour,Hourly_actual_production_count,
+	(
+		select sum(Hourly_actual_production_count)
+		from HourlyOEEValues inh
+		where inh.data_hour <= hv.data_hour
+		and inh.Date_time_stamp = hv.date_time_stamp
+		and inh.Workcenter_Code = hv.Workcenter_Code 
+	) Cumulative_actual_production_count
+	from HourlyOEEValues hv
+) ihv
+on hv.Date_time_stamp = ihv.Date_time_stamp
+and hv.Workcenter_Code = ihv.Workcenter_Code
+and hv.Data_hour = ihv.data_hour
+set hv.Cumulative_actual_production_count = ihv.Cumulative_actual_production_count
 
-
-
-
-
+-- select count(*) from Kors.HourlyOEEValues  --384
 select Date_time_stamp,Workcenter_Code,Data_hour,Hourly_actual_production_count,
 (
 	select sum(Hourly_actual_production_count)
@@ -151,6 +98,163 @@ select Date_time_stamp,Workcenter_Code,Data_hour,Hourly_actual_production_count,
 from HourlyOEEValues hv
 where hv.Date_time_stamp = '2020-03-29 14:29:00'
 and Workcenter_Code = 'VSC_3'
+
+
+SET max_sp_recursion_depth=1000;
+WITH RECURSIVE cte_random (n,y) 
+AS (
+      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
+      UNION ALL
+      SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
+      FROM cte_random 
+      WHERE n < 1000
+    )
+-- SELECT n,y 
+-- FROM cte_random;
+-- select * from HourlyOEEValues ho order by id
+ 
+ 
+update HourlyOEEValues hv
+inner join cte_random rv
+on hv.ID  = rv.n
+-- set scrap_count = rv.randomnumber
+set Downtime_minutes = 
+case 
+when hv.Hourly_actual_production_count = 0  then 60
+when rv.y = 0 then 0
+when rv.y = 1 then 15
+when rv.y = 2 then 30
+when rv.y = 3 then 45
+when rv.y = 4 then 0
+when rv.y = 5 then 0
+when rv.y = 6 then 0
+when rv.y = 7 then 0
+when rv.y = 8 then 0
+when rv.y = 9 then 0
+end 
+
+
+SET max_sp_recursion_depth=1000;
+WITH RECURSIVE cte_random (n,y) 
+AS (
+      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
+      UNION ALL
+      SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
+      FROM cte_random 
+      WHERE n < 1000
+    )
+-- SELECT n,y 
+-- FROM cte_random;
+-- select * from HourlyOEEValues ho order by id
+ 
+ 
+
+update HourlyOEEValues hv
+inner join cte_random rv
+on hv.ID = rv.n
+set scrap_count = 
+case 
+
+when rv.y = 0 and Hourly_planned_production_count = 1 then hv.Hourly_actual_production_count
+when rv.y = 1 and Hourly_planned_production_count = 1 then 0
+when rv.y = 2 and Hourly_planned_production_count = 1 then 0
+when rv.y = 3 and Hourly_planned_production_count = 1 then 0
+when rv.y = 4 and Hourly_planned_production_count = 1 then 0
+when rv.y = 5 and Hourly_planned_production_count = 1 then 0
+when rv.y = 6 and Hourly_planned_production_count = 1 then 0
+when rv.y = 7 and Hourly_planned_production_count = 1 then 0
+when rv.y = 8 and Hourly_planned_production_count = 1 then 0
+when rv.y = 9 and Hourly_planned_production_count = 1 then 0
+
+
+when rv.y = 0 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 2 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 3 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+
+
+when rv.y = 0 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 3 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+
+when rv.y = 0 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 3
+when rv.y = 3 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+
+when rv.y = 0 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 3
+when rv.y = 3 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 4
+when rv.y = 4 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+
+else 0
+
+end 
+
+select DISTINCT scrap_count from HourlyOEEValues ho 
+
+select 
+Workcenter_Code,
+Part_number,
+Data_hour,
+Hourly_planned_production_count, 
+Cumulative_planned_production_count,
+Hourly_actual_production_count, 
+Cumulative_actual_production_count,
+Downtime_minutes,
+scrap_count 
+from HourlyOEEValues  hv 
+where hv.Date_time_stamp = '2020-04-12 14:29:00'
+-- and hv.Workcenter_Code = 'VSC_1'
+order by Workcenter_Code, Data_hour 
+
+
+select * from HourlyOEEValues 
+where Date_time_stamp = '2020-03-29 14:29:00'
+and Workcenter_Code =  'VSC_2'
+
+select DISTINCT date_time_stamp from dbo.HourlyOEEValues 
+/*
+ * 
+ 2020-03-29 14:29:00
+2020-04-05 14:29:00
+2020-04-12 14:29:00
+2020-04-19 14:29:00
+2020-04-26 14:29:00
+ */
+
+
+
+
+
+
+
+
 
 select * from HourlyOEEValues
 

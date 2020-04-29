@@ -88,71 +88,120 @@ where hv.Date_time_stamp = '2020-03-29 14:29:00'
 and Workcenter_Code = 'VSC_3'
  */
 
-with randowvalues
+with cte_random(n,y)
     as(
     -- generates a 0 based number from 0 to number - 1
-       select 1 id, CAST(RAND(CHECKSUM(NEWID()))*10 as int) randomnumber
+       select 66 n, CAST(RAND(CHECKSUM(NEWID()))*10 as int) y
         union  all
-        select id + 1, CAST(RAND(CHECKSUM(NEWID()))*10 as int)  randomnumber
+        select n + 1, CAST(RAND(CHECKSUM(NEWID()))*10 as int) y
 		--select id + 1, RAND(CHECKSUM(NEWID()))*100  randomnumber
-        from randowvalues
+        from cte_random
         where 
-          id < 1000
+          n < 1000
       )
 
 update HourlyOEEValues 
 set Downtime_minutes = 
 case 
-when rv.randomnumber = 0 then 0
-when rv.randomnumber = 1 then 15
-when rv.randomnumber = 2 then 30
-when rv.randomnumber = 3 then 45
-when rv.randomnumber = 4 then 60
-when rv.randomnumber = 5 then 0
-when rv.randomnumber = 6 then 0
-when rv.randomnumber = 7 then 0
-when rv.randomnumber = 8 then 0
-when rv.randomnumber = 9 then 0
+when hv.Hourly_actual_production_count = 0  then 60
+when rv.y = 0 then 0
+when rv.y = 1 then 15
+when rv.y = 2 then 30
+when rv.y = 3 then 45
+when rv.y = 4 then 60
+when rv.y = 5 then 0
+when rv.y = 6 then 0
+when rv.y = 7 then 0
+when rv.y = 8 then 0
+when rv.y = 9 then 0
 
 end 
 from HourlyOEEValues hv
-inner join randowvalues rv
-on hv.ID - 65 = rv.id
+inner join cte_random rv
+on hv.ID = rv.n
 OPTION(MAXRECURSION 1000)
 
 
 
-with randowvalues
+with cte_random(n,y)
     as(
     -- generates a 0 based number from 0 to number - 1
-       select 1 id, CAST(RAND(CHECKSUM(NEWID()))*10 as int) randomnumber
+       select 66 n, CAST(RAND(CHECKSUM(NEWID()))*10 as int) y
 	   --select 1 id, RAND(CHECKSUM(NEWID()))*100 randomnumber
         union  all
-        select id + 1, CAST(RAND(CHECKSUM(NEWID()))*10 as int)  randomnumber
+        select n + 1, CAST(RAND(CHECKSUM(NEWID()))*10 as int)  y
 		--select id + 1, RAND(CHECKSUM(NEWID()))*100  randomnumber
-        from randowvalues
+        from cte_random
         where 
-          id < 1000
+          n < 1000
       )
-
+      
 update HourlyOEEValues 
 --set Hourly_actual_production_count = rv.randomnumber
 set scrap_count = 
 case 
-when rv.randomnumber = 0 then 0
-when rv.randomnumber = 1 then FLOOR(hv.Hourly_actual_production_count * .01)
-when rv.randomnumber = 2 then FLOOR(hv.Hourly_actual_production_count * .03)
-when rv.randomnumber = 3 then FLOOR(hv.Hourly_actual_production_count * .03)
-when rv.randomnumber = 4 then FLOOR(hv.Hourly_actual_production_count * .05)
-when rv.randomnumber = 5 then 0
-when rv.randomnumber = 6 then 0
-when rv.randomnumber = 7 then 0
-when rv.randomnumber = 8 then 0
-when rv.randomnumber = 9 then 0
+when rv.y = 0 and Hourly_planned_production_count = 1 then hv.Hourly_actual_production_count
+when rv.y = 1 and Hourly_planned_production_count = 1 then 0
+when rv.y = 2 and Hourly_planned_production_count = 1 then 0
+when rv.y = 3 and Hourly_planned_production_count = 1 then 0
+when rv.y = 4 and Hourly_planned_production_count = 1 then 0
+when rv.y = 5 and Hourly_planned_production_count = 1 then 0
+when rv.y = 6 and Hourly_planned_production_count = 1 then 0
+when rv.y = 7 and Hourly_planned_production_count = 1 then 0
+when rv.y = 8 and Hourly_planned_production_count = 1 then 0
+when rv.y = 9 and Hourly_planned_production_count = 1 then 0
+
+
+when rv.y = 0 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 2 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 3 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 5 and Hourly_actual_production_count <= 10 then 0
+
+
+when rv.y = 0 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 3 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 11 and Hourly_actual_production_count <= 20 then 0
+
+when rv.y = 0 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 3
+when rv.y = 3 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 4 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 20 and Hourly_actual_production_count <= 30 then 0
+
+when rv.y = 0 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 1
+when rv.y = 1 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 2
+when rv.y = 2 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 3
+when rv.y = 3 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 4
+when rv.y = 4 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 5 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 6 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 7 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 8 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+when rv.y = 9 and Hourly_actual_production_count >= 30 and Hourly_actual_production_count <= 40 then 0
+
+else 0
 end 
 from HourlyOEEValues hv
-inner join randowvalues rv
-on hv.ID - 65 = rv.id
+inner join cte_random rv
+on hv.ID  = rv.n
 OPTION(MAXRECURSION 1000)
 
 select 
@@ -727,6 +776,7 @@ exec InsertHourlyOEEValues 'VSC_12', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2
 
 select DISTINCT Date_time_stamp  
 from dbo.HourlyOEEValues 
+select count(*) from hourlyoeevalues  --480
 
 
 
