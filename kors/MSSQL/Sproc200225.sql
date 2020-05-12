@@ -17,19 +17,19 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-03-29T00:00:00';
 --select @start_date
-set @end_date ='2020-02-15T23:59:59';
+set @end_date ='2020-04-18T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt02080';
+set @table_name = 'rpt04010';
 EXEC	@return_value = [dbo].[Sproc200206] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count 
 
 GO
---drop table rpt02210
-select * from rpt02210 order by primary_key
+--drop table rpt04010
+select * from rpt04010 order by primary_key
 --drop table rpt02080
-select top(10) * from rpt02080 order by id
+select top(10) * from rpt04010 order by id
 --THIS IS NOT DONE.  WE NEED 2 SPROCS 
 -- ONE LIKE SPROC200206 FOR THE TABLE AND ONE LIKE SPROC200221 FOR THE CHARTS
 --drop PROCEDURE  sproc200206
@@ -76,8 +76,10 @@ set @end_of_month_for_end_date = DATEADD(day, 1, @end_of_month_for_end_date);
 set @end_of_month_for_end_date = DATEADD(second,-1,@end_of_month_for_end_date);
 select @start_of_month_for_start_date,@end_of_month_for_end_date
 
-
---drop table #primary_key
+--NOT NEEDED IN PRODUCTION. BUT NEEDED FOR DBEAVER DEBUGGING
+IF OBJECT_ID('tempdb.dbo.#primary_key', 'U') IS NOT NULL
+	EXEC ('DROP Table #primary_key')
+	
 create table #primary_key
 (
   primary_key int,
@@ -116,6 +118,9 @@ insert into #primary_key(primary_key,year_week,start_week,end_week,part_number,w
 --select count(*) #primary_key from #primary_key  --16
 --select top(100) * from #primary_key
 --FORMAT ( @d, 'd', 'en-US' ) 
+IF OBJECT_ID('tempdb.dbo.#set2group', 'U') IS NOT NULL
+	EXEC ('DROP Table #set2group')
+
 create table #set2group
 (
 	primary_key int,
@@ -154,9 +159,10 @@ and pk.workcenter_code=hv.Workcenter_Code
 )
 --select top(100) * from #set2group 
 --select count(*) #set2group from #set2group  --1404
---drop table #primary_key
---drop table #set2group
---drop table #results
+
+IF OBJECT_ID('tempdb.dbo.#results', 'U') IS NOT NULL
+	EXEC ('DROP Table #results')
+	
 create table #results
 (
   primary_key int,
@@ -225,7 +231,7 @@ insert into #results (primary_key,start_week,end_week,part_number,workcenter_cod
 			on sg.primary_key = pk.primary_key
 		)s1
 )
-	--select * from #results 
+	select * from #results 
 	--DECLARE @table_name varchar(12),
 	--	@record_count INT
 	--set @table_name = 'rpt0213test'

@@ -6,22 +6,19 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-03-29T00:00:00';
 --select @start_date
-set @end_date ='2020-02-15T23:59:59';
+set @end_date ='2020-04-25T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt02210';
+set @table_name = 'rpt04010';
 EXEC	@return_value = [dbo].[Sproc200221] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count 
-select * from rpt02210
---drop table #primary_key
---drop table #set2group
---drop table #results
+select * from rpt04010
 
 GO
-select * from rpt02080 order by primary_key
---drop table rpt02080
-select top(10) * from rpt02080 order by id
+select * from rpt04010 order by primary_key
+--drop table rpt04010
+select top(10) * from rpt04010 order by id
 
 --drop PROCEDURE  sproc200221
 CREATE PROCEDURE Sproc200221
@@ -42,8 +39,8 @@ DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
-set @start_date ='2020-02-09T00:00:00';
-set @end_date ='2020-02-15T23:59:59';
+set @start_date ='2020-03-29T00:00:00';
+set @end_date ='2020-04-18T23:59:59';
 --drop table rpt0221test
 set @table_name = 'rpt0221test'
 */-- END TESTING ONLY
@@ -78,6 +75,9 @@ IF OBJECT_ID(@PKTable) IS NOT NULL
 EXEC sp_executesql @sqlDropPK
 */
 --drop table #primary_key
+IF OBJECT_ID('tempdb.dbo.#primary_key', 'U') IS NOT NULL
+	EXEC ('DROP Table #primary_key')
+
 create table #primary_key
 (
   primary_key int,
@@ -105,6 +105,9 @@ insert into #primary_key(primary_key,part_number)
 --select count(*) #primary_key from #primary_key  --16
 --select top(100) * from #primary_key
 --FORMAT ( @d, 'd', 'en-US' ) 
+IF OBJECT_ID('tempdb.dbo.#set2group', 'U') IS NOT NULL
+	EXEC ('DROP Table #set2group')
+	
 create table #set2group
 (
 	primary_key int,
@@ -142,6 +145,9 @@ on pk.part_number=hv.Part_number
 --drop table #primary_key
 --drop table #set2group
 --drop table #results
+IF OBJECT_ID('tempdb.dbo.#results', 'U') IS NOT NULL
+	EXEC ('DROP Table #results')
+	
 create table #results
 (
   primary_key int,
@@ -199,5 +205,5 @@ EXEC sp_executesql @sql
 SELECT @record_count = @@ROWCOUNT;
 --select @record_count
 END; 
-select * from rpt0221test
+select * from rpt0401test
 

@@ -1,37 +1,3 @@
-
-SELECT 
-Data_hour,Date_time_stamp 
-FROM HourlyOEEValues 
-group by Data_hour,Date_time_stamp 
-having Date_time_stamp BETWEEN @start_date and @end_date
-order by Data_hour 
-ORDER BY id 
-OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
-
-select count(*) cnt from MyHourlyOEEValues mho 
-DECLARE	@return_value int,
-@start_date DATETIME,
-@end_date DATETIME,
-@table_name varchar(12),
-@record_count int;
---2004-05-23T14:25:10
---YYYYMMDD or YYYY-MM-DD
---YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-02-09T00:00:00';
---select @start_date
-set @end_date ='2020-02-15T23:59:59';
---HH:MM:SS.SSS
-set @table_name = 'rpt02080';
-EXEC	@return_value = [dbo].[Sproc200206] @start_date,@end_date,@table_name,@record_count OUTPUT
-select @record_count 
-
-GO
---drop table rpt02210
-select * from rpt02210 order by primary_key
---drop table rpt02080
-select top(10) * from rpt02080 order by primary_key 
-
---drop PROCEDURE  sproc200206
 CREATE PROCEDURE Sproc200206
 	@start_date DATETIME,
 	@end_date DATETIME,
@@ -248,6 +214,3 @@ insert into #results (primary_key,start_week,end_week,part_number,workcenter_cod
 	SELECT @record_count = @@ROWCOUNT;
 --select @record_count
 END;
-
-select * from rpt0213test
-
