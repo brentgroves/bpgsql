@@ -258,8 +258,9 @@ select DISTINCT date_time_stamp from HourlyOEEValues
 
 select Data_hour from HourlyOEEValues
 select Data_hour AS solution from HourlyOEEValues
-
-
+select * from HourlyOEEValues ho 
+select distinct Date_time_stamp from HourlyOEEValues ho2 
+select distinct Data_hour from HourlyOEEValues ho2 
 call InsertHourlyOEEValues ('VSC_1', '1201', '4140', 7, 1, 1, 834,582, 0, 0,'2020-03-29 14:29:00');
 call InsertHourlyOEEValues ('VSC_2', '1202', '4141', 7, 5, 5, 834,582, 0, 0,'2020-03-29 14:29:00');
 call InsertHourlyOEEValues ('VSC_3', '1203', '4142', 7, 10, 10, 834,582, 0, 0,'2020-03-29 14:29:00');
@@ -682,6 +683,8 @@ call InsertHourlyOEEValues ('VSC_10', '1209', '4150',14, 38, 38, 834,582, 0, 0,'
 call InsertHourlyOEEValues ('VSC_11', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-04-19 14:29');
 call InsertHourlyOEEValues ('VSC_12', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-04-19 14:29');
 
+--select DISTINCT date_time_stamp from HourlyOEEValues ho
+--select DISTINCT date_time_stamp,Data_hour from HourlyOEEValues ho
 call InsertHourlyOEEValues ('VSC_1', '1201', '4140', 7, 1, 1, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_2', '1202', '4141', 7, 5, 5, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_3', '1203', '4142', 7, 10, 10, 834,582, 0, 0,'2020-04-26 14:29:00');
@@ -747,7 +750,7 @@ call InsertHourlyOEEValues ('VSC_9', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2
 call InsertHourlyOEEValues ('VSC_10', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_11', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_12', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-04-26 14:29:00');
-
+-- select * from HourlyOEEValues where date_time_stamp = '2020-04-26 14:29:00' order by id desc 
 call InsertHourlyOEEValues ('VSC_1', '1201', '4140',12, 1, 1, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_2', '1202', '4141',12, 5, 5, 834,582, 0, 0,'2020-04-26 14:29:00');
 call InsertHourlyOEEValues ('VSC_3', '1203', '4142',12, 10, 10, 834,582, 0, 0,'2020-04-26 14:29:00');
@@ -895,8 +898,115 @@ call InsertHourlyOEEValues ('VSC_10', '1209', '4150',14, 38, 38, 834,582, 0, 0,'
 call InsertHourlyOEEValues ('VSC_11', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-03 14:29:00');
 call InsertHourlyOEEValues ('VSC_12', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-03 14:29:00');
 
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140', 7, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141', 7, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142', 7, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143', 7, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144', 7, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145', 7, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146', 7, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147', 7, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150', 7, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150', 7, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150', 7, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150', 7, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140', 8, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141', 8, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142', 8, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143', 8, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144', 8, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145', 8, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146', 8, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147', 8, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150', 8, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150', 8, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150', 8, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150', 8, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+-- select distinct data_hour from HourlyOEEValues where date_time_stamp = '2020-05-10 14:29:00' 
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140', 9, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141', 9, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142', 9, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143', 9, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144', 9, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145', 9, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146', 9, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147', 9, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150', 9, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150', 9, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150', 9, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150', 9, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140',10, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141',10, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142',10, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143',10, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144',10, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145',10, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146',10, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147',10, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150',10, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150',10, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150',10, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150',10, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140',11, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141',11, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142',11, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143',11, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144',11, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145',11, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146',11, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147',11, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150',11, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140',12, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141',12, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142',12, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143',12, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144',12, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145',12, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146',12, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147',12, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150',12, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150',12, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150',12, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150',12, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140',13, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141',13, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142',13, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143',13, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144',13, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145',13, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146',13, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147',13, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150',13, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150',13, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150',13, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150',13, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+call InsertHourlyOEEValues ('VSC_1', '1201', '4140',14, 1, 1, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_2', '1202', '4141',14, 5, 5, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_3', '1203', '4142',14, 10, 10, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_4', '1204', '4143',14, 15, 15, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_5', '1205', '4144',14, 20, 20, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_6', '1206', '4145',14, 25, 25, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_7', '1207', '4146',14, 30, 30, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_8', '1208', '4147',14, 35, 35, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_9', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_10', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_11', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+call InsertHourlyOEEValues ('VSC_12', '1209', '4150',14, 38, 38, 834,582, 0, 0,'2020-05-10 14:29:00');
+
+
 select DISTINCT Date_time_stamp  
 from HourlyOEEValues 
 
-select count(*) from HourlyOEEValues ho 
+select count(*) from HourlyOEEValues ho --672
 
