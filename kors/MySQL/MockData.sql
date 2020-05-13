@@ -12,14 +12,15 @@ SET max_sp_recursion_depth=1000;
 
 WITH RECURSIVE cte_random (n,y) 
 AS (
-      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
+      -- SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y HOME
+      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y -- WORK dev and prod
       UNION ALL
       SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
       FROM cte_random 
       WHERE n < 1000
     )
-    
-    
+-- dev system work     
+-- select ID from HourlyOEEValues ho2 ord ID      
 -- SELECT n,y 
 -- FROM cte_random;
 -- select * from HourlyOEEValues ho order by id
@@ -103,7 +104,8 @@ and Workcenter_Code = 'VSC_3'
 SET max_sp_recursion_depth=1000;
 WITH RECURSIVE cte_random (n,y) 
 AS (
-      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
+--      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y -- HOME
+      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y -- WORK
       UNION ALL
       SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
       FROM cte_random 
@@ -137,7 +139,8 @@ end
 SET max_sp_recursion_depth=1000;
 WITH RECURSIVE cte_random (n,y) 
 AS (
-      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y
+--      SELECT 7 as n, FLOOR(RAND()*(9-0+1))+0 y -- home
+      SELECT 1 as n, FLOOR(RAND()*(9-0+1))+0 y  -- work
       UNION ALL
       SELECT n + 1, FLOOR(RAND()*(9-0+1))+0 y 
       FROM cte_random 
