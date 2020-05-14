@@ -22,7 +22,7 @@ CREATE TABLE HourlyOEEValues (
 
 DELIMITER //
 --drop procedure country_hos
-CREATE PROCEDURE country_hos
+CREATE PROCEDURE country_hos2
 (IN _con CHAR(20))
 BEGIN
   SELECT Name, HeadOfState FROM Country
@@ -41,6 +41,7 @@ BEGIN
     SET @table_name = table_name;
     SET @sql_query = CONCAT('SELECT 1 FROM ',@table_name);
     PREPARE stmt1 FROM @sql_query;
+   	execute b;
     IF (@err = 1) THEN
         SET @table_exists = 0;
     ELSE

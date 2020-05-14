@@ -1,18 +1,126 @@
-CREATE PROCEDURE Sproc200206
-	@start_date DATETIME,
-	@end_date DATETIME,
-	@table_name varchar(12),
-	@record_count INT OUTPUT
-AS
+
+/*
+ * This has been my 'go-to' EXISTS procedure that checks both temp and normal tables. This procedure works in MySQL version 5.6 and above. 
+ * The @DEBUG parameter is optional. The default schema is assumed, but can be concatenated to the table in the @s statement.
+ */
+
+drop procedure if exists prcDoesTableExist;
+delimiter #
+CREATE PROCEDURE prcDoesTableExist(IN pin_Table varchar(100), OUT pout_TableExists BOOL)
 BEGIN
--- SET NOCOUNT ON added to prevent extra result sets from
--- interfering with SELECT statements.
-SET NOCOUNT ON;
-IF OBJECT_ID(@table_name) IS NOT NULL
-	EXEC ('DROP Table ' + @table_name)
+    DECLARE boolTableExists TINYINT(1) DEFAULT 1;
+    DECLARE CONTINUE HANDLER FOR 1243, SQLSTATE VALUE '42S02' SET boolTableExists = 0;
+        SET @s = concat('SELECT null FROM `', pin_Table, '` LIMIT 0 INTO @resultNm');
+    PREPARE stmt1 FROM @s;
+    EXECUTE stmt1;
+    DEALLOCATE PREPARE stmt1;
+    set pout_TableExists = boolTableExists; -- Set output variable
+    IF @DEBUG then
+        select IF(boolTableExists
+            , CONCAT('TABLE `', pin_Table, '` exists: ', pout_TableExists)
+            , CONCAT('TABLE `', pin_Table, '` does not exist: ', pout_TableExists)
+        ) as result;
+    END IF;
+END 
+set @DEBUG = true;
+call prcDoesTableExist('tempTable', @tblExists);
+select @tblExists as '@tblExists';
+
+
+CREATE TABLE TempTable (
+	ID int NOT NULL AUTO_INCREMENT,
+	Workcenter_Code varchar(50),
+	Job_number varchar(20),
+	Part_number varchar(60),
+	Data_hour int,
+	Hourly_planned_production_count int,
+	Hourly_actual_production_count int,
+	Cumulative_planned_production_count int,
+	Cumulative_actual_production_count int,
+	scrap_count int,
+	Downtime_minutes float,
+	Date_time_stamp datetime,
+  	CONSTRAINT HOV_pk PRIMARY KEY (ID)
+)
+
+DROP PROCEDURE Test;
+CREATE PROCEDURE Test
+(
+	_start_date DATETIME,
+	_end_date DATETIME,
+	_table_name varchar(12),
+	OUT _record_count INT 
+)
+BEGIN
+    DECLARE credit DECIMAL DEFAULT 0;
+	call prcDoesTableExist(_table_name, @tblExists);
+	IF @tblExists = 1 THEN
+	    -- SET @table_name = _table_name;
+	    SET @sql_query = CONCAT('DROP TABLE ',_table_name);
+	    PREPARE stmt1 FROM @sql_query;
+	   	execute stmt1;
+	END IF;
+	set _record_count = 2;
+
+END 
+
+set @start_date = '2020-02-09T00:00:00';
+set @end_date = '2020-02-15T00:00:00';
+set @table_name = 'TempTable';
+
+CALL Kors.Sproc200206(@start_date, @end_date, @table_name,@rec);
+select @rec
+
+DROP PROCEDURE Sproc200206;
+CREATE PROCEDURE Sproc200206
+(
+	_start_date DATETIME,
+	_end_date DATETIME,
+	_table_name varchar(12),
+	OUT _record_count INT 
+)
+BEGIN
+
+	Declare start_year char(4);
+	Declare start_week int;
+	Declare end_year char(4);
+	Declare end_week int;
+	Declare start_of_week_for_start_date datetime;
+	Declare end_of_week_for_end_date datetime;
+
+	SET @sql_query = CONCAT('DROP TABLE IF EXISTS ',_table_name);
+   	PREPARE stmt1 FROM @sql_query;
+	execute stmt1;
+
+	set start_year = YEAR(_start_date);
+	set start_week = WEEK(_start_date);
+	set end_year = YEAR(_end_date);
+	set end_week = WEEK(_end_date);
+set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
+
+SELECT DATE_ADD("2017-06-15", INTERVAL 10 DAY);
+select start_year,start_week,end_year,end_week;
+
+/*		
+	Declare _start_year char(4)
+	Declare _start_week int
+	Declare @end_year char(4)
+	Declare @end_week int
+	Declare @start_of_week_for_start_date datetime
+	Declare @end_of_week_for_end_date datetime
+*/
+	set _record_count = 2;
+END 
+-- https://www.mysqltutorial.org/mysql-drop-table/
+set @start_date = '2020-02-09T00:00:00';
+set @end_date = '2020-02-15T00:00:00';
+set @table_name = 'TempTable';
+
+CALL Kors.Sproc200206(@start_date, @end_date, @table_name,@rec);
+select @rec
 
 /* TESTING ONLY
-DECLARE @start_date DATETIME,
+DECLARE _start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
@@ -21,12 +129,13 @@ set @end_date ='2020-02-15T23:59:59';
 set @table_name = 'rpt0213test'
 */ -- END TESTING ONLY
 	
-Declare @start_year char(4)
-Declare @start_week int
-Declare @end_year char(4)
-Declare @end_week int
-Declare @start_of_week_for_start_date datetime
-Declare @end_of_week_for_end_date datetime
+CREATE PROCEDURE Sproc200206
+	@start_date DATETIME,
+	@end_date DATETIME,
+	@table_name varchar(12),
+	@record_count INT OUTPUT
+AS
+BEGIN
 
 set @start_year = DATEPART(YEAR,@Start_Date)
 set @start_week = DATEPART(WEEK,@Start_Date)

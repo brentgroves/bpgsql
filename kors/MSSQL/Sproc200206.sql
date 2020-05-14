@@ -45,15 +45,15 @@ SET NOCOUNT ON;
 IF OBJECT_ID(@table_name) IS NOT NULL
 	EXEC ('DROP Table ' + @table_name)
 
---/* TESTING ONLY
+/* TESTING ONLY
 DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
-set @start_date ='2020-03-29T00:00:00';
-set @end_date ='2020-04-04T23:59:59';
-set @table_name = 'rpt0401test'
--- */ -- END TESTING ONLY
+set @start_date ='2020-02-09T00:00:00';
+set @end_date ='2020-02-15T23:59:59';
+set @table_name = 'rpt0213test'
+*/ -- END TESTING ONLY
 	
 Declare @start_year char(4)
 Declare @start_week int
@@ -74,7 +74,6 @@ set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) 
 set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
 
---select @start_of_week_for_start_date,@end_of_week_for_end_date
 /* may be necessary if multiple calls are done on the same connection
 decdrop table #resultslare @sqlDropPK nvarchar(4000)
 declare @PKTable nvarchar(50)
@@ -122,7 +121,7 @@ insert into #primary_key(primary_key,year_week,start_week,end_week,part_number,w
 
 --drop table #set2group
 --select count(*) #primary_key from #primary_key  --16
-select top(100) * from #primary_key
+--select top(100) * from #primary_key
 --FORMAT ( @d, 'd', 'en-US' ) 
 create table #set2group
 (
