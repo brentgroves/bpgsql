@@ -74,32 +74,54 @@ select @rec
 DROP PROCEDURE Sproc200206;
 CREATE PROCEDURE Sproc200206
 (
-	_start_date DATETIME,
-	_end_date DATETIME,
-	_table_name varchar(12),
-	OUT _record_count INT 
+	pStartDate DATETIME,
+	pEndDate DATETIME,
+	pTableName varchar(12),
+	OUT pRecordCount INT 
 )
 BEGIN
-
-	Declare start_year char(4);
-	Declare start_week int;
-	Declare end_year char(4);
-	Declare end_week int;
-	Declare start_of_week_for_start_date datetime;
-	Declare end_of_week_for_end_date datetime;
-
-	SET @sql_query = CONCAT('DROP TABLE IF EXISTS ',_table_name);
+	SET @table_name = pTableName;
+	set @startDate =pStartDate;
+	set @endDate =pEndDate;
+	SET @tableName = pTableName;  
+-- /* 
+    -- https://www.w3resource.com/mysql/date-and-time-functions/mysql-week-function.php
+    -- Week 1 is the first week with a sunday; range: 0 - 53
+	-- 52 -- set @startDate ='2019-12-31 00:00:00';  
+	-- 0 -- set @startDate ='2020-01-01 00:00:00';  
+	-- 1 -- set @startDate ='2020-01-05 00:00:00';  
+	set @startDate ='2020-02-09 00:00:00';
+	set @endDate ='2020-02-15 23:59:59';	
+	SET @tableName = 'TempTable';  -- Debug 
+-- */
+	SET @sql_query = CONCAT('DROP TABLE IF EXISTS ',@table_name);
    	PREPARE stmt1 FROM @sql_query;
 	execute stmt1;
+	
+	set @startWeek = WEEK(@startDate);
+	set @startYear = YEAR(@startDate);
+	set @endYear = YEAR(@endDate);
+	set @endWeek = WEEK(@endDate);
+	-- THIS IS NEEDED TO MAKE SURE MSSQL WEEKS ARE THE SAME AS MYSQL DATES
+	set @startYearJan1 = CONCAT(@startYear,'-01-01T00:00:00');
+	set @startYearJan1DOW = DAYOFWEEK(@startYearJan1);
+	set @endYearJan1 = CONCAT(@endYear,'-01-01T00:00:00');
+	set @endYearJan1DOW = DAYOFWEEK(@endYearJan1);
 
-	set start_year = YEAR(_start_date);
-	set start_week = WEEK(_start_date);
-	set end_year = YEAR(_end_date);
-	set end_week = WEEK(_end_date);
-set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
+	set @startWeek = if(@startYearJan1DOW = 1,@startWeek,@startWeek + 1); 
+	set @endWeek = if(@endYearJan1DOW = 1,@endWeek,@endWeek + 1); 
 
-SELECT DATE_ADD("2017-06-15", INTERVAL 10 DAY);
-select start_year,start_week,end_year,end_week;
+	-- START HERE
+	-- set @startWeekStartDate = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
+	-- set @endWeekEndDate = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
+	
+	-- set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
+	-- set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
+
+-- set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
+
+-- SELECT DATE_ADD("2017-06-15", INTERVAL 10 DAY);
+select @startYear,@startWeek,@endYear,@endWeek;
 
 /*		
 	Declare _start_year char(4)

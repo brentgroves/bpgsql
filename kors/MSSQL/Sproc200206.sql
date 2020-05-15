@@ -45,15 +45,18 @@ SET NOCOUNT ON;
 IF OBJECT_ID(@table_name) IS NOT NULL
 	EXEC ('DROP Table ' + @table_name)
 
-/* TESTING ONLY
+-- /* TESTING ONLY
 DECLARE @start_date DATETIME,
 	@end_date DATETIME,
 	@table_name varchar(12),
 	@record_count INT
+-- set @start_date ='2019-12-31T00:00:00';  -- week 53
+-- set @start_date ='2020-01-01T00:00:00';  -- week 1 
+-- set @end_date ='2020-01-05T23:59:59';  -- week 2
 set @start_date ='2020-02-09T00:00:00';
 set @end_date ='2020-02-15T23:59:59';
 set @table_name = 'rpt0213test'
-*/ -- END TESTING ONLY
+-- */ -- END TESTING ONLY
 	
 Declare @start_year char(4)
 Declare @start_week int
@@ -66,13 +69,14 @@ set @start_year = DATEPART(YEAR,@Start_Date)
 set @start_week = DATEPART(WEEK,@Start_Date)
 set @end_year = DATEPART(YEAR,@End_Date)
 set @end_week = DATEPART(WEEK,@End_Date)
-
+select @start_year,@start_week,@end_year,@end_week;
 
 set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
 set @end_of_week_for_end_date = DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)  --end of week
 
 set @end_of_week_for_end_date = DATEADD(day, 1, @end_of_week_for_end_date);
 set @end_of_week_for_end_date = DATEADD(second,-1,@end_of_week_for_end_date);
+select @start_year,@start_week,@end_year,@end_week;
 
 /* may be necessary if multiple calls are done on the same connection
 decdrop table #resultslare @sqlDropPK nvarchar(4000)
