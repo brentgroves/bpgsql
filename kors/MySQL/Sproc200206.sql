@@ -111,6 +111,17 @@ BEGIN
 	set @startWeek = if(@startYearJan1DOW = 1,@startWeek,@startWeek + 1); 
 	set @endWeek = if(@endYearJan1DOW = 1,@endWeek,@endWeek + 1); 
 
+-- START HERE MODIFY MSSQL CODE TO INCLUDE THIS PLEX SECTION I FORGOT
+if DATEPART(WEEK,@Start_Date) = 1
+set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1, 1)
+else
+set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
+-- MODIFY FIRST_DAY_OF_WEEK CODE AND LAST_DAY_OF_WEEK TO INCLUDE THIS PLEX SECTION I FORGOT
+if DATEPART(WEEK,@End_Date) > 51 and  (  DATEPART(MONTH,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,@End_Date))) + (DATEPART(WEEK,@End_Date)-1), 5))   =1)
+set @end_of_week_for_end_date = DATEADD(second,-1,convert(datetime,DATEADD(day, 1,datefromparts(DATEPART(YEAR,@End_Date), 12, 31))))
+else
+set @end_of_week_for_end_date = DATEADD(second,-1,DATEADD(day,1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)))  --end of week
+
 
 	set @startWeekStartDate = FIRST_DAY_OF_WEEK(@startDate);
 	set @endWeekEndDate = LAST_DAY_OF_WEEK(@endDate);
