@@ -1,60 +1,73 @@
 /*
  * Find first day of WEEK
  */
--- START HERE MODIFY MSSQL CODE TO INCLUDE THIS PLEX SECTION I FORGOT
-/*
-if DATEPART(WEEK,@Start_Date) = 1
-set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1, 1)
-else
-set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
--- MODIFY FIRST_DAY_OF_WEEK CODE AND LAST_DAY_OF_WEEK TO INCLUDE THIS PLEX SECTION I FORGOT
-if DATEPART(WEEK,@End_Date) > 51 and  (  DATEPART(MONTH,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,@End_Date))) + (DATEPART(WEEK,@End_Date)-1), 5))   =1)
-set @end_of_week_for_end_date = DATEADD(second,-1,convert(datetime,DATEADD(day, 1,datefromparts(DATEPART(YEAR,@End_Date), 12, 31))))
-else
-set @end_of_week_for_end_date = DATEADD(second,-1,DATEADD(day,1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)))  --end of week
-*/
 
+
+	-- set @startDate = STR_TO_DATE('02/09/2020 23:59:59','%m/%d/%Y %H:%i:%s');
+	-- set @startDate = STR_TO_DATE('01/01/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+	set @startDate = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+	-- set @startDate = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
+	-- set @startDate =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+	-- SELECT @startDate;
+	SELECT FIRST_DAY_OF_WEEK(@startDate);
 drop function FIRST_DAY_OF_WEEK;
-CREATE FUNCTION FIRST_DAY_OF_WEEK(day DATE)
+CREATE FUNCTION FIRST_DAY_OF_WEEK(day DATETIME)
 RETURNS DATETIME DETERMINISTIC
 BEGIN
-	set @floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
-	return subdate(@floorDate, INTERVAL DAYOFWEEK(@floorDate)-1 DAY);
-END
+
+	set @day = day;
+	set @week = week(@day);
+	if @week = 0 then
+	 	set @year = year(@day);
+		set @dayOne = concat('01/01/',@year,' 00:00:00');
+		set @firstDay = STR_TO_DATE(@dayOne,'%m/%d/%Y %H:%i:%s');
+	else
+		set @floorDate = ADDDATE(DATE(@day),INTERVAL 0 second);
+		set @firstDay = subdate(@floorDate, INTERVAL DAYOFWEEK(@floorDate)-1 DAY);
+	end if;
+	return @firstDay;
+END;	
+
+-- set @startDate = STR_TO_DATE('01/01/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+SET @msg := '';
+-- set @day = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @day = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
+set @day =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+SELECT LAST_DAY_OF_WEEK(@day);
+SELECT @msg;
 
 drop function LAST_DAY_OF_WEEK;
-CREATE FUNCTION LAST_DAY_OF_WEEK(day DATE)
+CREATE FUNCTION LAST_DAY_OF_WEEK(day DATETIME)
 RETURNS DATETIME DETERMINISTIC
 BEGIN
-	set @floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
+	set @day = day;
+	set @week = week(@day);
+	set @floorDate = ADDDATE(DATE(@day),INTERVAL 0 second);
 	set @lastDay = ADDDATE(@floorDate,INTERVAL 7 - DAYOFWEEK(@floorDate) DAY );
 	set @nextDay = ADDDATE(DATE(@lastDay),INTERVAL 1 DAY);
-	return subdate(@nextDay, INTERVAL 1 second);
+	set @endWeek = week(subdate(@nextDay, INTERVAL 1 second));
+-- set @lastDay = STR_TO_DATE(concat('12/31/',@year,' 00:00:00'),'%m/%d/%Y %H:%i:%s');
+-- SELECT CONCAT('[Debug #',@week,',',@endWeek,']') INTO @msg;
+-- if the week of @day > 51 and the end of week for @day is in week 0 then 
+	-- make the last day = 12/13 
+	if @week > @endWeek then
+	 	set @year = year(@day);
+	 	set @lastDay = STR_TO_DATE(concat('12/31/',@year,' 00:00:00'),'%m/%d/%Y %H:%i:%s');
+  		SELECT CONCAT('[Debug # @week > @endWeek]') INTO @msg;
+	else
+  		SELECT CONCAT('[Debug # @week <= @endWeek]') INTO @msg;
+	 	set @lastDay = subdate(@nextDay, INTERVAL 1 second);
+	end if;
+	return @lastDay;
 END;
-
-set @startDate ='2020-02-16 01:00:00';
-set @endDate ='2020-02-09 23:59:59';
-
-	set @floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
+	set @day =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+	set @week = week(@day);
+	set @floorDate = ADDDATE(DATE(@day),INTERVAL 0 second);
 	set @lastDay = ADDDATE(@floorDate,INTERVAL 7 - DAYOFWEEK(@floorDate) DAY );
-	set @nextDay = ADDDATE(DATE(day),INTERVAL 1 DAY);
-	select subdate(@nextDay, INTERVAL 1 second);
+	set @nextDay = ADDDATE(DATE(@lastDay),INTERVAL 1 DAY);
+	select week(subdate(@nextDay, INTERVAL 1 second));
 
--- SELECT FIRST_DAY_OF_WEEK(@startDate);
- SELECT LAST_DAY_OF_WEEK(@endDate);
 
--- select WEEKDAY(@startDate);
--- select DAYOFWEEK(@startDate);
--- SELECT FIRST_DAY_OF_WEEK(@startDate);
 
--- select DATE_ADD(@startDate, INTERVAL(1-DAYOFWEEK(@startDate)) DAY);
--- SELECT subdate(now(), INTERVAL 7-DAYOFWEEK(now()) DAY)
--- SELECT INTERVAL weekday(now()) day
-SELECT INTERVAL (7 - DAYOFWEEK(@startDate));
-SELECT subdate(now(), INTERVAL weekday(now()) DAY)
-SELECT adddate(now(), INTERVAL 6-weekday(now()) DAY)
-SELECT  
-  DATETIME(@startDate + INTERVAL (1 - DAYOFWEEK(@startDate)) DAY) as start_date,  
-  DATE(@endDate + INTERVAL (7 - DAYOFWEEK(@endDate)) DAY) as end_date
+
   
---  set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week

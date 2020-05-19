@@ -53,7 +53,7 @@ DECLARE @start_date DATETIME,
 -- set @start_date ='2019-12-31T00:00:00';  -- week 53
 -- set @start_date ='2020-01-01T00:00:00';  -- week 1 
 -- set @end_date ='2020-01-05T23:59:59';  -- week 2
-set @start_date ='2020-02-09T00:00:00';
+set @start_date ='2020-01-03T00:00:00';
 set @end_date ='2020-02-15T23:59:59';
 set @table_name = 'rpt0213test'
 -- */ -- END TESTING ONLY

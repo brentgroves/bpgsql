@@ -4,29 +4,6 @@
  * The @DEBUG parameter is optional. The default schema is assumed, but can be concatenated to the table in the @s statement.
  */
 
-drop procedure if exists prcDoesTableExist;
-delimiter #
-CREATE PROCEDURE prcDoesTableExist(IN pin_Table varchar(100), OUT pout_TableExists BOOL)
-BEGIN
-    DECLARE boolTableExists TINYINT(1) DEFAULT 1;
-    DECLARE CONTINUE HANDLER FOR 1243, SQLSTATE VALUE '42S02' SET boolTableExists = 0;
-        SET @s = concat('SELECT null FROM `', pin_Table, '` LIMIT 0 INTO @resultNm');
-    PREPARE stmt1 FROM @s;
-    EXECUTE stmt1;
-    DEALLOCATE PREPARE stmt1;
-    set pout_TableExists = boolTableExists; -- Set output variable
-    IF @DEBUG then
-        select IF(boolTableExists
-            , CONCAT('TABLE `', pin_Table, '` exists: ', pout_TableExists)
-            , CONCAT('TABLE `', pin_Table, '` does not exist: ', pout_TableExists)
-        ) as result;
-    END IF;
-END 
-set @DEBUG = true;
-call prcDoesTableExist('tempTable', @tblExists);
-select @tblExists as '@tblExists';
-
-
 CREATE TABLE TempTable (
 	ID int NOT NULL AUTO_INCREMENT,
 	Workcenter_Code varchar(50),
@@ -43,33 +20,29 @@ CREATE TABLE TempTable (
   	CONSTRAINT HOV_pk PRIMARY KEY (ID)
 )
 
-DROP PROCEDURE Test;
-CREATE PROCEDURE Test
-(
-	_start_date DATETIME,
-	_end_date DATETIME,
-	_table_name varchar(12),
-	OUT _record_count INT 
-)
-BEGIN
-    DECLARE credit DECIMAL DEFAULT 0;
-	call prcDoesTableExist(_table_name, @tblExists);
-	IF @tblExists = 1 THEN
-	    -- SET @table_name = _table_name;
-	    SET @sql_query = CONCAT('DROP TABLE ',_table_name);
-	    PREPARE stmt1 FROM @sql_query;
-	   	execute stmt1;
-	END IF;
-	set _record_count = 2;
 
-END 
 
-set @start_date = '2020-02-09T00:00:00';
-set @end_date = '2020-02-15T00:00:00';
-set @table_name = 'TempTable';
 
-CALL Kors.Sproc200206(@start_date, @end_date, @table_name,@rec);
-select @rec
+
+-- set @startDate = STR_TO_DATE('02/09/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @startDate = STR_TO_DATE('02/15/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @startDate =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+-- set @startDate = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+set @startDate = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
+-- set @endDate = STR_TO_DATE('02/09/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @endDate = STR_TO_DATE('02/15/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @endDate =STR_TO_DATE('03/14/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+-- set @endDate =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+-- set @endDate = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
+set @endDate = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
+set @tableName = 'TempTable';
+set @DEBUG = true;
+TRUNCATE TABLE debugger; 
+CALL Kors.Sproc200206(@startDate, @endDate, @tableName,@rec);
+SELECT * from debugger;
+SELECT @rec;
+
 
 DROP PROCEDURE Sproc200206;
 CREATE PROCEDURE Sproc200206
@@ -90,9 +63,9 @@ BEGIN
 	-- 52 -- set @startDate ='2019-12-31 00:00:00';  
 	-- 0 -- set @startDate ='2020-01-01 00:00:00';  
 	-- 1 -- set @startDate ='2020-01-05 00:00:00';  
-	set @startDate ='2020-02-15 00:00:00';
-	set @endDate ='2020-02-09 23:59:59';	
-	SET @tableName = 'TempTable';  -- Debug 
+	-- set @startDate ='2020-02-15 00:00:00';
+	-- set @endDate ='2020-02-09 23:59:59';	
+	-- SET @tableName = 'TempTable';  -- Debug 
 -- */
 	SET @sql_query = CONCAT('DROP TABLE IF EXISTS ',@tableName);
    	PREPARE stmt1 FROM @sql_query;
@@ -110,22 +83,13 @@ BEGIN
 
 	set @startWeek = if(@startYearJan1DOW = 1,@startWeek,@startWeek + 1); 
 	set @endWeek = if(@endYearJan1DOW = 1,@endWeek,@endWeek + 1); 
-
--- START HERE MODIFY MSSQL CODE TO INCLUDE THIS PLEX SECTION I FORGOT
-if DATEPART(WEEK,@Start_Date) = 1
-set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1, 1)
-else
-set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 6)  --start of week
--- MODIFY FIRST_DAY_OF_WEEK CODE AND LAST_DAY_OF_WEEK TO INCLUDE THIS PLEX SECTION I FORGOT
-if DATEPART(WEEK,@End_Date) > 51 and  (  DATEPART(MONTH,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + CONVERT(varchar, DATEPART(YEAR,@End_Date))) + (DATEPART(WEEK,@End_Date)-1), 5))   =1)
-set @end_of_week_for_end_date = DATEADD(second,-1,convert(datetime,DATEADD(day, 1,datefromparts(DATEPART(YEAR,@End_Date), 12, 31))))
-else
-set @end_of_week_for_end_date = DATEADD(second,-1,DATEADD(day,1,DATEADD(wk, DATEDIFF(wk, 5, '1/1/' + @end_year) + (@end_week-1), 5)))  --end of week
-
-
 	set @startWeekStartDate = FIRST_DAY_OF_WEEK(@startDate);
 	set @endWeekEndDate = LAST_DAY_OF_WEEK(@endDate);
-	select @startYear,@startWeek,@endYear,@endWeek,@startWeekStartDate,@endWeekEndDate;
+    IF @DEBUG then
+      	INSERT INTO debugger VALUES (CONCAT('[Debug # ',@startYear,',',@startWeek,',',@endYear,',',@endWeek,',',@startWeekStartDate,',',@endWeekEndDate,']'));
+	End If;
+	set pRecordCount = 5;
+end
 -- START HERE
 -- drop table #primary_key
 create table #primary_key
