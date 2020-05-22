@@ -6,14 +6,14 @@ DECLARE	@return_value int,
 --2004-05-23T14:25:10
 --YYYYMMDD or YYYY-MM-DD
 --YYYY-MM-DDThh:mm:ss.nnn
-set @start_date ='2020-03-29T00:00:00';
+set @start_date ='2020-03-01T00:00:00';
 --select @start_date
-set @end_date ='2020-04-25T23:59:59';
+set @end_date ='2020-03-14T23:59:59';
 --HH:MM:SS.SSS
-set @table_name = 'rpt04010';
+set @table_name = 'TempTable';
 EXEC	@return_value = [dbo].[Sproc200221] @start_date,@end_date,@table_name,@record_count OUTPUT
-select @record_count 
-select * from rpt04010
+select @record_count; 
+select * from TempTable;
 
 GO
 select * from rpt04010 order by primary_key
