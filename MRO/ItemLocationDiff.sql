@@ -1,10 +1,11 @@
 -- DO drops later in case you spot an error somewhere else in the process
 -- I messed up and called 1223 files 1213.
 select * 
-into station0518
+into station0526
 from STATION
 
-select count(*) cnt from station0518
+select count(*) cnt from station0526
+--12676
 --12676 --05/18
 --12680
 --12681
@@ -28,17 +29,17 @@ select count(*) cnt from station0518
 --12653
 --12624
 --verify backup of station
-select top 100 * from station0518
+select top 100 * from station0526
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0518 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0526 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0518
-from 'c:\il0518GE12500.csv'
+Bulk insert PlxSupplyItemLocation0526
+from 'c:\il0526GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -49,13 +50,14 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation0518 --13992 
+from PlxSupplyItemLocation0526 --13990 
 -- Check for duplicates
 select count(*)
 from 
 (
-select distinct item_no,location from PlxSupplyItemLocation0518
+select distinct item_no,location from PlxSupplyItemLocation0526
 )s1  --13992 --05/18
+--,13990
 
 /*
  * Item locations in plex but not in CM: 2563
@@ -63,60 +65,19 @@ select distinct item_no,location from PlxSupplyItemLocation0518
  * Plex '01-002A01' Item locations with quantity = 0: 2534
  * Plex '01-002A01' Item locations with quantity <> 0: 7
  */
-SELECT count(*) from nic0511  --2611
-SELECT count(*) from nic0518  --3197
-
-/*
- * Between 05-11 and 05-18 it looks like there have been 587 items that have had all of 
- * their item_location removed from Plex. Since we regularly only remove about 12 items per week 
- * it made me wonder what was going on.  So I verified that there were no bin locations for these items in CM.  
- * None of the 587 items had a bin location in CM so everything should be ok with this large update. 
- */
-select
-nic0518.item_no
-into rm0518
--- nic0518.*
--- count(*)  --587
-from nic0518  --3197
-left outer join nic0511
-on nic0518.item_no=nic0511.item_no
-where nic0511.item_no is null 
---Bev Rathburn updated on 05/14/20
---16704
---Farkas, Justin  --05/13/20
-select count(*) from rm0518  --587
-
-
-select 
-*
-from rm0518 rm
-inner join station st 
-on rm.item_no=item
-where st.BinQuantity <> 0 
-or st.quantity <> 0
---05/18 -- 0
-
-select 
---itemnumber
-count(*)
-from dbo.nic0518 nic
-inner join inventry inv
-on nic.item_no=inv.ItemNumber --3168
-inner join station st 
-on nic.item_no=st.item  --1864
 
 
 select 
 --il.item_no
 --il.item_no,il.location,il.quantity
--- into nic0518 --Plex supply items with the default location and a quantity = 0
-count(*) -- 3197 05/18
+--into nic0526 --Plex supply items with the default location and a quantity = 0
+count(*) -- 3196 05/26, 3197 05/18
 --2615,2614,2591,2590,2591,2595,2585,2580,2578,2581,2578,2578,2577,2581,2563,2563,2563,2562,2561,236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0518 
+	from PlxSupplyItemLocation0526 
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -133,10 +94,11 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic0511
+	from nic0526
+	--3196 05/26
 	--3197 05/18
 	--2611 05/11
-	--2615  --03/24??
+	--2615 --03/24??
 	--2614
 	--2591
 	--2590
@@ -180,9 +142,10 @@ count(*) cnt
 	item in 
 	(
 	select item_no
-	from nic0518
+	from nic0526
 	)
-	and (st.BinQuantity<>0 or st.Quantity <> 0 ) 
+	and (st.BinQuantity<>0 or st.Quantity <> 0 )
+	--05/26 11 more
 	-- 05/18
 	-- 05/11 = 11
 	-- 03/24?? 12,11,12,14,19,14,13,12,11,12,12,12, 12, 12,12,12,13,13,15,12,13,12, 10, 8,9,10
@@ -200,16 +163,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0518
+	from PlxSupplyItemLocation0526
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity --05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
---il.quantity > st.BinQuantity --05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
---il.quantity < st.BinQuantity --05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
+il.quantity <> st.BinQuantity  --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
+--il.quantity < st.BinQuantity --05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389
@@ -256,6 +219,53 @@ select count(*) from PlxSupplyItemLocation0411 where location = '01-002A01' --1
 select count(*) from PlxSupplyItemLocation0203 where location = '01-002A01' --1  --2617
 SELECT count(*) from nic0511  --2611
 
+
+/*
+ * Between 05-11 and 05-18 it looks like there have been 587 items that have had all of 
+ * their item_location removed from Plex. Since we regularly only remove about 12 items per week 
+ * it made me wonder what was going on.  So I verified that there were no bin locations for these items in CM.  
+ * None of the 587 items had a bin location in CM so everything should be ok with this large update. 
+ */
+select
+nic0526.item_no
+into rm0518
+-- nic0518.*
+-- count(*)  --587
+from nic0518  --3197
+left outer join nic0511
+on nic0518.item_no=nic0511.item_no
+where nic0511.item_no is null 
+
+SELECT count(*) 
+from nic0526  
+--3197 05/18
+--2611 05/11
+
+
+--Bev Rathburn updated on 05/14/20
+--16704
+--Farkas, Justin  --05/13/20
+select count(*) from rm0518  --587
+
+
+
+select 
+*
+from rm0518 rm
+inner join station st 
+on rm.item_no=item
+where st.BinQuantity <> 0 
+or st.quantity <> 0
+--05/18 -- 0
+
+select 
+--itemnumber
+count(*)
+from dbo.nic0518 nic
+inner join inventry inv
+on nic.item_no=inv.ItemNumber --3168
+inner join station st 
+on nic.item_no=st.item  --1864
 
 /*
  * 

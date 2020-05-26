@@ -8,15 +8,15 @@ DECLARE	@return_value int,
 --YYYY-MM-DDThh:mm:ss.nnn
 set @start_date ='2020-03-01T00:00:00';
 --select @start_date
-set @end_date ='2020-03-14T23:59:59';
+set @end_date ='2020-04-04T23:59:59';
 --HH:MM:SS.SSS
 set @table_name = 'TempTable';
 EXEC	@return_value = [dbo].[Sproc200221] @start_date,@end_date,@table_name,@record_count OUTPUT
 select @record_count; 
 select * from TempTable;
-
+--drop table TempTable 
 GO
-select * from rpt04010 order by primary_key
+select * from rpt05261 order by primary_key
 --drop table rpt04010
 select top(10) * from rpt04010 order by id
 
@@ -206,4 +206,4 @@ SELECT @record_count = @@ROWCOUNT;
 --select @record_count
 END; 
 select * from rpt0401test
-
+select * from rpt05261;
