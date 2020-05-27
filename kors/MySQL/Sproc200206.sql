@@ -39,17 +39,19 @@ set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week
 -- set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @startDate = STR_TO_DATE('03/14/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
  set @endDate = STR_TO_DATE('04/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
-set @tableName = 'rpt05261';
+set @tableName = 'TempTable';
 set @DEBUG = true;
 TRUNCATE TABLE debugger; 
 CALL Kors.Sproc200206(@startDate, @endDate, @tableName,@rec);
 -- SELECT * from debugger;
 SELECT @rec;
 select * from TempTable;
+
+SELECT * FROM TempTable order by primary_key LIMIT 20 OFFSET 1
 drop table TempTable;
 
 drop table rpt05027;
-select * from rpt05263;
+select * from rpt05027;
 select Data_hour AS solution from HourlyOEEValues
 
 DROP PROCEDURE Sproc200206;

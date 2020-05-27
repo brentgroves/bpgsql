@@ -20,7 +20,7 @@ TRUNCATE TABLE debugger;
 CALL Kors.Sproc200221(@startDate, @endDate, @tableName,@recordCount);
 SELECT * from debugger;
 SELECT @recordCount;
-select * from TempTable order by primary_key;
+select * from rpt05270 order by primary_key;
 
 --drop PROCEDURE  Sproc200221
 CREATE PROCEDURE Sproc200221
