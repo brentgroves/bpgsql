@@ -25,7 +25,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (title,@expired_date,amount)
 SET expired_date = STR_TO_DATE(@expired_date, '%m/%d/%Y');
-
+select * from discounts;
 /*
  * PATH IS LOCAL TO THE DATABASE CLIENT IN THIS CASE
  * THIS IS SLOWER
@@ -40,3 +40,6 @@ IGNORE 1 ROWS
 SET expired_date = STR_TO_DATE(@expired_date, '%m/%d/%Y');
 
 select * from discounts d 
+
+
+
