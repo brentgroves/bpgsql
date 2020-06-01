@@ -1,10 +1,11 @@
 -- DO drops later in case you spot an error somewhere else in the process
 -- I messed up and called 1223 files 1213.
 select * 
-into station0526
+into station0601
 from STATION
 
-select count(*) cnt from station0526
+select count(*) cnt from station0601
+--12676
 --12676
 --12676 --05/18
 --12680
@@ -29,17 +30,17 @@ select count(*) cnt from station0526
 --12653
 --12624
 --verify backup of station
-select top 100 * from station0526
+select top 100 * from station0601
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0526 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0601 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0526
-from 'c:\il0526GE12500.csv'
+Bulk insert PlxSupplyItemLocation0601
+from 'c:\il0601GE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -50,15 +51,16 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation0526 --13990 
+from PlxSupplyItemLocation0601 --13990 
 -- Check for duplicates
 select count(*)
 from 
 (
-select distinct item_no,location from PlxSupplyItemLocation0526
-)s1  --13992 --05/18
+select distinct item_no,location from PlxSupplyItemLocation0601
+)s1  
+-- 13990 06/01
 --,13990
-
+--13992 --05/18
 /*
  * Item locations in plex but not in CM: 2563
  * Plex Item locations not in CM not having location '01-002A01': 22
@@ -70,14 +72,14 @@ select distinct item_no,location from PlxSupplyItemLocation0526
 select 
 --il.item_no
 --il.item_no,il.location,il.quantity
---into nic0526 --Plex supply items with the default location and a quantity = 0
-count(*) -- 3196 05/26, 3197 05/18
+--into nic0601 --Plex supply items with the default location and a quantity = 0
+ count(*) -- 3196 05/26, 3197 05/18
 --2615,2614,2591,2590,2591,2595,2585,2580,2578,2581,2578,2578,2577,2581,2563,2563,2563,2562,2561,236	
 --il.item_no,inv.ItemClass,inv.Description1,il.location,il.quantity as PlexQuantity,st.BinQuantity as CribMasterQty,st.Quantity as CMQuantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0526 
+	from PlxSupplyItemLocation0601 
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -94,7 +96,8 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic0526
+	from nic0601
+	--3196 06/01
 	--3196 05/26
 	--3197 05/18
 	--2611 05/11
@@ -133,7 +136,7 @@ and il.quantity = 0
 set BinQuantity = 0,
 Quantity = 0
 --select 
-count(*) cnt 
+ count(*) cnt 
 --05/18 11 items
 --05/11 11 items,
 --	item,st.BinQuantity,st.Quantity 
@@ -142,9 +145,10 @@ count(*) cnt
 	item in 
 	(
 	select item_no
-	from nic0526
+	from nic0601
 	)
 	and (st.BinQuantity<>0 or st.Quantity <> 0 )
+	-- 11 06/01
 	--05/26 11 more
 	-- 05/18
 	-- 05/11 = 11
@@ -163,16 +167,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0526
+	from PlxSupplyItemLocation0601
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity  --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
---il.quantity > st.BinQuantity --05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
---il.quantity < st.BinQuantity --05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
+il.quantity <> st.BinQuantity  --06/01 126, --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --58 06/01 05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
+--il.quantity < st.BinQuantity --68 06/01--05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389
