@@ -22,30 +22,38 @@ CREATE TABLE TempTable (
 
 
 
+--  TRUNCATE TABLE debugger; -- table debugger is full error?
+-- select * from debugger d2
 
 
 -- set @startDate =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
 -- set @startDate = STR_TO_DATE('02/09/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @startDate = STR_TO_DATE('02/15/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
-set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @startDate = STR_TO_DATE('03/29/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @startDate = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @startDate = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
+-- set @startDate = STR_TO_DATE('05/31/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week with no records test
+set @startDate ='Sun May 31 2020 00:00:00 GMT-0400 (Eastern Daylight Time)';
+set @endDate = 'Sat Jun 06 2020 23:59:59 GMT-0400 (Eastern Daylight Time)';
 -- set @endDate =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
 -- set @endDate = STR_TO_DATE('01/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @endDate = STR_TO_DATE('01/05/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 1
 -- set @endDate = STR_TO_DATE('02/09/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
 -- set @endDate = STR_TO_DATE('02/15/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
--- set @startDate = STR_TO_DATE('03/01/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
--- set @startDate = STR_TO_DATE('03/14/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
- set @endDate = STR_TO_DATE('04/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+-- set @endDate = STR_TO_DATE('03/14/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @endDate = STR_TO_DATE('02/15/2020 00:00:00','%m/%d/%Y %H:%i:%s'); -- week 0
+-- set @endDate = STR_TO_DATE('04/04/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
+-- set @endDate = STR_TO_DATE('06/06/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week with no records test
 set @tableName = 'TempTable';
 set @DEBUG = true;
-TRUNCATE TABLE debugger; 
+-- TRUNCATE TABLE debugger; -- table debugger is full error?
+
 CALL Kors.Sproc200206(@startDate, @endDate, @tableName,@rec);
 -- SELECT * from debugger;
 SELECT @rec;
 select * from TempTable;
+select * from debugger d2
 
 SELECT * FROM TempTable order by primary_key LIMIT 20 OFFSET 1
 drop table TempTable;
