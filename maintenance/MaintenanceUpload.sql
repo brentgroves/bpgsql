@@ -1298,7 +1298,6 @@ from
 	group by nsitemnumber
 )tst --10371 records after grouping clause.
 --Pass 07/15C
-
 /*
  * Test: 10B 
  *  
@@ -1313,7 +1312,7 @@ WHERE LTRIM(RTRIM(BEItemNumber)) like '%' + ' ' + '%'  --are there any spaces
 
 
 -- plxSupplyItem:
-
+select top 100 Supplier_Code,* from dbo.plxSupplyItem 
 
 select
 row_number() OVER(ORDER BY set1.item_no ASC) AS Row#,
