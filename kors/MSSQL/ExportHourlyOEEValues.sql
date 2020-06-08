@@ -37,17 +37,3 @@ select
 from HourlyOEEValues ho 
 2 choose export from result window from context menu.
 choose quote always false, and select quote never.
-3 copy csv to docker container
-start docker conainer
-sudo docker cp Kors.csv db:/Kors.csv
-
-Open ImportHourlyOEEValues.sql and connect to docker containers database
-LOAD DATA INFILE '/Kors.csv'  
-INTO TABLE discounts
-FIELDS TERMINATED BY ',' ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS
-(title,@expired_date,amount)
-SET expired_date = STR_TO_DATE(@date_time_stamp, '%m/%d/%Y');
-
-*/

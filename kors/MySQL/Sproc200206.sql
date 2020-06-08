@@ -19,9 +19,14 @@ CREATE TABLE TempTable (
 	Date_time_stamp datetime,
   	CONSTRAINT HOV_pk PRIMARY KEY (ID)
 )
+create table t1 (
+startDate datetime
+)
 
+insert into t1 (startDate)
+values('2020-06-08T12:06:26.938')
 
-
+select * from t1
 --  TRUNCATE TABLE debugger; -- table debugger is full error?
 -- select * from debugger d2
 
