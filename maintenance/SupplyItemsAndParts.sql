@@ -569,6 +569,7 @@ select
 	-- all to upload it into varchar field.
 	--REPLACE(REPLACE(REPLACE(convert(varchar(max),p.NotesText), CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(10)) as Note, --
 	-- BUT to make sure CHECK NOTES WITH NEWLINES BEFORE MASS UPLOAD
+	--select * from parts where numbered = '701536'
 	NotesText as Note, 
 	'Maintenance' as item_type,
 	CASE

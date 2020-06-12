@@ -26,6 +26,51 @@ IGNORE 1 ROWS
 (title,@expired_date,amount)
 SET expired_date = STR_TO_DATE(@expired_date, '%m/%d/%Y');
 select * from discounts;
+
+
+-- TRUNCATE TABLE PlxAlbSupplyItem0612;
+-- DROP TABLE PlxAlbSupplyItem0612;
+CREATE TABLE PlxAlbSupplyItem0612 (
+	item_no varchar(50),
+	brief_description varchar (100)
+)
+
+LOAD DATA
+  INFILE '/AlbionLE10000.csv'
+  INTO TABLE PlxAlbSupplyItem0612
+  FIELDS
+    TERMINATED BY ','
+    ESCAPED BY '"'
+  LINES
+    TERMINATED BY '\n'
+  --IGNORE 1 LINES
+;
+
+LOAD DATA
+  INFILE '/AlbionLE10000.csv'
+  INTO TABLE PlxAlbSupplyItem0612
+  FIELDS
+    TERMINATED BY ','
+    ESCAPED BY '#'
+  LINES
+    TERMINATED BY '\n'
+(item_no,@brief_description)    
+SET brief_description = REPLACE(@brief_description,'@','"');    
+  --IGNORE 1 LINES
+;
+
+
+LOAD DATA INFILE '/AlbionLE10000.csv'  
+INTO TABLE PlxAlbSupplyItem0612
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '"'
+LINES TERMINATED BY '\n'
+-- IGNORE 1 ROWS
+(item_no,brief_description)
+SET expired_date = STR_TO_DATE(@expired_date, '%m/%d/%Y');
+
+select * from PlxAlbSupplyItem0612
+
+
 /*
  * PATH IS LOCAL TO THE DATABASE CLIENT IN THIS CASE
  * THIS IS SLOWER
