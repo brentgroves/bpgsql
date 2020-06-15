@@ -1,10 +1,11 @@
 -- DO drops later in case you spot an error somewhere else in the process
 -- I messed up and called 1223 files 1213.
 select * 
-into station0609
+into station0615
 from STATION
 
-select count(*) cnt from station0609
+select count(*) cnt from station0615
+--12676 --06/15
 --12676 --06/09
 --12676 --06/02
 --12676
@@ -32,17 +33,17 @@ select count(*) cnt from station0609
 --12653
 --12624
 --verify backup of station
-select top 100 * from station0609
+select top 100 * from station0615
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0609 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation0615 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation0609
-from 'c:\il0609GE12500.csv'
+Bulk insert PlxSupplyItemLocation0615
+from 'c:\ilGE12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -53,13 +54,14 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation0609 
+from PlxSupplyItemLocation0615 
 -- Check for duplicates
 select count(*)
 from 
 (
-select distinct item_no,location from PlxSupplyItemLocation0609
+select distinct item_no,location from PlxSupplyItemLocation0615
 )s1  
+-- 13991 06/15 
 -- 13991 06/09
 -- 13990 06/02
 -- 13990 06/01
@@ -76,8 +78,9 @@ select distinct item_no,location from PlxSupplyItemLocation0609
 select 
 il.item_no
 --il.item_no,il.location,il.quantity
---into nic0609 --Plex supply items with the default location and a quantity = 0
+into nic0615 --Plex supply items with the default location and a quantity = 0
 --count(*) 
+--3192 06-15
 --3194 06/09
 --3196 06/02
 -- 3196 05/26, 3197 05/18
@@ -86,7 +89,7 @@ il.item_no
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0609 
+	from PlxSupplyItemLocation0615
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -103,7 +106,8 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic0609
+	from nic0615
+	--3192 06/15
 	--3194 06/09
 	--3196 06/02
 	--3196 06/01
@@ -154,9 +158,10 @@ Quantity = 0
 	item in 
 	(
 	select item_no
-	from nic0609
+	from nic0615
 	)
 	and (st.BinQuantity<>0 or st.Quantity <> 0 )
+	-- 11 06/15
 	-- 11 06/09
 	-- 11 06/02
 	-- 11 06/01
@@ -174,20 +179,20 @@ Quantity = il.quantity
 --select 
 --il.item_no
 --il.item_no,il.location,il.quantity
---count(*) 
+-- count(*) 
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation0609
+	from PlxSupplyItemLocation0615
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
-il.quantity <> st.BinQuantity --06/09 333,06/02 89,06/01 126, --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
---il.quantity > st.BinQuantity --145 06/09,12 06/02,58 06/01 05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
---il.quantity < st.BinQuantity --188 06/09, 77 06/02 --68 06/01--05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
+il.quantity <> st.BinQuantity --179 06/15,06/09 333,06/02 89,06/01 126, --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
+--il.quantity > st.BinQuantity --43 06/15,145 06/09,12 06/02,58 06/01 05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
+--il.quantity < st.BinQuantity --136 06/15,188 06/09, 77 06/02 --68 06/01--05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389

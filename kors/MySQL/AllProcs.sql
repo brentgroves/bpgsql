@@ -375,12 +375,13 @@ BEGIN
 	set yearJan1DOW = DAYOFWEEK(yearJan1);
 
 	set week = if(yearJan1DOW = 1,week,week + 1);
-	IF @DEBUG then
-		INSERT INTO debugger VALUES (CONCAT('[STD_WEEK:day=',day,',week=',week,',year=',year,',yearJan1=',yearJan1,',yearJan1DOW=',yearJan1DOW,']'));
-	End If;
+	-- IF @DEBUG then
+	-- 	INSERT INTO debugger VALUES (CONCAT('[STD_WEEK:day=',day,',week=',week,',year=',year,',yearJan1=',yearJan1,',yearJan1DOW=',yearJan1DOW,']'));
+	-- End If;
 
 	return week;
 END;
+
 CREATE DEFINER=`brent`@`%` FUNCTION `Kors`.`LAST_DAY_OF_WEEK`(pDay DATETIME) RETURNS datetime
     DETERMINISTIC
 BEGIN
@@ -398,9 +399,9 @@ BEGIN
 	 	set year = year(day);
 	 	set lastDay = STR_TO_DATE(concat('12/31/',year,' 23:59:59'),'%m/%d/%Y %H:%i:%s');
 	end if;
-	IF @DEBUG then
-		INSERT INTO debugger VALUES (CONCAT('[LAST_DAY_OF_WEEK: day=',day,',week=',week,',floorDate=',floorDate,',lastDay=',lastDay,',nextDay=',nextDay,',endWeek=',endWeek,']'));
-	End If;
+	-- IF @DEBUG then
+	-- 	INSERT INTO debugger VALUES (CONCAT('[LAST_DAY_OF_WEEK: day=',day,',week=',week,',floorDate=',floorDate,',lastDay=',lastDay,',nextDay=',nextDay,',endWeek=',endWeek,']'));
+	-- End If;
 	return lastDay;
 END;
 
@@ -420,11 +421,14 @@ BEGIN
 		set floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
 		set firstDay = subdate(floorDate, INTERVAL DAYOFWEEK(floorDate)-1 DAY);
 	end if;
-	IF @DEBUG then
-		INSERT INTO debugger VALUES (CONCAT('[FIRST_DAY_OF_WEEK: day=',day,',week=',week,',firstDay=',firstDay,']'));
-	End If;
+	-- IF @DEBUG then
+	--   INSERT INTO debugger VALUES (CONCAT('[FIRST_DAY_OF_WEEK: day=',day,',week=',week,',firstDay=',firstDay,']'));
+	-- End If;
 	return firstDay;
 END;
+
+
+
 
 
 
