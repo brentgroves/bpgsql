@@ -11,7 +11,10 @@ TRUNCATE TABLE debugger;
 set @day =STR_TO_DATE('12/31/2019 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 52
 SELECT FIRST_DAY_OF_WEEK(@day);
 SELECT * from debugger;
-
+set @startDate ='2020-02-15 00:00:00';
+set @endDate ='2020-02-09 23:59:59';	
+-- benchmark(1000000, FIRST_DAY_OF_WEEK(@startDate)); 
+select FIRST_DAY_OF_WEEK(@startDate)
 drop function FIRST_DAY_OF_WEEK;
 CREATE FUNCTION FIRST_DAY_OF_WEEK(pDay DATETIME)
 RETURNS DATETIME DETERMINISTIC
@@ -34,6 +37,45 @@ BEGIN
 	-- End If;
 	
 	return firstDay;
+END;	
+
+-- SELECT If(COALESCE(`price`, 0) < 5, 5, `price`) AS `Item_Price'
+set @startDate ='2020-02-15 00:00:00';
+set @endDate ='2020-02-09 23:59:59';	
+-- benchmark(1000000, FIRST_DAY_OF_WEEK(@startDate)); 
+select FIRST_DAY_OF_WEEK(@startDate); 
+select TEST_FIRST_DAY_OF_WEEK(@startDate); 
+drop function TEST_FIRST_DAY_OF_WEEK;
+CREATE FUNCTION TEST_FIRST_DAY_OF_WEEK(pDay DATETIME)
+RETURNS DATETIME DETERMINISTIC
+BEGIN
+	DECLARE day,firstDayWk0,firstDay,floorDate DATETIME;
+	DECLARE week,year int;
+	DECLARE dayOne char(20);
+	set day = pDay;
+	set week = week(day);
+
+	set year = year(day);
+	set dayOne = concat('01/01/',year,' 00:00:00');
+	set firstDayWk0 = STR_TO_DATE(dayOne,'%m/%d/%Y %H:%i:%s');
+	set floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
+	set firstDay = if(week = 0,firstDayWk0,subdate(floorDate, INTERVAL DAYOFWEEK(floorDate)-1 DAY));
+	return firstDay;
+/*
+	if week = 0 then
+	 	set year = year(day);
+		set dayOne = concat('01/01/',year,' 00:00:00');
+		set firstDay = STR_TO_DATE(dayOne,'%m/%d/%Y %H:%i:%s');
+	else
+		set floorDate = ADDDATE(DATE(day),INTERVAL 0 second);
+		set firstDay = subdate(floorDate, INTERVAL DAYOFWEEK(floorDate)-1 DAY);
+	end if;
+	-- IF @DEBUG then
+	--   INSERT INTO debugger VALUES (CONCAT('[FIRST_DAY_OF_WEEK: day=',day,',week=',week,',firstDay=',firstDay,']'));
+	-- End If;
+	
+	return firstDay;
+	*/
 END;	
 
 -- set @startDate = STR_TO_DATE('01/01/2020 23:59:59','%m/%d/%Y %H:%i:%s'); -- week 0
@@ -137,8 +179,7 @@ BEGIN
         SET @table_exists = 1;
         DEALLOCATE PREPARE stmt1;
     END IF;
-   select 1 from HourlyOEEValues ho 
-END 
+END; 
 
 call check_table_exists('HourlyOEEValues');
 
