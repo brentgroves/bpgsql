@@ -43,8 +43,9 @@ create table PlxSupplyItemTemplate
   cube_height decimal(9,4),
   cube_unit varchar (20)
 )
+-- truncate table PlxSupplyItemTemplate
 -- LOAD DATA INFILE '/var/lib/mysql-files/AlbSupplyItemLE250.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
-LOAD DATA INFILE '/var/lib/mysql-files/AlbSupplyItemLE500.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
+LOAD DATA INFILE '/AlbSupplyItemSet5.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
 (
   row_no,
   item_no,
@@ -58,8 +59,8 @@ LOAD DATA INFILE '/var/lib/mysql-files/AlbSupplyItemLE500.csv' INTO TABLE PlxSup
   customer_unit_price,
   average_cost,
   inventory_unit,
-  min_quantity, 
-  max_quantity,
+  @min_quantity, 
+  @max_quantity,
   tax_code,
   account_no,
   @manufacturer,
@@ -88,6 +89,8 @@ LOAD DATA INFILE '/var/lib/mysql-files/AlbSupplyItemLE500.csv' INTO TABLE PlxSup
 SET
 manufacturer = NULLIF(@manufacturer,''),
 item_quantity = NULLIF(@item_quantity,''),
+min_quantity = NULLIF(@min_quantity,''),
+max_quantity = NULLIF(@max_quantity,''),
 supplier_std_purch_qty = NULLIF(@supplier_std_purch_qty,''),
 supplier_std_unit_price = NULLIF(@supplier_std_unit_price,''),
 supplier_unit_conversion = NULLIF(@supplier_unit_conversion,''),
@@ -96,7 +99,7 @@ country_of_origin = NULLIF(@country_of_origin,''),
 cube_unit = NULLIF(@cube_unit,'')
 ;
 select count(*) from PlxSupplyItemTemplate;  -- Edon 06/17,25,986 ADDED Inactive items
-select * from PlxSupplyItemTemplate pasi 
+select * from PlxSupplyItemTemplate pasi order by row_no desc
 
 -- DECODE CSV CHARACTER MAPPINGS
 -- update PlxSupplyItemTemplate 
@@ -106,10 +109,10 @@ note = REPLACE(REPLACE(note, '###', ','), '##@', '"')
 select * from PlxSupplyItemTemplate where cube_unit = '' 
 select 
   -- 'T0000766' item_no,
-  item_no,
+  i.item_no,
   
   -- brief_description,  
-  REPLACE(REPLACE(REPLACE(brief_description , CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as brief_description,
+  REPLACE(REPLACE(REPLACE(i.brief_description , CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as brief_description,
   -- description,
   REPLACE(REPLACE(REPLACE(description , CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as description,
   -- note,
@@ -123,9 +126,18 @@ select
   inventory_unit,
   min_quantity, 
   max_quantity,
-  tax_code, 
+  	-- purchasing_v_tax_code / did not put this in for MRO supply items
+	-- but before you update the item in plex it has to be filled with something
+	-- and accountant said I could use tax exempt.
+	-- Found that EM Parts are already marked as taxable 'Y' or 'N'
+	-- where taxable = 'N' --2044
+	-- where taxable = 'Y'--10619
+	-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
+	-- accountant also said this so I'm going to mark them all as Tax Exempt
+	-- 70	Tax Exempt - Labor / Industrial Processing
+  'Tax Exempt - Labor / Industrial Processing' as tax_code,
   account_no,
-  manufacturer,
+  null as manufacturer,
   manf_Item_no, 
   drawing_no, 
   item_quantity,
@@ -150,12 +162,28 @@ select
   cube_width,
   cube_height,
   cube_unit 
-from PlxSupplyItemTemplate 
+from PlxSupplyItemTemplate i 
+inner join NotInEdon ned 
+on i.item_no = ned.item_no 
+order by i.row_no 
+-- and i.row_no > 4405
+-- 0004884
+-- 009848
 -- where item_no = '0000011'
 
-select item_no,item_type,currency,supplier_std_purch_qty,supplier_std_unit_price
-from PlxSupplyItemTemplate psit 
-where item_no in ('0000766','0000011')
+select 
+count(*)
+-- i.item_no,supplier_code 
+from PlxSupplyItemTemplate i 
+where i.row_no > 4405  -- 103
+where i.item_no >= '009849' and i.item_no <= '011815'
+where i.item_no in ('BE851728','009483')
 
+select item_no,supplier_code from PlxSupplyItemTemplate where supplier_code like '%Kend%' limit 5
+
+inner join NotInEdon ned 
+on i.item_no = ned.item_no 
+-- where i.item_no in ('0000766','0000011')
+select * from NotInEdon nie where item_no > '009848'
 -- worked
 -- 0000766

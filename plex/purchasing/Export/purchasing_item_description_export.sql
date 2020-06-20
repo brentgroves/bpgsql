@@ -20,6 +20,8 @@ brief_description
 from purchasing_v_item i
 where i.active = 1
 and i.brief_description like '%,%'
+and i.brief_description like '%"%'
+and left(i.item_no,1) = '0'
 
 */
 --export all the active items with descriptions
@@ -39,18 +41,21 @@ and i.brief_description like '%,%'
     item_no,
     brief_description
     from purchasing_v_item i
-    where i.active = 1
-    and i.item_no not like '%[-" ]%'
+    where 
+    -- i.active = 1  -- FOR EDON WE WANT THE INACTIVE RECORDS FOR ALBION WE DON'T
+    i.item_no not like '%[-" ]%'
     and brief_description <> ''
 
   )s1
-  where row_no > 15000 
---  where row_no > 10000 and row_no <= 15000 
+ where row_no > 25000 and row_no <= 30000 
+-- where row_no > 20000 and row_no <= 25000 
+-- where row_no > 15000 and row_no <= 20000 
+-- where row_no > 10000 and row_no <= 15000 
 -- where row_no > 5000 and row_no <= 10000 
 -- where row_no <= 5000 
 --  where item_no = '006696'  -- comma
 --where row_no > 5040 and row_no <= 5050 
-
+-- select count(*) from purchasing_v_item where brief_description = ''  -- 7
 /*
 select
 --top 100 *

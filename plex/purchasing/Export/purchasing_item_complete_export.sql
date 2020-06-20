@@ -125,7 +125,7 @@ insert into #ItemSupplierPrice(item_key,item_no,supplier_no,supplier_code,suppli
       s3.item_key,
       s3.supplier_no,
       s3.unit_price,
-      sp.price_key
+      sp.price_key  -- now we have the full key of the record we want.
       from
       (
       --select count(*) from (  --27673  
@@ -161,6 +161,7 @@ insert into #ItemSupplierPrice(item_key,item_no,supplier_no,supplier_code,suppli
       and s3.unit_price=sp.unit_price -- 1 to many. There could be many item-supplier constants with the same unit price.  Maybe those having different unit keys; so we will just pick one at random.  There is only 1 like this.
     )s4
     group by s4.item_key,s4.supplier_no,s4.unit_price
+    -- now we have an item_key,supplier_no, and unit_price we can get pick one unit_price_key to use.
   )s5
   inner join purchasing_v_Item_Supplier_Price sp
   on s5.item_key=sp.item_key
@@ -178,8 +179,13 @@ insert into #ItemSupplierPrice(item_key,item_no,supplier_no,supplier_code,suppli
   left outer join common_v_currency cc
   on sp.currency_key=cc.currency_key --1 to 1
   where i.active = 1  --16995
-  and i.item_no not like 'BE%'
-  and i.item_no not like '%R'  
+  and i.item_no not like '%[-" ]%'  -- we don't want any records with item_no containing a dash, double-quote, or space.
+  and brief_description <> ''  -- These might be in Edon already but they are not in our list to make inactive because
+  -- our comparision check is for stipped leading zeros and for the brief_description to match.
+  -- select count(*) from purchasing_v_item where brief_description = ''  -- 7  These 7 items will not get uploaded
+  -- select count(*) from purchasing_v_item where item_no like '%[-" ]%'
+--  and i.item_no not like 'BE%'
+--  and i.item_no not like '%R'  
 )
 
 --select count(*) #ItemSupplierPrice from #ItemSupplierPrice --16995
@@ -204,27 +210,18 @@ create table #SupplyItem
   item_group varchar(50),
   item_category varchar (50),
   item_priority varchar (50),
-
   customer_unit_price decimal(19,4),
   average_cost decimal(23,9),
   inventory_unit varchar (20),
   min_quantity decimal(18,2),
   max_quantity decimal(18,2),
-  tax_code_no int,
-
+  tax_code varchar(100),
   account_no varchar(20),
- 
   manufacturer int,
   manf_Item_no 	varchar(50),
-
   drawing_no varchar(50),
-
   item_quantity decimal(18,2), --we don't use this so want it to be null
- 
   location varchar(50), -- from the item location table but we will not use it.
-
-   
-
   supplier_code varchar (25),
   supplier_part_no varchar (50),  -- Supplier_Item_No
   supplier_std_purch_qty decimal(19,2),  -- Purchase_Quantity
@@ -236,12 +233,12 @@ create table #SupplyItem
   update_when_received char(1), --this is a smallint in plex, but needs to be 'Y' for the upload.
   manufacturer_item_revision varchar (8),
   country_of_origin int,
-  commodity_code_key int,
+  commodity_code varchar(10),
   harmonized_tariff_code 	varchar(20),
   cube_length decimal(9,4),
   cube_width decimal(9,4),
   cube_height decimal(9,4),
-  cube_unit int  --think this is for the cube_unit_key
+  cube_unit varchar (20)
 
 )
 
@@ -255,23 +252,18 @@ insert into #SupplyItem (
   item_group,
   item_category,
   item_priority,
-
   customer_unit_price,
   average_cost,
   inventory_unit,
   min_quantity, 
   max_quantity,
-  tax_code_no,
-
+  tax_code,
   account_no,
   manufacturer,
   manf_Item_no,
   drawing_no,
-
   item_quantity,
   location,
-
-
   supplier_code,
   supplier_part_no,
   supplier_std_purch_qty,
@@ -283,13 +275,12 @@ insert into #SupplyItem (
   update_when_received,
   manufacturer_item_revision,
   country_of_origin,
-  commodity_code_key,
+  commodity_code,
   harmonized_tariff_code,
   cube_length,
   cube_width,
   cube_height,
   cube_unit 
-
 )
 (
 --where i.item_no = '0002475'  
@@ -319,17 +310,14 @@ insert into #SupplyItem (
   i.customer_unit_price,
   i.average_cost,
   i.inventory_unit,
-  i.min_quantity,
+  i.min_quantity,  
   i.max_quantity,
   case
   when t.tax_code_no is null then null -- nulls are allowed
-  else t.tax_code_no
-  end tax_code_no,
-
-
+  else t.tax_code
+  end tax_code,
   -- select * from purchasing_v_item i where i.tax_code_no is not null --0 REC   
   i.account_no,
-
   i.manufacturer,  
   -- select distinct manufacturer from purchasing_v_item
   -- select distinct manufacturer from purchasing_v_item  --662070
@@ -337,9 +325,7 @@ insert into #SupplyItem (
   i.manf_Item_no,  -- I think we use this field for a manufacturer number even though the manufacture field contains a supplier_no and not a manufacturer
   i.drawing_no,
   null as item_quantity,  -- don't load any item quantities 
-
   '' as location,
-
   sp.supplier_code, -- this can be null
   sp.supplier_part_no, -- this can be null
   sp.supplier_std_purch_qty, -- this can be null   
@@ -357,12 +343,12 @@ insert into #SupplyItem (
 	--select count(*) from purchasing_v_item where update_when_received = 1  --31278 REC
 	i.manufacturer_item_revision,
 	i.country_of_origin,
-	i.commodity_code_key,
+	c.commodity_code,
 	tc.harmonized_tariff_code,  -- this can be null
 	i.cube_length,
 	i.cube_width,
 	i.cube_height,
-	i.cube_unit_key
+	u.unit cube_unit
   from purchasing_v_item i
   left outer join purchasing_v_item_type it
   on i.item_type_key=it.item_type_key  --1 to 1
@@ -371,23 +357,39 @@ insert into #SupplyItem (
   left outer join purchasing_v_item_category ic
   on i.item_category_key=ic.item_category_key  --1 to 1
   left outer join purchasing_v_item_priority ip
-  on i.item_priority_key=ip.item_priority_key
+  on i.item_priority_key=ip.item_priority_key  --1 to 1
   left outer join purchasing_v_tax_code t
-  on i.tax_code_no=t.tax_code_no
+  on i.tax_code_no=t.tax_code_no  -- 1 to 1
   left outer join sales_v_harmonized_tariff_code tc
-  on i.harmonized_tariff_code_key=tc.harmonized_tariff_code_key
+  on i.harmonized_tariff_code_key=tc.harmonized_tariff_code_key  -- 1 to 1
   left outer join #ItemSupplierPrice sp
   on i.item_key=sp.item_key
+  left outer join purchasing_v_commodity c  -- no supply item has a commodity_code_key. and the key does not exactly match
+  on i.commodity_code_key=c.commodity_key
+  left outer join common_v_unit u
+  on i.cube_unit_key=u.unit_key
   where i.active=1
 
 )
 
+/* 
+select * 
+from purchasing_v_commodity c
+select count(*) from purchasing_v_item i where Commodity_Code_Key	is not null  -- 0 
+select * from purchasing_v_item where cube_unit_key is not null  --1
+select * from common_v_unit where unit_key = 50781
 
-select top 100 
+*/
+select 
+  -- top 1 
+  row_no,
   item_no,
-  brief_description,  
-  description,
-  note,
+  REPLACE(REPLACE(brief_description, ',', '###'), '"', '##@') brief_description,
+--  brief_description,  
+  REPLACE(REPLACE(description, ',', '###'), '"', '##@') description,
+--  description,
+  REPLACE(REPLACE(note, ',', '###'), '"', '##@') note,
+--  note,
   item_type,
   item_group,
   item_category,
@@ -395,9 +397,9 @@ select top 100
   customer_unit_price,
   average_cost,
   inventory_unit,
-  min_quantity, 
-  max_quantity,
-  tax_code_no,
+  null as min_quantity, -- i.min_quantity,  CASEY SAID WE DON'T NEED THESE
+  null as max_quantity, -- i.max_quantity
+  tax_code,
   account_no,
   manufacturer,
   manf_Item_no,
@@ -415,14 +417,39 @@ select top 100
   update_when_received,
   manufacturer_item_revision,
   country_of_origin,
-  commodity_code_key,
+  commodity_code,
   harmonized_tariff_code,
   cube_length,
   cube_width,
   cube_height,
   cube_unit 
 from  #SupplyItem  --18643
+WHERE item_no >= 'BE201055' and item_no <='BE851803'
+-- where row_no >= 4509 and row_no <= 7951 
+-- where item_no = '17207'  -- 7951
+ --where item_no = '01814441' -- 4509 
+-- where item_no = '011434'  -- 4405
+-- where item_no = '011815'  --4508
+-- where item_no = '009849'  --3601
+-- where row_no >= 3601 and row_no <= 4508 
+-- where row_no >= 4508 
+-- order by row_no
 
+-- where item_no = '009848'
+-- where item_no >  '0003127' 
+-- where item_no >=  '0001160' and item_no <= '0003030' -- set 2
+--where item_no between '0000011' and '0001154R'  -- set 1
+--where item_no between '0000011' and '0002397'
+
+-- where brief_description like '%,%'
+-- and brief_description like '%"%'
+-- and left(item_no,1) = '0'
+-- where item_no ='0000010'
+--where item_no = '0000766'
+-- where row_no 
+-- where row_no <=250
+-- brief_description like '%"%'
+-- and left(item_no,1) = '0'
 /*
 --where sp.item_no = '0003491'
 
@@ -441,4 +468,9 @@ inner join common_v_unit cu
 on sk.unit_key=cu.unit_key
 where sk.item_no = '0003491'
 select * from purchasing_v_item where item_no like 'BE701536'
+select * 
+from purchasing_v_item i
+inner join purchasing_v_item_location il
+on i.item_key=il.item_key
+where il.location like '%A01A01%'
 */
