@@ -45,7 +45,7 @@ create table PlxSupplyItemTemplate
 )
 -- truncate table PlxSupplyItemTemplate
 -- LOAD DATA INFILE '/var/lib/mysql-files/AlbSupplyItemLE250.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
-LOAD DATA INFILE '/AlbSupplyItemSet5.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
+LOAD DATA INFILE '/AlbSupplyItemSet10.csv' INTO TABLE PlxSupplyItemTemplate FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS
 (
   row_no,
   item_no,
@@ -96,21 +96,26 @@ supplier_std_unit_price = NULLIF(@supplier_std_unit_price,''),
 supplier_unit_conversion = NULLIF(@supplier_unit_conversion,''),
 supplier_lead_time = NULLIF(@supplier_lead_time,''),
 country_of_origin = NULLIF(@country_of_origin,''),
-cube_unit = NULLIF(@cube_unit,'')
-;
-select count(*) from PlxSupplyItemTemplate;  -- Edon 06/17,25,986 ADDED Inactive items
+cube_unit = NULLIF(@cube_unit,'');
+
+select count(*) from PlxSupplyItemTemplate;  -- Don't import more than ~ 264 of these records in Plex at a time or data corruption may occur.
 select * from PlxSupplyItemTemplate pasi order by row_no desc
 
 -- DECODE CSV CHARACTER MAPPINGS
 -- update PlxSupplyItemTemplate 
-set brief_description = REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),
-description = REPLACE(REPLACE(description, '###', ','), '##@', '"'),
-note = REPLACE(REPLACE(note, '###', ','), '##@', '"')
-select * from PlxSupplyItemTemplate where cube_unit = '' 
+set brief_description = REPLACE(REPLACE(REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13)),
+description = REPLACE(REPLACE(REPLACE(REPLACE(description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13)),
+note = REPLACE(REPLACE(REPLACE(REPLACE(note, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13))
+
 select 
   -- 'T0000766' item_no,
   i.item_no,
-  
+  /*
+   * anywhere there is a \n, ie. 0D0A combo we need to replace it.  
+   * If we don't the Plex upload process will interpret this as a 
+   * completely new record to be uploaded. So replace the \n (0x0D 0x0A) combo with 0x0D.  
+   * I tested with replacing the combo with 0x0A and the upload failed.
+   */
   -- brief_description,  
   REPLACE(REPLACE(REPLACE(i.brief_description , CHAR(13), '13'), CHAR(10), '10'),'1310',CHAR(13)) as brief_description,
   -- description,
@@ -135,6 +140,8 @@ select
 	-- Talked with Kristen about taxable = 'Y' and she said that is wrong and the 
 	-- accountant also said this so I'm going to mark them all as Tax Exempt
 	-- 70	Tax Exempt - Labor / Industrial Processing
+	-- WHEN THE ITEM IS UPLOADED WITHOUT ONE IT LOOKS LIKE IT PICKS ONE FOR YOU
+	-- SO I WENT WITH THE TAX EXEMPT ONE.
   'Tax Exempt - Labor / Industrial Processing' as tax_code,
   account_no,
   null as manufacturer,
@@ -163,9 +170,11 @@ select
   cube_height,
   cube_unit 
 from PlxSupplyItemTemplate i 
-inner join NotInEdon ned 
+inner join NotInEdon0620 ned 
 on i.item_no = ned.item_no 
-order by i.row_no 
+order by ned.row_no 
+-- NotInEdon0620 range: {1=0003040, 200=0003523}, record count: 200
+
 -- and i.row_no > 4405
 -- 0004884
 -- 009848

@@ -183,7 +183,7 @@ insert into #ItemSupplierPrice(item_key,item_no,supplier_no,supplier_code,suppli
   and brief_description <> ''  -- These might be in Edon already but they are not in our list to make inactive because
   -- our comparision check is for stipped leading zeros and for the brief_description to match.
   -- select count(*) from purchasing_v_item where brief_description = ''  -- 7  These 7 items will not get uploaded
-  -- select count(*) from purchasing_v_item where item_no like '%[-" ]%'
+  -- select count(*) from purchasing_v_item where item_no like '%[-" ]%'  --49
 --  and i.item_no not like 'BE%'
 --  and i.item_no not like '%R'  
 )
@@ -313,7 +313,7 @@ insert into #SupplyItem (
   i.min_quantity,  
   i.max_quantity,
   case
-  when t.tax_code_no is null then null -- nulls are allowed
+  when t.tax_code_no is null then null -- nulls are allowed according to the supply item import template.
   else t.tax_code
   end tax_code,
   -- select * from purchasing_v_item i where i.tax_code_no is not null --0 REC   
@@ -369,6 +369,9 @@ insert into #SupplyItem (
   left outer join common_v_unit u
   on i.cube_unit_key=u.unit_key
   where i.active=1
+  and i.item_no not like '%[-" ]%'  -- we don't want any records with item_no containing a dash, double-quote, or space.
+  and brief_description <> ''  -- These might be in Edon already but they are not in our list to make inactive because
+  -- our comparision check is for stipped leading zeros and for the brief_description to match.
 
 )
 
@@ -384,11 +387,14 @@ select
   -- top 1 
   row_no,
   item_no,
-  REPLACE(REPLACE(brief_description, ',', '###'), '"', '##@') brief_description,
+   -- Binary-like Key to replace characters which cause issues in CSV files: # = 0, @ = 1
+  REPLACE(REPLACE(REPLACE(REPLACE(brief_description, ',', '###'), '"', '##@'),CHAR(10),'#@#'),CHAR(13),'#@@') brief_description,
 --  brief_description,  
-  REPLACE(REPLACE(description, ',', '###'), '"', '##@') description,
+  REPLACE(REPLACE(REPLACE(REPLACE(description, ',', '###'), '"', '##@'),CHAR(10),'#@#'),CHAR(13),'#@@') description,
+--  REPLACE(REPLACE(description, ',', '###'), '"', '##@') description,
 --  description,
-  REPLACE(REPLACE(note, ',', '###'), '"', '##@') note,
+--  REPLACE(REPLACE(note, ',', '###'), '"', '##@') note,
+  REPLACE(REPLACE(REPLACE(REPLACE(note, ',', '###'), '"', '##@'),CHAR(10),'#@#'),CHAR(13),'#@@') note,
 --  note,
   item_type,
   item_group,
@@ -397,8 +403,17 @@ select
   customer_unit_price,
   average_cost,
   inventory_unit,
-  null as min_quantity, -- i.min_quantity,  CASEY SAID WE DON'T NEED THESE
-  null as max_quantity, -- i.max_quantity
+  case 
+  when item_no = '0003524' then min_quantity
+  else null
+  end min_quantity,
+--  null as min_quantity, -- i.min_quantity,  CASEY SAID WE DON'T NEED THESE, 
+  -- NOTE When the min and max quantity are not set the supplier information does not get imported.
+  case 
+  when item_no = '0003524' then max_quantity
+  else null
+  end max_quantity,
+--  null as max_quantity, -- i.max_quantity
   tax_code,
   account_no,
   manufacturer,
@@ -423,33 +438,36 @@ select
   cube_width,
   cube_height,
   cube_unit 
+  
+--select count(*)
 from  #SupplyItem  --18643
-WHERE item_no >= 'BE201055' and item_no <='BE851803'
--- where row_no >= 4509 and row_no <= 7951 
--- where item_no = '17207'  -- 7951
- --where item_no = '01814441' -- 4509 
--- where item_no = '011434'  -- 4405
--- where item_no = '011815'  --4508
--- where item_no = '009849'  --3601
--- where row_no >= 3601 and row_no <= 4508 
--- where row_no >= 4508 
--- order by row_no
+WHERE item_no in
+('BE450713','BE705620','BE706816','BE850567','BE851453')
+-- WHERE item_no >= 'BE851453' and item_no <= 'BE450589' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 1400 records. THIS WORKS
+-- WHERE item_no >= 'BE207212' and item_no <= 'BE450589' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 1400 records. 
+--WHERE item_no >= 'BE207212' and item_no <= 'BE450713' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 1515 records. HAD PROBLEMS WITH UPLOADED on 1409 .
+-- WHERE item_no >= 'BE207212' and item_no <= 'BE851453' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 6031 records. HAD PROBLEMS WITH UPLOADED.
 
--- where item_no = '009848'
--- where item_no >  '0003127' 
--- where item_no >=  '0001160' and item_no <= '0003030' -- set 2
---where item_no between '0000011' and '0001154R'  -- set 1
---where item_no between '0000011' and '0002397'
-
--- where brief_description like '%,%'
--- and brief_description like '%"%'
--- and left(item_no,1) = '0'
--- where item_no ='0000010'
---where item_no = '0000766'
--- where row_no 
--- where row_no <=250
--- brief_description like '%"%'
--- and left(item_no,1) = '0'
+-- WHERE item_no > '008399'  and item_no <= '008713' order by item_no  
+-- WHERE item_no > '008093'  and item_no <= '008399' order by item_no 
+-- WHERE item_no > '007592' and item_no <= '008093' order by item_no 
+-- WHERE item_no > '007085' and item_no <= '007592R' order by item_no 
+-- WHERE item_no > '0004578' and item_no <= '0005239' order by item_no 
+-- WHERE item_no > '0004057' and item_no <= '0004578'
+-- '0003524'(7,13) - verify that if min_qty,max_qty are null supplier information is ignored on imports
+-- WHERE item_no >= '0003524' and item_no <='0004057'
+-- '0003524'(7,13) - verify that if min_qty,max_qty are null supplier information is ignored on imports
+-- NotInEdon0620 range: {1=0003524, 200=0004066}, record count: 200
+--WHERE item_no >= '0003040' and item_no <='0003523'
+--and brief_description like '%"%' --0003194  -- " inserted but no supplier?
+-- and description like '%' + CHAR(10) + '%'  -- 	0003394  after 25M
+-- and description like '%' + CHAR(13) + '%'  -- 	0003394
+-- and description not like '%' + CHAR(10) + '%'  -- 0
+-- where description like '%' + CHAR(13) + '%'  -- 118
+-- where description like '%' + CHAR(10) + '%'  -- 104
+-- where description like '%' + CHAR(10) + CHAR(13) + '%'  -- 15
+-- where description like '%' + CHAR(13) + CHAR(10) + '%'  -- 104
+-- select * from parameters where name like '%'+char(13)+'%' or name like '%'+char(10)+'%'
 /*
 --where sp.item_no = '0003491'
 

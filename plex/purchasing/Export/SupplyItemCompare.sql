@@ -99,58 +99,32 @@ on alb.item_no=edon.item_no -- 18602
 where edon.item_no is null  -- 06/20=1461 
 -- and left(alb.item_no,1) <> '0'  -- 06/20=9
 and left(alb.item_no,1) = '0'  -- 06/20=1452
--- where edon.item_no is null  -- 3742  --06/19 Added Edon's inactive items and reduced this from 3766
--- and left(alb.item_no,1) <> '0'  -- 217
--- and left(alb.item_no,1) = '0'  -- 3525
+-- where edon.item_no is null  -- 06/19=3742 Added Edon's inactive items and reduced this from 3766
+-- and left(alb.item_no,1) <> '0'  -- 06/19=217
+-- and left(alb.item_no,1) = '0'  -- 06/19=3525
 -- limit 100 offset 0
 -- order by alb.item_no
-
-select
-count(*)
-from PlxAlbSupplyItem0619 alb
-left outer join PlxEdonSupplyItem0620 edon
-on alb.item_no=edon.item_no 
-where edon.item_no is null  -- 3742
-limit 100 offset 0
-
-
-select
-count(*)
--- top 1000 * 
-from PlxAlbSupplyItem0619 alb
-inner join PlxEdonSupplyItem0620 edon
-on alb.item_no=edon.item_no  -- 14853
 
 /*  
 Verify the 3742 missing items are in Edon’s supply list with leading zeros stripped. 
 How to trim leading zeros and spaces
-
-Return the position of a pattern in a string:
-select  Patindex('%[^0 ]%', '0078956'); --3
-
-SELECT Substring('0078956', Patindex('%[^0]%', '0078956'), Len('0078956') ) AS Trimmed_Leading_0;
-SELECT Substring('0078956', Patindex('%[^0 ]%', '0078956'), Len('0078956') ) AS Trimmed_Leading_0_and_space;
-SELECT Substring('0078956', Patindex('%[^0 ]%', '0078956' + ' '), Len('0078956') ) AS Trimmed_Leading_0_and_space;
-0000010
-0000011
-0000030
-0000057
-0000066
-0000070
-**/
+*/
 
 
-
+/* 
+ * I accidentally deleted the NotInEdon from 06/19 recordset that had all the supply items
+ * that needed to be imported into Edon's supply item PCN before the 06/19 import.
+ */
 -- DROP TABLE IF EXISTS NotInEdon;
-TRUNCATE TABLE NotInEdon;
-CREATE TABLE NotInEdon (
+TRUNCATE TABLE NotInEdon0620;
+CREATE TABLE NotInEdon0620 (
 	row_no int,
 	item_no varchar(50),
 	trmItemNo varchar (60),
   	brief_description varchar (80)
 );
 
-INSERT into NotInEdon (row_no,item_no,trmItemNo,brief_description)
+INSERT into NotInEdon0620 (row_no,item_no,trmItemNo,brief_description)
 (
 select
 row_number() OVER(ORDER BY alb.item_no ASC) AS row_no,
@@ -162,16 +136,18 @@ alb.brief_description
 from PlxAlbSupplyItem0619 alb
 left outer join PlxEdonSupplyItem0620 edon
 on alb.item_no=edon.item_no 
-where edon.item_no is null  -- 3742
+where edon.item_no is null  -- 06/20=1461
+-- where edon.item_no is null  -- 06/190=3742
 -- order by alb.item_no
 )
 
 
-select count(*) NotInEdon from NotInEdon  -- 3742
-select * from NotInEdon limit 100 offset 0
+select count(*) NotInEdon from NotInEdon0620  -- 06/20=1461,06/19=3742
+select * from NotInEdon0620 limit 100 offset 0
 
 /*
  * Are these supply items in Edon with the leading zeros removed? 
+ * DID NOT TOUCH THIS ON 06/20.  It contains the recordset from just before the 06/19 Edon Supply Item import
  */
 -- drop TABLE MakeInactive;
 -- truncate TABLE MakeInactive;
@@ -179,7 +155,7 @@ CREATE TABLE MakeInactive (
 	item_no varchar(50),
   	brief_description varchar (80)
 );
-
+select * from MakeInactive mi;
 INSERT into MakeInactive (item_no,brief_description)
 (
 select 
@@ -204,6 +180,8 @@ from MakeInactive i
 /*
  * There are some Albion supply items to import into Edon that do not
  * need to be made inactive. 
+ * DID NOT TOUCH THIS ON 06/20.  It contains the recordset from just before the 06/19 Edon Supply Item import
+ * 
  */
 -- truncate table DoNotMakeInactive 
 DROP TABLE IF EXISTS DoNotMakeInactive;
@@ -234,27 +212,48 @@ where ed.item_no is null  -- 248
  * 
  * Find ranges of item_no to export from Albion's PCN so
  * that we don't have to export all 18,000 records.
+ * Pay close attention to the character coalation sequence
+ * because it may be different between MSSQL and MySQL 
+ * databases.
+ * MYSQL supply items needing imported sequence ranges.
+ * 007*
+ * 008*
+ * BE207*
+ * BE450*
+ * BE851*
+ * MSSQL sequence
+ * 
+ * The trick is to pull block of supply items from the source PCN
+ * that will encompass a block of the subset of supply items that need to
+ * be imported into the destination PCN.  Only export 250 supply items at a time
+ * although it may be tempting to do more.  I believe you could 
+ * export a huge recordset from Plex but I don't trust it not to corrupt the data.
+ * Limit yourself to the length that will show fully when you execute the query
+ * from the SDE.
+ * 
  * 
  * 
  */
 
 select 
-nie.row_no,
-nie.item_no,
-nie.trmItemNo, 
-nie.brief_description
-from NotInEdon nie 
-where item_no >= 'BE201055'  -- row 3601  'BE201055','BE851803'
+-- count(*) cnt
+ nie.row_no,nie.item_no,nie.trmItemNo, nie.brief_description
+from NotInEdon0620 nie 
+-- where row_no <= 200 
+-- NotInEdon0620 range: {1=0003040, 200=0003523}, record count: 200
+-- where item_no >= '0003524' and item_no <='0004057'
+-- WHERE item_no > '0004057' and item_no <= '0004578'  
+-- WHERE item_no > '0004578' and item_no <= '0005239'  
+-- WHERE item_no > '007085' and item_no <= '0005239'  
+-- WHERE item_no > '007592' and item_no <= '0005239'  
+-- WHERE item_no > '008093' and item_no <= '0005239'  
+-- WHERE item_no > '008094' and item_no <= '0008399'  
+-- WHERE item_no > '008399' and item_no <= '008624'  
+-- WHERE item_no >= 'BE207212' and item_no <= 'BE450133' 
+WHERE item_no >= 'BE450713' and item_no <= 'BE851453' 
+
 -- where item_no > '011815'  -- row 3507  '01814441','17207'
 -- and item_no <= '17207'
-order by item_no 
--- where item_no > '011412'
--- where item_no >= '009484' -- set 4
--- where row_no > 383 and row_no <=583  -- set 3, 0001160, 0003030
--- where row_no > 183 and row_no <=383  -- set 2, 0001160, 0003030
--- where row_no <= 183 -- set1, 0000010, 0001154R
--- where item_no <= '0001154R'
--- where item_no <= '0001154R'
 
 
 /*
