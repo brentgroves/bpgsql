@@ -33,7 +33,7 @@ select * from PlxAlbSupplyItem0619 pasi
   
 -- DECODE CSV CHARACTER MAPPINGS
 update PlxAlbSupplyItem0619 
-set brief_description = REPLACE(REPLACE(brief_description, '###', ','), '##@', '"')
+set brief_description = REPLACE(REPLACE(REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13)),
 
 
 select
@@ -173,8 +173,9 @@ where ed.item_no is not null  -- 3489
 
 select 
 i.item_no,
-i.brief_description 
-from MakeInactive i 
+-- i.brief_description 
+REPLACE(i.brief_description, CHAR(13), '') as brief_description
+from MakeInactive i limit 100 offset 3400
 
 
 /*
