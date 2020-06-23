@@ -155,7 +155,7 @@ CREATE TABLE MakeInactive (
 	item_no varchar(50),
   	brief_description varchar (80)
 );
-select * from MakeInactive mi;
+select count(*) from MakeInactive mi;
 INSERT into MakeInactive (item_no,brief_description)
 (
 select 

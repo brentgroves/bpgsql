@@ -179,7 +179,7 @@ order by ned.row_no
 -- 0004884
 -- 009848
 -- where item_no = '0000011'
-
+select * from NotInEdon0620 nie 
 select 
 count(*)
 -- i.item_no,supplier_code 
@@ -188,7 +188,7 @@ where i.row_no > 4405  -- 103
 where i.item_no >= '009849' and i.item_no <= '011815'
 where i.item_no in ('BE851728','009483')
 
-select item_no,supplier_code from PlxSupplyItemTemplate where supplier_code like '%Kend%' limit 5
+select * from PlxSupplyItemTemplate where supplier_code like '%Kend%' limit 5
 
 inner join NotInEdon ned 
 on i.item_no = ned.item_no 

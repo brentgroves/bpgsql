@@ -20,7 +20,7 @@ from
 select distinct item_no from PlxAlbSupplyItem0622 pasi 
 )s1;
 select top 100 * from PlxAlbSupplyItem0622 pasi 
-
+where item_no like '%16542R%'
   
 -- DECODE CSV CHARACTER MAPPINGS
 update PlxAlbSupplyItem0622 
@@ -42,9 +42,40 @@ select count(*) notInPlex from (
 	ON i.AltVendorNo = av.RecNumber
 	left outer join VENDOR vn
 	on av.VendorNumber = vn.VendorNumber
-	where p.item_no is null
+	where p.item_no is null  --689
+	and  i.ItemNumber >= '16542R' and i.ItemNumber <='17255'
 --	InCMButNotInPlex
-)s1  -- 689
+)s1  -- 56
+
+CREATE TABLE PlexImportSupplyItem0623 (
+	ItemNumber varchar(50),
+	Description1 varchar (50),
+	ItemClass varchar (15),
+	VendorName varchar(50)
+	
+)
+insert into PlexImportSupplyItem0623 (ItemNumber,Description1,ItemClass,VendorName)
+(
+	select 
+	-- top 10 
+		i.ItemNumber,
+	i.Description1, 
+	i.ItemClass,
+	vn.VendorName
+	from dbo.INVENTRY i 
+	left outer join dbo.PlxAlbSupplyItem0622 p 
+	on i.ItemNumber=p.item_no
+	left outer join AltVendor av
+	ON i.AltVendorNo = av.RecNumber
+	left outer join VENDOR vn
+	on av.VendorNumber = vn.VendorNumber
+	where p.item_no is null  --689
+	and  i.ItemNumber >= '16542R' and i.ItemNumber <='17255'
+--	InCMButNotInPlex
+)
+
+select count(*) PlexImportSupplyItem0623 from PlexImportSupplyItem0623
+select *  from PlexImportSupplyItem0623
 select 	
 i.ItemNumber,
 i.Description1, 
