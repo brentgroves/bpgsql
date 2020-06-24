@@ -133,10 +133,11 @@
 			)
 			--2122
 	)lv1
-	inner join dbo.PlexImportSupplyItem0623 si 
-	on lv1.item_no = si.itemNumber
-	where lv1.supplier_code ='Competitive Carbide'
-	order by si.itemnumber
+--	inner join dbo.PlexImportSupplyItem0623 si 
+--	on lv1.item_no = si.itemNumber
+	where lv1.item_no > '17255' and lv1.item_no <= '17307' 
+	--where lv1.supplier_code ='Arch Cutting Tools -Mento'
+	--order by si.itemnumber
 	--where supplier_code is null
 	
 	--where Supplier_Std_Unit_Price is null
@@ -150,4 +151,15 @@
 --	or ((item_no >= '17044') and (item_no <= '17064'))
 --)lv2
 --order by lv2.itemNumber
+--select * from PlexImportSupplyItem0623
+/*
+	select * from dbo.btSupplyCode 
+where VendorName = 'Competitive Carbide'
+select * 
+-- into dbo.btSupplyCode0623 
+from dbo.btSupplyCode 
 
+-- update dbo.btSupplyCode 
+-- set Supplier_Code = 'Arch Cutting Tools -Mento'
+where Supplier_Code = 'Competitive Carbide'
+*/
