@@ -83,35 +83,84 @@ select distinct container_status from part_v_container
 select * from part_v_container_status
 select distinct location from part_v_container_change2
 */
-
-select
-s1.serial_no,
-s1.finished_date,
-s1.location,
-s1.ship_date,
-DATEDIFF(day,s1.finished_date,s1.ship_date) finished_to_shipped
-from
-(
+--select count(*) cnt from (
   select
---  top 100
-  sc.serial_no,
-  min(cc.change_date) finished_date,
-  cc.location,
-  sh.ship_date
-  from sales_v_shipper_container sc
-  inner join sales_v_shipper_line sl
-  on sc.shipper_line_key=sl.shipper_line_key -- 1 to 1
-  inner join sales_v_shipper sh
-  on sl.shipper_key=sh.shipper_key -- 1 to 1
-  inner join part_v_container_change2 cc 
-  on sc.serial_no=cc.serial_no  --1 to many
-  where 
-  --cc.last_action = 'Container Move'
-  cc.location like 'Finished%'
-  group by sc.serial_no,sh.ship_date,cc.location
-)s1
-where DATEDIFF(day,s1.finished_date,s1.ship_date) > 100
-order by s1.serial_no
+  s1.part_key,
+  s1.part_no,
+  sum(s1.quantity) quantity
+  from 
+  (
+-- select count(*) cnt from (
+    select
+    sc.shipper_container_key,
+    sc.serial_no,
+    sc.quantity,
+    p.part_key,
+    p.part_no,
+    sh.ship_date,
+    min(cc.change_date) finished_date,
+    DATEDIFF(day,min(cc.change_date),sh.ship_date) finished_to_shipped
+    -- select count(*) cnt from (
+    -- select count(*) cnt
+    from sales_v_shipper_container sc  -- 84,868
+    inner join part_v_container pc  -- THERE CAN BE MANY SHIPPER_CONTAINER BUT ONLY 1 PART CONTAINER WITH THE SAME SERIAL_NO
+    on sc.serial_no=pc.serial_no --1 to 1
+    inner join part_v_part p
+    on pc.part_key=p.part_key  -- 1 to 1
+    inner join sales_v_shipper_line sl
+    on sc.shipper_line_key=sl.shipper_line_key -- 1 to 1 (84,868)
+    inner join sales_v_shipper sh
+    on sl.shipper_key=sh.shipper_key -- 1 to 1 (84,868)
+    inner join part_v_container_change2 cc 
+    on sc.serial_no=cc.serial_no  --1 to many
+    where cc.location like 'Finished%' and sh.ship_date is not null  -- this will reduce the set
+    -- ship date is null when the part container is 'Loaded' to a shipper.
+    group by sc.shipper_container_key,sc.serial_no,sc.quantity, p.part_key,p.part_no,sh.ship_date  -- 84,689 -- some shipper_containers are loaded but have not been shipped.
+    having min(cc.change_date) between @Start_Date and @End_Date
+    -- some serial_no are on more than 1 release_keys
+    -- )s1
+    -- The container could have been in multiple Finished locations. Look at them all and pick the one with the earliest date
+  )s1 
+  group by s1.part_key,s1.part_no
+--)s2  --320
+  -- There can be multiple shipper containers with the same serial numbers so add the quantities.
+  -- Also one shipper_container may have shipped and the other may not have.
+  
+ -- where DATEDIFF(day,s1.finished_date,s1.ship_date) > 200 -- 19
+  --where DATEDIFF(day,s1.finished_date,s1.ship_date) > 100 -- 200
+  -- where DATEDIFF(day,s1.finished_date,s1.ship_date) > 50 -- 1109
+  -- where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 21 -- 80,720
+ --  where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 14 -- 78,738
+  -- where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 7 -- 72,965
+  -- where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 3 -- 58,090
+  -- where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 2-- 50,601
+ --  where DATEDIFF(day,s1.finished_date,s1.ship_date) <= 1 -- 40081
+--  where pc.location not like 'Finished%' --3 (BM000008,BM413557,BM465522)
+
+  --order by s1.serial_no
+--)s2
+-- where (s2.finished_date is null) or (s2.ship_date is null) -- 0
+
+/*   
+select count(*) cnt
+from sales_v_shipper_container sc  -- 84,868
+group by shipper_container_key
+having count(*) > 1
+select serial_no,quantity from sales_v_shipper_container 
+where serial_no = 'BM014709'
+    A single part_v_container can correspond to multiple sales_v_shipper_containers 
+    if the quantity of the sales_release is less than the part containers quantity.
+     	PCN	Shipper_Line_Key	Serial_No	Release_Key	Quantity	Loaded_Date	Shipper_Container_Key
+Below 1 part container was able to satisfy 2 sales release.
+	PCN	Shipper_Line_Key	Serial_No	Release_Key	Quantity	Loaded_Date	Shipper_Container_Key
+1	300758	24893283	BM006386	89514640	6.000	3/31/2019 12:15:28 PM	206788668
+2	300758	24893283	BM006386	89541839	30.000	3/31/2019 12:15:28 PM	206788667
+    
+    select * from sales_v_shipper_container
+    where serial_no in ('BM006386','BM006387','BM006389')
+    select * from part_v_container
+    where serial_no in ('BM006386','BM006387','BM006389')
+*/
 
 
 /*

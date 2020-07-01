@@ -135,7 +135,7 @@
 	)lv1
 --	inner join dbo.PlexImportSupplyItem0623 si 
 --	on lv1.item_no = si.itemNumber
-	where lv1.item_no > '17255' and lv1.item_no <= '17307' 
+	--where lv1.item_no > '17255' and lv1.item_no <= '17307' 
 	--where lv1.supplier_code ='Arch Cutting Tools -Mento'
 	--order by si.itemnumber
 	--where supplier_code is null
