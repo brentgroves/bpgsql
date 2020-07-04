@@ -1,6 +1,6 @@
 -- truncate/drop truncate table PlxAlbSupplyItem0619
--- truncate table PlxAlbSupplyItem0619
-CREATE TABLE PlxAlbSupplyItem0619 (
+-- truncate table PlxAlbSupplyItem0702
+CREATE TABLE PlxAlbSupplyItem0702 (
 	item_no varchar(50),
 	brief_description varchar (80)
 )
@@ -16,24 +16,24 @@ LOAD DATA INFILE '/var/lib/mysql-files/AlbionLE10000.csv' INTO TABLE PlxAlbSuppl
 LOAD DATA INFILE '/var/lib/mysql-files/AlbionLE15000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 LOAD DATA INFILE '/var/lib/mysql-files/AlbionGT15000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 -- If in docker container use the following
-LOAD DATA INFILE '/AlbionLE5000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
-LOAD DATA INFILE '/AlbionLE10000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
-LOAD DATA INFILE '/AlbionLE15000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
-LOAD DATA INFILE '/AlbionGT15000.csv' INTO TABLE PlxAlbSupplyItem0619 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/AlbionLE5000.csv' INTO TABLE PlxAlbSupplyItem0702 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/AlbionLE10000.csv' INTO TABLE PlxAlbSupplyItem0702 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/AlbionLE15000.csv' INTO TABLE PlxAlbSupplyItem0702 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/AlbionLE20000.csv' INTO TABLE PlxAlbSupplyItem0702 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 */
 
-select count(*) from PlxAlbSupplyItem0619;  -- Albion 06/19,18595
+select count(*) from PlxAlbSupplyItem0702;  -- Albion 07/02,18539
 select count(*) -- Albion 06/19,18595
 from 
 (
-select distinct item_no from PlxAlbSupplyItem0619 pasi 
+select distinct item_no from PlxAlbSupplyItem0702 pasi 
 )s1;
-select * from PlxAlbSupplyItem0619 pasi 
+select * from PlxAlbSupplyItem0702 pasi 
 
   
 -- DECODE CSV CHARACTER MAPPINGS
-update PlxAlbSupplyItem0619 
-set brief_description = REPLACE(REPLACE(REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13)),
+update PlxAlbSupplyItem0702 
+set brief_description = REPLACE(REPLACE(REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13))
 
 
 select
@@ -42,12 +42,53 @@ select
 from PlxAlbSupplyItem0619 limit 100 offset 0
 
 
--- drop table PlxEdonSupplyItem0615
--- truncate table PlxEdonSupplyItem0620
-CREATE TABLE PlxEdonSupplyItem0620 (
+
+
+-- drop table PlxAvillaSupplyItem0702
+-- truncate table PlxAvillaSupplyItem0702
+CREATE TABLE PlxAvillaSupplyItem0702 (
 	item_no varchar(50),
 	brief_description varchar (80)
 )
+/*
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaE5000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaLE10000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaLE15000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaLE20000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaLE25000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/var/lib/mysql-files/AvillaGT25000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+-- If importing into MySQL db container use the following
+LOAD DATA INFILE '/EdonLE5000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/EdonLE10000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/EdonLE15000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/EdonLE20000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/EdonLE25000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+LOAD DATA INFILE '/EdonGT25000.csv' INTO TABLE PlxAvillaSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+*/
+
+select count(*) from PlxAvillaSupplyItem0702;  -- Edon 06/20=28,276,  06/19=25,995 ADDED Inactive items
+select * from PlxAvillaSupplyItem0702 pasi limit 100 
+
+
+select
+count(*)
+from 
+(
+select distinct item_no from PlxAvillaSupplyItem0702
+)s1  -- Edon 06/20, 28,276
+
+-- DECODE CSV CHARACTER MAPPINGS
+update PlxAvillaSupplyItem0702 
+set brief_description = REPLACE(REPLACE(REPLACE(REPLACE(brief_description, '###', ','), '##@', '"'),'#@#',CHAR(10)),'#@@',CHAR(13))
+
+
+select
+-- count(*)
+*
+from PlxAvillaSupplyItem0702 limit 100 offset 0
+
+
+
 
 /*
 LOAD DATA INFILE '/var/lib/mysql-files/EdonLE5000.csv' INTO TABLE PlxEdonSupplyItem0615 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
@@ -64,6 +105,7 @@ LOAD DATA INFILE '/EdonLE20000.csv' INTO TABLE PlxEdonSupplyItem0620 FIELDS TERM
 LOAD DATA INFILE '/EdonLE25000.csv' INTO TABLE PlxEdonSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 LOAD DATA INFILE '/EdonGT25000.csv' INTO TABLE PlxEdonSupplyItem0620 FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 */
+select count(*) from PlxAlbSupplyItem0620;
 select count(*) from PlxEdonSupplyItem0620;  -- Edon 06/20=28,276,  06/19=25,995 ADDED Inactive items
 select * from PlxEdonSupplyItem0620 pasi limit 100 
 
