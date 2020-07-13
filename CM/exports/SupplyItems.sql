@@ -2,7 +2,11 @@
 	select 	
 	Item_No,Brief_Description,Description,Note,Item_Type,Item_Group,Item_Category,
 	Item_Priority,Customer_Unit_Price,Average_Cost,Inventory_Unit,Min_Quantity,Max_Quantity,
-	Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,Supplier_Code,
+	Tax_Code,Account_No,Manufacturer,Manf_Item_No,Drawing_No,Item_Quantity,Location,
+				--	AltVendorNo,
+				-- VendorNumber,
+				-- VendorName,
+	Supplier_Code,
 	Supplier_Part_No,Supplier_Std_Purch_Qty,Currency,Supplier_Std_Unit_Price,Supplier_Purchase_Unit,
 	Supplier_Unit_Conversion,Supplier_Lead_Time,Update_When_Received,Manufacturer_Item_Revision,
 	Country_Of_Origin,Commodity_Code_Key,Harmonized_Tariff_Code,Cube_Length,Cube_Width,Cube_Height,
@@ -63,6 +67,9 @@
 				'' as Drawing_No,
 				'' as Item_Quantity,
 				'' as Location,
+				inv.AltVendorNo,
+				vn.VendorNumber,
+				vn.VendorName,
 				sc.Supplier_Code,
 				Description1 as Supplier_Part_No,
 				'' as Supplier_Std_Purch_Qty,
@@ -99,6 +106,12 @@
 				on av.VendorNumber = vn.VendorNumber
 			left outer join btSupplyCode sc
 				on vn.VendorName=sc.VendorName
+			--	select * from dbo.btSupplyCode WHERE Supplier_Code lIKE  'Seco Tools' 
+			--	select * from dbo.btSupplyCode WHERE Supplier_Code LIKE 'Arch%'
+			-- update btSupplyCode set VendorName ='SECO' WHERE Supplier_Code = 'Seco Tools'
+			-- update btSupplyCode set VendorName ='SECO' WHERE Supplier_Code = 'Arch Cutting Tools'
+			-- insert into dbo.btSupplyCode (Supplier_Code,VendorName ) VALUES ('Arch Cutting Tools -Mento','ARCH')
+			-- ARCH=Arch Cutting Tools, Mento, SECO = Seco Tools,
 			left outer join (
 				select item, max(OverrideOrderPoint) as Min_Quantity
 				from 
@@ -133,6 +146,7 @@
 			)
 			--2122
 	)lv1
+	where lv1.item_no > '17315' and lv1.item_no <= '17376' 
 --	inner join dbo.PlexImportSupplyItem0623 si 
 --	on lv1.item_no = si.itemNumber
 	--where lv1.item_no > '17255' and lv1.item_no <= '17307' 

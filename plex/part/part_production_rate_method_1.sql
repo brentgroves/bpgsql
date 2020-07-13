@@ -89,45 +89,113 @@ START HERE:
 Accumulate the quantities shipped by date
 Find the date range that we worked on the part for 500 hours by adding time records
 */
-select
-s1.part_key,
-s1.part_no,
-min(s1.change_date) first_moved,
-s1.serial_no,
-s1.quantity,
-sum(s1.quantity) over (partition by s1.part_key order by min(s1.change_date)) RunningTotalQuantity,
-count(*) cnt
-from
+
+/*
+primary_key: Determine primary key of result set.
+*/
+
+
+create table #primary_key
+(
+  primary_key int,
+  part_key int,
+  part_no varchar (113),   
+  period int,
+  start_date datetime,
+  end_date datetime
+)
+
+insert into #primary_key(primary_key,part_key,part_no,period,start_date,end_date)
 (
   select
-  --count(*)
-  p.part_key,
-  p.part_no,
-  c.serial_no,
-  c.quantity,
-  cc.change_date
-  from sales_v_shipper_container sc --85808
-  inner join part_v_container c
-  on sc.serial_no=c.serial_no  -- 1 to 1 ; There can be more than one shipper_container with the same serial_no but not more than 1 part_v_container.
-  inner join part_v_part p
-  on c.part_key=p.part_key -- 1 to 1
-  inner join part_v_container_change2 cc
-  on c.serial_no=cc.serial_no  --1 to many, 1,627,750
-  inner join sales_v_shipper_line sl
-  on sc.shipper_line_key=sl.shipper_line_key  -- 1 to 1 
-  inner join sales_v_shipper sh
-  on sl.shipper_key=sh.shipper_key  -- 1 to 1 
-  inner join sales_v_shipper_status ss
-  on sh.shipper_status_key=ss.shipper_status_key  -- 1 to 1, 1,627,750 
-  where 
-  ss.shipper_status = 'Shipped'  -- 1,626,271
-  and c.container_status = 'Shipped'  -- 1,626,271
-  and cc.location like 'Finished%'
-  and cc.last_action = 'Container Move'  -- moved to Finished, 	81,400
-) s1
-group by s1.part_key,s1.part_no,s1.serial_no,s1.quantity
-having min(s1.change_date) between @start_of_week_for_start_date and @end_of_week_for_end_date 
+  ROW_NUMBER() OVER (
+    ORDER BY part_no,period
+  ) primary_key,
+  part_key,
+  part_no,
+  period,
+  min(cost_date) start_date,
+  max(cost_date) end_date
+  from
+  (
+    select
+    s1.part_key,
+    s1.part_no,
+    s1.hours,
+    s1.cost_date,
+    cast((s1.runninTotal / 480) as int) as period
+    from
+    (
+    select
+    p.part_key,
+    p.part_no,
+    cc.quantity hours,
+    cc.cost_date cost_date,
+    sum(cc.quantity) over (partition by p.part_key order by cc.cost_date) as runninTotal
+    from part_v_part p
+    inner join common_v_cost cc
+    on p.part_key=cc.part_key
+    inner join common_v_cost_sub_type cst
+    on cc.cost_sub_type_key = cst.cost_sub_type_key
+    where p.part_no = '18190-RNO-A012-S10'
+    and cc.cost_date between @start_of_week_for_start_date and @end_of_week_for_end_date
+    and cst.cost_sub_type = 'Production'
+    )s1
+  )s2
+  group by s2.part_key,s2.part_no,s2.period
+)
+select * from #primary_key
 
+create table #set2group
+(
+  part_key int,
+  part_no varchar (113),   
+  first_moved datetime,
+  serial_no varchar(25),
+  quantity decimal (19,5)	
+)
+
+insert into #set2group(part_key,part_no,first_moved,serial_no,quantity)
+(
+  select
+  s1.part_key,
+  s1.part_no,
+  min(s1.change_date) first_moved,
+  s1.serial_no,
+  s1.quantity
+  -- sum(s1.quantity) over (partition by s1.part_key order by min(s1.change_date)) RunningTotalQuantity,
+  --count(*) cnt
+  from
+  (
+    select
+    --count(*)
+    p.part_key,
+    p.part_no,
+    c.serial_no,
+    c.quantity,
+    cc.change_date
+    from sales_v_shipper_container sc --85808
+    inner join part_v_container c
+    on sc.serial_no=c.serial_no  -- 1 to 1 ; There can be more than one shipper_container with the same serial_no but not more than 1 part_v_container.
+    inner join part_v_part p
+    on c.part_key=p.part_key -- 1 to 1
+    inner join part_v_container_change2 cc
+    on c.serial_no=cc.serial_no  --1 to many, 1,627,750
+    inner join sales_v_shipper_line sl
+    on sc.shipper_line_key=sl.shipper_line_key  -- 1 to 1 
+    inner join sales_v_shipper sh
+    on sl.shipper_key=sh.shipper_key  -- 1 to 1 
+    inner join sales_v_shipper_status ss
+    on sh.shipper_status_key=ss.shipper_status_key  -- 1 to 1, 1,627,750 
+    where 
+    ss.shipper_status = 'Shipped'  -- 1,626,271
+    and c.container_status = 'Shipped'  -- 1,626,271
+    and cc.location like 'Finished%'
+    and cc.last_action = 'Container Move'  -- moved to Finished, 	81,400
+  ) s1
+  group by s1.part_key,s1.part_no,s1.serial_no,s1.quantity
+  having min(s1.change_date) between @start_of_week_for_start_date and @end_of_week_for_end_date 
+);
 --cc.Change_Date between @start_of_week_for_start_date and @end_of_week_for_end_date  -- 168769
 -- select distinct container_status from part_v_container_status
 
@@ -193,6 +261,7 @@ order by c.serial_no, cc.change_date  -- 77
 /*
 primary_key: Determine primary key of result set.
 */
+/*
 create table #primary_key
 (
   primary_key int,
@@ -271,7 +340,7 @@ insert into #primary_key(primary_key,year_week,year_week_fmt,week_fmt,start_week
 
 --select count(*) #primary_key from #primary_key  --169
 select top(100) * from #primary_key
-
+*/
 /*
 WORK AREA
 
