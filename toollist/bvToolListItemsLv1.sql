@@ -1,3 +1,6 @@
+SELECT     [User], Job, Machine, D_Consumer, item, D_Item, plant
+FROM         dbo.bfToolBossItemsInPlant(11) AS bfToolBossItemsInPlant_1
+
 DECLARE	@return_value int
 
 EXEC	@return_value = [dbo].[bpDistinctToolLists]
@@ -10,6 +13,7 @@ select  * from dbo.bfToolListsInPlant(11)
 where customer = 'JOHN DEERE'
 ) jd 
 on i.job=jd.originalprocessid
+
 
 -- dbo.bvToolListItemsLv1 source
 
