@@ -67,11 +67,6 @@ BEGIN
   RETURN
 END
 
---select @start_of_week_for_start_date 
---select @end_of_week_for_end_date
-
---select @start_year,@start_week,@start_of_week_for_start_date
---select @end_year,@end_week,@end_of_week_for_end_date
 
 
 /*
@@ -144,7 +139,7 @@ insert into #primary_key(primary_key,part_key,part_no,period,start_date,end_date
   )s2
   group by s2.part_key,s2.part_no,s2.period
 )
-select * from #primary_key
+-- select * from #primary_key
 
 create table #set2group
 (
@@ -192,13 +187,39 @@ insert into #set2group(part_key,part_no,first_moved,serial_no,quantity)
     and c.container_status = 'Shipped'  -- 1,626,271
     and cc.location like 'Finished%'
     and cc.last_action = 'Container Move'  -- moved to Finished, 	81,400
+    and cc.change_date between @start_of_week_for_start_date and @end_of_week_for_end_date
   ) s1
   group by s1.part_key,s1.part_no,s1.serial_no,s1.quantity
-  having min(s1.change_date) between @start_of_week_for_start_date and @end_of_week_for_end_date 
 );
 --cc.Change_Date between @start_of_week_for_start_date and @end_of_week_for_end_date  -- 168769
 -- select distinct container_status from part_v_container_status
-
+select
+-- s1.primary_key,
+s1.part_key,
+s1.part_no,
+s1.period,
+s1.start_date,
+s1.end_date,
+sum(s1.quantity) quantity
+from
+(
+  select 
+  pk.primary_key,
+  pk.part_key,
+  pk.part_no,
+  pk.period,
+  pk.start_date,
+  pk.end_date,
+  gr.first_moved,
+  gr.serial_no,
+  gr.quantity
+  from #primary_key pk 
+  inner join #set2group gr 
+  on pk.part_key=gr.part_key
+  and gr.first_moved between pk.start_date and pk.end_date
+  and pk.period=0  -- 27
+) s1
+group by s1.primary_key,s1.part_key,s1.part_no,s1.period,s1.start_date,s1.end_date
 /*
 select
 top 10
