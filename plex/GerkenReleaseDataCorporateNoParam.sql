@@ -9,10 +9,17 @@
 -- @Start_Date datetime = '20200801'
 -- @Work_Days int = 20
 
+Declare @Start_Date datetime 
+
+--set @Start_Date = '20200801'
+set @Start_Date = GETDATE()
+
+Declare @Work_Days datetime
+set @Work_Days = 20
+
 Declare @End_Date datetime
---2 reports
---GerkenReleaseDataCorporateNoParam
---GerkenReleaseDataCorporate
+
+
 
 -- Make sure time starts at 12am.
 set @Start_Date = datefromparts(DATEPART(YEAR,@Start_Date),DATEPART(MONTH,@Start_Date), DATEPART(DAY,@Start_Date));
