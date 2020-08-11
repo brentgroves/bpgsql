@@ -11,7 +11,7 @@
 
 Declare @Start_Date datetime 
 
---set @Start_Date = '20200801'
+-- set @Start_Date = '20200801'
 set @Start_Date = GETDATE()
 
 Declare @Work_Days datetime
@@ -19,10 +19,28 @@ set @Work_Days = 20
 
 Declare @End_Date datetime
 
+Declare @PCN int
+--set @PCN = 	295933  -- Franklin
+set @PCN = 	295932  -- Fruitport
 
+
+Declare @start_of_week_for_start_date datetime
+Declare @start_year char(4)
+Declare @start_week int
+
+set @start_year = DATEPART(YEAR,@Start_Date)
+set @start_week = DATEPART(WEEK,@Start_Date)
+
+if DATEPART(WEEK,@Start_Date) = 1
+set @start_of_week_for_start_date = datefromparts(DATEPART(YEAR,@Start_Date), 1, 1)
+else
+set @start_of_week_for_start_date = DATEADD(wk, DATEDIFF(wk, 6, '1/1/' + @start_year) + (@start_week-1), 7)  --start of week
+
+set @Start_Date = @start_of_week_for_start_date
 
 -- Make sure time starts at 12am.
 set @Start_Date = datefromparts(DATEPART(YEAR,@Start_Date),DATEPART(MONTH,@Start_Date), DATEPART(DAY,@Start_Date));
+
 
 
 with cte_business_days(date,workDays) as
@@ -53,6 +71,8 @@ option (maxrecursion 100);
 
 set @End_Date = DATEADD(second,-1,DATEADD(day,1,@End_Date))
 
+
+
 --/* testing 0
 -- select @Start_Date, @End_Date
 --*/ end testing 0 
@@ -64,63 +84,54 @@ primary_key: Determine primary key of result set.
 create table #primary_key
 (
   primary_key int,
+  PCN int,
   part_key int,
   part_no varchar(100),
   name varchar(100)
 )
-insert into #primary_key(primary_key,part_key,part_no,name)
+insert into #primary_key(primary_key,PCN,part_key,part_no,name)
 (
   select 
   ROW_NUMBER() OVER (
     ORDER BY part_no
   ) primary_key,
+  s1.PCN,
   s1.part_key,
   s1.part_no,
   s1.name
   from
   (
-  
+
   select 
-  -- count(*) cnt
-  -- sr.release_key,
-  -- sr.release_no,
-  distinct p.part_key,part_no,name
-  -- c.quantity
+  distinct p.plexus_customer_no PCN,p.part_key,p.part_no,p.name
+
+-- COUNTS ARE FOR FRUITPORT ON 08/05
+  from part_v_part_e as p  -- 735
+
+  inner join part_v_part_operation_e o  -- 4335
+  on p.part_key=o.part_key  -- 1 to many
+
+  inner join part_v_container_e as c  -- 2,597,167
+  on o.part_operation_key=c.part_operation_key -- 1 to many; only operation_key is necessary  
   
-  from sales_v_release sr
-  inner join sales_v_release_status rs  -- 4988
-  on sr.release_status_key = rs.release_status_key -- 1 to 1  
-  inner join sales_v_po_line as pl  -- 4988
-  on sr.po_line_key = pl.po_line_key  -- 1 to 1
-  inner join sales_v_po as po  -- 4988
-  on pl.po_key = po.po_key  -- 1 to 1
-  inner join sales_v_po_status as ps  -- 4988
-  on po.po_status_key = ps.po_status_key  -- 1 to 1
-  inner join part_v_part as p  -- 4988
-  on pl.part_key = p.part_key  -- 1 to 1 
-  inner join part_v_part_operation o
-  on p.part_key=o.part_key
-  inner join part_v_container as c  -- 97,391,628
-  on pl.part_key = c.part_key  -- 1 to many
-  and o.part_operation_key=c.part_operation_key
-  inner join part_v_container_status as cs  -- 97,391,628
+  inner join part_v_container_status_e as cs  -- 2,597,167
   on c.container_status = cs.container_status  -- 1 to 1
-  where c.active = 1  -- 86,513
-  and (rs.release_status ='Open' or rs.release_status = 'Scheduled')  -- 4910
-  and sr.ship_date between @Start_Date and @End_Date  -- 883
-  and sr.quantity > 0  -- 844
-  and pl.active = 1  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  and ps.active = 1  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  -- 2 records do not have an EDI line and Release no.  What does that mean?
-  and p.part_source_key = 373  -- 844 All of the records for this set have this source_key; so I don't know if this line is necessary
-  and p.part_status not in ('Obsolete','Inactive')  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  and p.part_no <> 'Melt'  -- 844 None in this set so I don't know if this line is necessary
---  and c.container_status in ('OK','Loaded','Safe Launch','Quality PPAP') -- 794 I don't think 'Safe Launch' and 'Quality PPAP' is a container status. 
-  and cs.allow_ship = 1  -- 844 Same as container_status in ('OK','Loaded','Staged')
-  and o.shippable=1  --844 Joining to the part_operation table adds more time to query and does not filter any additional records   
-  
+
+  where 
+  c.active = 1  -- 2335  -- FRUITPORT
+  and (p.part_source_key = 373  or p.part_source_key = 788 ) -- 2000 All of the records for this set have this source_key; so I don't know if this line is necessary
+  and p.part_status not in ('Obsolete','Inactive')  -- 2000 All of the records for this set are active; so I don't know if this line is necessary
+  and p.part_no <> 'Melt'  -- 1964 
+  and cs.allow_ship = 1  -- 1932 -- PPAP or quality
+  and o.shippable=1  --627 Joining to the part_operation table adds more time to query and does not filter any additional records --4411,releases
   )s1
 )
+
+
+
+-- select* from #primary_key
+-- Release total quantities
+
 
 create table #set2groupB
 (
@@ -137,45 +148,27 @@ insert into #set2groupB(part_key,part_no,quantity)
   p.part_key,
   p.part_no,
   sr.quantity
-  from sales_v_release sr
-  inner join sales_v_release_status rs  -- 4988
+  -- COUNTS ARE FOR FRUITPORT ON 08/05
+  from sales_v_release_e sr -- 36,712
+  inner join sales_v_release_status_e rs  -- 36,712
   on sr.release_status_key = rs.release_status_key -- 1 to 1  
-  inner join sales_v_po_line as pl  -- 4988
+  inner join sales_v_po_line_e as pl  -- 36,712
   on sr.po_line_key = pl.po_line_key  -- 1 to 1
-  inner join sales_v_po as po  -- 4988
+  inner join sales_v_po_e as po  -- 36,712
   on pl.po_key = po.po_key  -- 1 to 1
-  inner join sales_v_po_status as ps  -- 4988
+  inner join sales_v_po_status_e as ps  -- 36,712
   on po.po_status_key = ps.po_status_key  -- 1 to 1
-  inner join part_v_part as p  -- 4988
+  inner join part_v_part_e as p  -- 36,712
   on pl.part_key = p.part_key  -- 1 to 1 
---  inner join part_v_part_operation o
---  on p.part_key=o.part_key
---  inner join part_v_container as c  -- 97,391,628
---  on pl.part_key = c.part_key  -- 1 to many
---  and o.part_operation_key=c.part_operation_key
---  inner join part_v_container_status as cs  -- 97,391,628
---  on c.container_status = cs.container_status  -- 1 to 1
   where 
-  (rs.release_status ='Open' or rs.release_status = 'Scheduled')  -- 4910
-  and sr.ship_date between @Start_Date and @End_Date  -- 883
-  and sr.quantity > 0  -- 844
-  and pl.active = 1  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  and ps.active = 1  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  -- 2 records do not have an EDI line and Release no.  What does that mean?
-  and p.part_source_key = 373  -- 844 All of the records for this set have this source_key; so I don't know if this line is necessary
-  and p.part_status not in ('Obsolete','Inactive')  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  and p.part_no <> 'Melt'  -- 844 None in this set so I don't know if this line is necessary
-  
+  (rs.release_status ='Open' or rs.release_status = 'Scheduled')  -- 1,289
+  and sr.ship_date between @Start_Date and @End_Date  -- 287
+  and sr.quantity > 0  -- 285
 )  
---  and c.container_status in ('OK','Loaded','Safe Launch','Quality PPAP') -- 794 I don't think 'Safe Launch' and 'Quality PPAP' is a container status. 
-
---  and cs.allow_ship = 1  -- 844 Same as container_status in ('OK','Loaded','Staged')
---  and o.shippable=1  --844 Joining to the part_operation table adds more time to query and does not filter any additional records  
-
 -- select count(*) cnt from #set2groupB
 -- select top 100 * from #set2groupB
 
-
+-- Inventory totals
 create table #set2groupA
 (
   part_key int,
@@ -188,24 +181,45 @@ insert into #set2groupA(part_key,quantity)
   select 
   p.part_key,
   c.quantity
-  from part_v_part as p  -- 4988
-  inner join part_v_part_operation o
-  on p.part_key=o.part_key
-  inner join part_v_container as c  -- 97,391,628
-  on o.part_operation_key=c.part_operation_key
-  inner join part_v_container_status as cs  -- 97,391,628
+  
+-- COUNTS ARE FOR FRUITPORT ON 08/05
+  from part_v_part_e as p  -- 735
+
+  inner join part_v_part_operation_e o  -- 4335
+  on p.part_key=o.part_key  -- 1 to many
+
+  inner join part_v_container_e as c  -- 2,597,167
+  on o.part_operation_key=c.part_operation_key -- 1 to many; only operation_key is necessary  
+  
+  inner join ( 
+    select container_status,max(allow_ship) allow_ship 
+    from
+    (
+      select distinct container_status,allow_ship from part_v_container_status_e as cs --order by container_status -- 2,597,167
+    )s
+    group by container_status
+  -- select container_status,allow_ship from part_v_container_status_e as cs order by container_status  -- 2,597,167
+  )cs
   on c.container_status = cs.container_status  -- 1 to 1
-  where c.active = 1  -- 86,513
-  and p.part_source_key = 373  -- 844 All of the records for this set have this source_key; so I don't know if this line is necessary
-  and p.part_status not in ('Obsolete','Inactive')  -- 844 All of the records for this set are active; so I don't know if this line is necessary
-  and p.part_no <> 'Melt'  -- 844 None in this set so I don't know if this line is necessary
-  and cs.allow_ship = 1  -- 844 Same as container_status in ('OK','Loaded','Staged')
-  and o.shippable=1  --844 Joining to the part_operation table adds more time to query and does not filter any additional records 
+
+  where 
+  c.active = 1  -- 2335  -- FRUITPORT
+  and (p.part_source_key = 373  or p.part_source_key = 788 )  -- 2000 All of the records for this set have this source_key; so I don't know if this line is necessary
+  and p.part_status not in ('Obsolete','Inactive')  -- 2000 All of the records for this set are active; so I don't know if this line is necessary
+  and p.part_no <> 'Melt'  -- 1964 
+  and cs.allow_ship = 1  -- 1932 -- PPAP or quality
+  and o.shippable=1  --627 Joining to the part_operation table adds more time to query and does not filter any additional records 
 )
 
--- select count(*) #set2groupA from #set2groupA  --844
-
--- select top 10 * from #set2groupA
+-- select count(*) #set2groupA from #set2groupA  --627
+/*
+select top 10 * 
+from #set2groupA a
+where a.part_key = 2800320
+inner join part_v_part p
+on a.part_key=p.part_key
+where p.part_no = '001-0408-04'
+*/
 create table #price
 (
   part_key int,
@@ -233,14 +247,13 @@ insert into #price(part_key,price)
       from
       (
         select
-        top 100
         pl.part_key,
         pr.Effective_Date
         -- pr.price_key,
         -- pr.price
-        from sales_v_price pr
-        inner join sales_v_po_line pl
-        on pr.po_line_key=pl.po_line_key
+        from sales_v_price_e pr
+        inner join sales_v_po_line_e pl
+        on pr.po_line_key=pl.po_line_key -- many to 1
         where 
         -- part_key = 2488053
         -- pl.part_key in (2488053,2488530)
@@ -263,13 +276,12 @@ insert into #price(part_key,price)
       from
       (
         select
-        top 100
         pl.part_key,
         pr.Effective_Date,
         pr.price_key
         -- pr.price
-        from sales_v_price pr
-        inner join sales_v_po_line pl
+        from sales_v_price_e pr
+        inner join sales_v_po_line_e pl
         on pr.po_line_key=pl.po_line_key
         where 
         -- part_key = 2488053
@@ -288,9 +300,9 @@ insert into #price(part_key,price)
     on s2.part_key=s3.part_key
     and s2.effective_date=s3.effective_date  -- 1 to many
     group by s2.part_key,s2.effective_date
-      
+
   )s4
-  inner join sales_v_price pr
+  inner join sales_v_price_e pr
   on s4.price_key=pr.price_key
 )  
 
@@ -298,9 +310,11 @@ insert into #price(part_key,price)
 -- select count(*) #price from #price
 -- select * from #price
 
+
 create table #result
 (
   primary_key int,
+  PCN int,
   part_key int,
   part_no varchar(100),
   name varchar(100),
@@ -310,26 +324,46 @@ create table #result
   release_quantity int
 )
 
-insert into #result (primary_key,part_key,part_no,name,unit_price,total_quantity,total_price,release_quantity)
+insert into #result (primary_key,PCN,part_key,part_no,name,unit_price,total_quantity,total_price,release_quantity)
 (
   select 
-  pk.primary_key,
-  pk.part_key,
-  pk.part_no,
-  pk.name,
-  s2.unit_price,
-  s2.total_quantity,
-  s2.total_price,
-  s2.release_quantity
+  s2.primary_key,
+  s2.PCN,
+  s2.part_key,
+  s2.part_no,
+  s2.name,
+
+  case
+    when s2.unit_price is null then 0.00
+    else s2.unit_price
+  end unit_price,
+
+  case
+    when s2.total_quantity is null then 0.00
+    else s2.total_quantity
+  end total_quantity,
+  case
+    when s2.total_price is null then 0.00
+    else s2.total_price
+  end total_price,
+  case
+    when s2.release_quantity is null then 0.00
+    else s2.release_quantity
+  end release_quantity
   from
   (
     select 
-    s1.part_key,
+    pk.primary_key,
+    pk.PCN,
+    pk.part_key,
+    pk.part_no,
+    pk.name,
     s1.quantity total_quantity,
     pr.price unit_price,
     s1.quantity * pr.price total_price,
     s0.release_quantity
-    from 
+    from #primary_key pk
+    left outer join
     (
       select
       sg.part_key,
@@ -337,7 +371,8 @@ insert into #result (primary_key,part_key,part_no,name,unit_price,total_quantity
       from #set2groupA sg -- 729
       group by sg.part_key
     )s1
-    inner join
+    on pk.part_key=s1.part_key
+    left outer join
     (
       select
       sb.part_key,
@@ -345,17 +380,17 @@ insert into #result (primary_key,part_key,part_no,name,unit_price,total_quantity
       from #set2groupB sb
       group by sb.part_key
     )s0
-    on s1.part_key=s0.part_key
-    inner join #price pr 
-    on s1.part_key = pr.part_key 
+    on pk.part_key=s0.part_key
+    left outer join #price pr 
+    on pk.part_key = pr.part_key 
   )s2
-  inner join #primary_key pk
-  on s2.part_key=pk.part_key
 )
 
 -- select count(*) cnt from #result
-select 
+select
+PCN,
 part_no,
+part_key,
 name,
 unit_price,
 total_quantity,
@@ -388,7 +423,7 @@ from #result
   inner join part_v_container_status as cs  -- 97,391,628
   on c.container_status = cs.container_status  -- 1 to 1
   where c.active = 1  -- 86,513
-  and p.part_source_key = 373  -- 844 All of the records for this set have this source_key; so I don't know if this line is necessary
+  and (p.part_source_key = 373  or p.part_source_key = 788 )  -- 844 All of the records for this set have this source_key; so I don't know if this line is necessary
   and p.part_status not in ('Obsolete','Inactive')  -- 844 All of the records for this set are active; so I don't know if this line is necessary
   and p.part_no <> 'Melt'  -- 844 None in this set so I don't know if this line is necessary
   and cs.allow_ship = 1  -- 844 Same as container_status in ('OK','Loaded','Staged')

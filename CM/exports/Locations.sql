@@ -1,10 +1,13 @@
+select count (*) cnt from (
 select 
 st.Crib, 
 st.CribBin,
-SUBSTRING(st.CribBin,1,2) pre,
 st.item
 from STATION st 
 where SUBSTRING(st.CribBin,1,2) = '12' 
+order by st.item
+--and st.CribBin like '12-A01A0%'
+)s1  -- 269
 /*
  * 
  * 
