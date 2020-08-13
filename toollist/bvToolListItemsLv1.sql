@@ -1,5 +1,11 @@
-SELECT     [User], Job, Machine, D_Consumer, item, D_Item, plant
-FROM         dbo.bfToolBossItemsInPlant(11) AS bfToolBossItemsInPlant_1
+select * from bvToolListItemsInPlants where originalprocessid = 50542
+
+
+select * from [ToolList Master] tm 
+where
+tm.ProcessId = 	62521  -- there are 2 tool lists for the same part and operation so I will pick the newest one.
+--tm.ProcessId = 	62521 -- OPID=50542,10049132 JT REAR CARRIER-NON ELD,Released
+
 
 DECLARE	@return_value int
 
