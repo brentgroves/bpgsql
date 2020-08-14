@@ -3,52 +3,107 @@
  *  Plex screen: Master Tool List 
  */
 /*
-Part No,
-Tool No,
-Drawing No,
-Revision,
-Description,
-Extra Description,
-Tool Type,
-Tool Group,
-Tool Status,
-Grade,Storage Location,
-Min Qty,Tool Life,
-Reworked Tool Life,
-Std Reworks,
-Action,
-Serialize,
-Purchasing Description,
-Tool Product Line,
-Source,
-Replenish Qty,
-Supplier Code,
-Price,
-Accounting Job No,
-Customer Code,
-Max Recuts,
-Recut Length,
-Recut Unit,
-Auto Pick,
-Storage Section,
-Storage Row,
-Storage Rack,
-Storage Rack Side,
-Storage Position,
-Tool Dimensions,
-Tool Weight,
-Output Per Cycle,
-Design Cycle Time,
-Press Size,
-Drawing/Data Date
+1. Part No (Only used if customer setting Display Job No on Form is active)
+2. Tool No*
+3. Drawing No
+4. Revision
+5. Description
+6. Extra Description
+7. Tool Type*
+8. Tool Group*
+9. Tool Status*
+10. Grade
+11. Storage Location
+12. Min Qty
+13. Tool Life (Max of 99,999,999)
+14. Reworked Tool Life
+15. Std Reworks
+16. Action
+17. Serialize (0 or 1)*
+18. Purchasing Description
+19. Tool Product Line
+20. Source
+21. Replenish Qty
+22. Supplier Code
+23. Price
+24. Accounting Job No
+25. Customer Code
+26. Max Recuts
+27. Recut Length
+28. Recut Unit
+29. Auto Pick (0 or 1)
+30. Storage Section
+31. Storage Row
+32. Storage Rack
+33. Storage Rack Side
+34. Storage Position
+35. Tool Dimensions
+36. Tool Weight
+37. Ouput Per Cycle
+38. Design Cycle Time
+39. Press Size
+40. Drawing/Data Date
+
+* indicates required field.
+ 
+ 
+Notes
+What does the 0 and 1 represent for fields Serialize and Auto Pick? 
+True = 1, False = 0    Auto Pick is part of a specific process designed for one customer and does not apply to most other customers.
+
+What is Replenish Quantity? 
+Used in TRP.
+ 
+The Tool Type must be the description of the Tool Type
+ 
+
+
+select brief_description, description from purchasing_v_item i
+left outer join purchasing_v_item_type it
+on i.item_type_key=it.item_type_key  --1 to 1
+select * from purchasing_v_item_type in (17139)
+
+--select distinct tool_group_code  -- Body,Heads,Mach,Mill
+
+-- select distinct tool_group_code from part_v_tool_group
+
+-- select distinct item_category from purchasing_v_item_category i 
+select tg.tool_group_code,ic.item_category from part_v_tool_group tg left outer join purchasing_v_item_category ic on trim(tg.tool_group_code)=trim(ic.item_category)
+
 */
 
   select 
    --top 100
 	row_number() OVER(ORDER BY i.item_no ASC) AS row_no,
-  i.item_no,
-  i.brief_description,
-  i.description,
+	'' Part_No,  -- This will be blank, since we don't assign part numbers to assemblies and not supply list items. 
+  i.item_no Tool_No,
+  '' Drawing_No, -- We don't assign a drawing to a supply list item
+  '' Revision,  -- We don't have supply list item revisions 
+  i.brief_description Description,  -- This could change to the contents of i.description if desired look at the data and the plex screens.
+  i.description Extra_Description,
+  ic.item_category Tool_Type,
+  -- select distinct item_category from purchasing_v_item i inner join purchasing_v_item_category ic on i.item_category_key=ic.item_category_key
+  'Mill' Tool_Group,-- Alabama uses (Body,Heads,Mach,Mill) but most of them are Mill
+  -- select * from part_v_tool_status
+  'Current Production' Tool_Status,
+  '' Grade,
+  il.location Storage_Location,  -- NOT DONE if toolboss items then TBOSS-12-FRONT OR TBOSS-12-REAR  else CribLocation.
+  1 Min_Qty,
+  '' Tool_Life,  -- We don't use this.  I believe a tool_life record is created with this tool_key if this column contains a value.
+  '' Reworked_Tool_Life,  -- This is a column in the the tool_life table.
+  '' Std_Reworks, -- Maybe this is true or false for a reworked no,
+  '' Action,
+  0 Serialize,
+  '' Purchasing_Description, -- Always blank in Alabama
+  '' Tool_Product_Line, -- In common scale table
+  '' Source,  -- No idea what this is
+  '' Replenish_Qty,
+  
+  -- START HERE
+  '' Supplier_Code, -- MANY ALABAMA TOOLING HAVE A SUPPLIER NO SO GET THIS
+  
+  
+  -- END OF TOOLING TEMPLATE FIELDS
   i.note,
   it.item_type, -- nulls are NOT allowed
   -- select * from purchasing_v_item i where i.item_type_key is null --0 REC
@@ -98,8 +153,10 @@ Drawing/Data Date
 	i.cube_width,
 	i.cube_height,
 	u.unit cube_unit
-  from purchasing_v_item i
-  left outer join purchasing_v_item_type it
+	-- select count(*) cnt  
+	-- COUNTS FROM EDON ON 08/14
+  from purchasing_v_item i  -- 29849
+  left outer join purchasing_v_item_type it --29,849
   on i.item_type_key=it.item_type_key  --1 to 1
   left outer join purchasing_v_item_group ig
   on i.item_group_key=ig.item_group_key --1 to 1
@@ -109,24 +166,65 @@ Drawing/Data Date
   on i.item_priority_key=ip.item_priority_key  --1 to 1
   left outer join purchasing_v_tax_code t
   on i.tax_code_no=t.tax_code_no  -- 1 to 1
-  left outer join sales_v_harmonized_tariff_code tc
+  left outer join sales_v_harmonized_tariff_code tc  -- 29,849
   on i.harmonized_tariff_code_key=tc.harmonized_tariff_code_key  -- 1 to 1
  -- left outer join #ItemSupplierPrice sp
 --  on i.item_key=sp.item_key
   left outer join purchasing_v_commodity c  -- no supply item has a commodity_code_key. and the key does not exactly match
   on i.commodity_code_key=c.commodity_key
   left outer join common_v_unit u
-  on i.cube_unit_key=u.unit_key
+  on i.cube_unit_key=u.unit_key  -- 29,849
+  left outer join 
+  (
+    select
+    il.item_key,
+    il.location
+    from 
+    (
+      select
+      s1.item_key,
+      s1.quantity,
+      max(s2.item_location_key) item_location_key
+      from
+      (
+        select item_key, max(quantity) quantity 
+        from purchasing_v_item_location il group by item_key
+      ) s1 
+      inner join 
+      (
+        select item_location_key,item_key,quantity 
+        from purchasing_v_item_location il 
+      ) s2   
+      on s1.item_key = s2.item_key  
+      and s1.quantity = s2.quantity  -- 1 to many
+      group by s1.item_key,s1.quantity
+    ) s3 
+    inner join purchasing_v_item_location il 
+    on s3.item_location_key=il.item_location_key
+  ) il 
+  on i.item_key=il.item_key
   where 
- item_no in ('16303')
- -- i.item_no = '16303'
+-- item_no in ('16303')
+ item_no = '16293'
  -- i.active=1
 --  and i.item_no not like '%[-" ]%'  -- we don't want any records with item_no containing a dash, double-quote, or space.
 --  and brief_description <> ''  -- These might be in Edon already but they are not in our list to make inactive because
   -- our comparision check is for stipped leading zeros and for the brief_description to match.
 
 -- 2753842	LB5C-5K651-BF, Control Arm,
-
+/*
+select 
+i.item_no
+from
+(
+  select item_key, count(*) cnt
+  from purchasing_v_item_location il 
+  group by item_key
+  having count(*) > 1 and max(quantity) > 0
+) il 
+inner join purchasing_v_item i 
+on il.item_key=i.item_key
+*/
 /*
  * plxSupplyItem 
  * SUPPLY ITEM UPLOAD
@@ -506,6 +604,7 @@ insert into #SupplyItem (
 
 )
 
+/*
 select 
   -- top 1 
   row_no,
@@ -565,6 +664,7 @@ select
 --select count(*)
 from  #SupplyItem  --18643
 WHERE item_no in ('16303')
+*/
 --('BE450713','BE705620','BE706816','BE850567','BE851453')
 -- WHERE item_no >= 'BE851453' and item_no <= 'BE450589' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 1400 records. THIS WORKS
 -- WHERE item_no >= 'BE207212' and item_no <= 'BE450589' order by item_no -- TRY BIG SET DOWNLOAD AND IMPORT INTO MYSQL with 1400 records. 
