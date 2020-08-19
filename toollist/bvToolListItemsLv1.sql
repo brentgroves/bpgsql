@@ -1,4 +1,8 @@
-select * from bvToolListItemsInPlants where originalprocessid = 50542
+select
+itemNumber 
+--count(*) cnt -- 888
+from bvToolListItemsInPlants 
+where plant = 12
 
 
 select * from [ToolList Master] tm 
@@ -10,12 +14,12 @@ tm.ProcessId = 	62521  -- there are 2 tool lists for the same part and operation
 DECLARE	@return_value int
 
 EXEC	@return_value = [dbo].[bpDistinctToolLists]
-call bpDistinctToolLists bpDistinctToolLists
+call bpDistinctToolLists
 select i.* 
-from dbo.bfToolBossItemsInPlant(11) i
+from dbo.bfToolBossItemsInPlant(12) i
 inner join 
 (
-select  * from dbo.bfToolListsInPlant(11) 
+select  * from dbo.bfToolListsInPlant(12) 
 where customer = 'JOHN DEERE'
 ) jd 
 on i.job=jd.originalprocessid
@@ -145,6 +149,10 @@ from
 			else m.Quantity/30
 		end DailyUsage  
 		FROM [ToolList Misc] as m 
+		select top 100 * from  [ToolList Misc] as m 
+		select top 100 * from  [ToolList Item] as m 
+		select top 100 * from [TOOLLIST Fixture] as tf
+		select * from [ToolList Toolboss Stock Items]
 		INNER JOIN 
 		(
 			-- these are the toollist which are added to the toolbosses
