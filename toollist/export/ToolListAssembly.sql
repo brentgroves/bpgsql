@@ -1,19 +1,23 @@
 -- Busche Tool List
 
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-create table
+create table ToolListAssembly
 (
-Assembly_No	varchar (50), --Assembly No,
-Tool_Assembly_Type	varchar (50), --Tool Assembly Type,
-Description	varchar (100), --Description,
-Part_No	varchar (100), --Part No,
-Revision	varchar (8), --Part Revision,
-Operation_Code	varchar (30), --Operation,
-Tool_Assembly_Status	varchar (50),  --Tool Assembly Status
-Include_In_Analysis smallint,  --Include in Analysis
-Analysis_Note	varchar (500), --Analysis Note,
-Note	varchar (500), -- Note,
-Location varchar (5) --	I don't know what this is 
+	Assembly_No	varchar (50), --Assembly No,
+	Tool_Assembly_Type	varchar (50), --Tool Assembly Type,
+	Description	varchar (100), --Description,
+	Part_No	varchar (100), --Part No,
+	Revision	varchar (8), --Part Revision,
+	Operation_Code	varchar (30), --Operation,
+	Tool_Assembly_Status	varchar (50),  --Tool Assembly Status
+	Include_In_Analysis smallint,  --Include in Analysis
+	Analysis_Note	varchar (500), --Analysis Note,
+	Note	varchar (500), -- Note,
+	Location varchar (5), --	I don't know what this is 
+	ProcessID int NOT NULL,
+	Plex_Part_No varchar(100) NOT NULL,
+	Revision varchar(8) NOT NULL,
+	Operation_Code	varchar (30) NOT NULL
 )
 select 
 tl.partNumber, -- This is old.  Map a part number,revision,and operation to each processID
@@ -23,21 +27,32 @@ case
 end Assembly_No,
 'Machining' Tool_Assembly_Type,
 tt.OpDescription Description,
--- tl.partNumber,  -- This is the location for the import file.
-'1' Part_Revision, -- This is old.  Map a Plex part number,revision,and operation to each processID; 
-'Machine Complete' Operation,
+tl.PartNumber,
+m.Plex_Part_No Part_No,
+m.Revision Part_Revision,
+m.Operation_Code Operation,
 'Active' Tool_Assembly_Status,
 1 Include_In_Analysis,
 '' Note,
 '' Location
+
 -- select * 
 from dbo.bvToolListsInPlants tl  -- 30
 --where tl.processid = 56730
 left outer join [ToolList Tool] tt  -- 307
 on tl.processid = tt.ProcessID
+left outer join TL_Plex_PN_Op_Map m 
+on tl.processid = m.processid
 where tl.plant = '12'
 order by tl.partNumber,tt.ToolNumber
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
+
+/*
+ * 
+62421	6788776	2	Machine A-WIP
+62422	6788776	2	Machine A-WIP
+62423	6788776	2	Machine Complete
+ */
 
 create table TL_Plex_PN_Map
 (
