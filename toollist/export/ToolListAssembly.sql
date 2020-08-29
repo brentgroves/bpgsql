@@ -8,52 +8,112 @@ create table ToolListAssembly
 	Description	varchar (100), --Description,
 	Part_No	varchar (100), --Part No,
 	Revision	varchar (8), --Part Revision,
-	Operation_Code	varchar (30), --Operation,
+	Operation	varchar (30), --Operation_Code in Plex,
 	Tool_Assembly_Status	varchar (50),  --Tool Assembly Status
 	Include_In_Analysis smallint,  --Include in Analysis
 	Analysis_Note	varchar (500), --Analysis Note,
 	Note	varchar (500), -- Note,
 	Location varchar (5), --	I don't know what this is 
-	ProcessID int NOT NULL,
-	Plex_Part_No varchar(100) NOT NULL,
-	Revision varchar(8) NOT NULL,
-	Operation_Code	varchar (30) NOT NULL
+	-- ProcessID int NOT NULL,
+	-- Plex_Part_No varchar(100) NOT NULL,
+	-- Revision varchar(8) NOT NULL,
+	-- Operation_Code	varchar (30) NOT NULL
 )
-select 
-tl.partNumber, -- This is old.  Map a part number,revision,and operation to each processID
-case 
-	when tt.ToolNumber < 10 then 'T0' + cast(tt.ToolNumber as varchar(3))
-	else 'T' + cast(tt.ToolNumber as varchar(3)) 
-end Assembly_No,
-'Machining' Tool_Assembly_Type,
-tt.OpDescription Description,
-tl.PartNumber,
-m.Plex_Part_No Part_No,
-m.Revision Part_Revision,
-m.Operation_Code Operation,
-'Active' Tool_Assembly_Status,
-1 Include_In_Analysis,
-'' Note,
-'' Location
+-- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
 
--- select * 
-from dbo.bvToolListsInPlants tl  -- 30
---where tl.processid = 56730
-left outer join [ToolList Tool] tt  -- 307
-on tl.processid = tt.ProcessID
-left outer join TL_Plex_PN_Op_Map m 
-on tl.processid = m.processid
-where tl.plant = '12'
-order by tl.partNumber,tt.ToolNumber
+	select 
+	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
+	tl.Part_No,tl.Part_Revision,tl.Operation,
+	case 
+		when ag.Count_PN_Rev_Assembly_No > 1 then tl.Assembly_No + '-' + tl.OperationDescription 
+		else tl.Assembly_No
+	end Assembly_No,
+	tl.Tool_Assembly_Type,tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
+	from 
+	(
+		select
+		tl.OperationDescription,
+		case 
+			when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
+			when (tt.ToolNumber >= 10) then 'T' + cast(tt.ToolNumber as varchar(3))
+		end Assembly_No,
+		'Machining' Tool_Assembly_Type,
+		tt.OpDescription Description,
+		-- tl.PartNumber,
+		m.Plex_Part_No Part_No,
+		m.Revision Part_Revision,
+		m.Operation_Code Operation,
+		'Active' Tool_Assembly_Status,
+		1 Include_In_Analysis,
+		'' Analysis_Note,
+		'' Note,
+		'' Location
+		
+		-- select * from bvToolListsInPlants where partNumber = '10049132' -- ,pid= 50542,  in map pid 61788
+		-- select count(*) cnt
+		from bvToolListsInPlants tl
+		inner join [ToolList Tool] tt  -- 307
+		on tl.processid = tt.ProcessID
+		inner join TL_Plex_PN_Op_Map m 
+		on tl.processid = m.processid  -- 307
+	)tl
+	inner join 
+	(
+		select Assembly_No,Part_No,Part_Revision,Operation,count(*) Count_PN_Rev_Assembly_No
+		from 
+		(
+			select 
+			case 
+				when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
+				when (tt.ToolNumber >= 10) then 'T' + cast(tt.ToolNumber as varchar(3))
+			end Assembly_No,
+			m.Plex_Part_No Part_No,
+			m.Revision Part_Revision,
+			m.Operation_Code Operation
+			-- select * from bvToolListsInPlants where partNumber = '10049132' -- ,pid= 50542,  in map pid 61788
+			-- select count(*) cnt
+			from bvToolListsInPlants tl
+			inner join [ToolList Tool] tt  -- 307
+			on tl.processid = tt.ProcessID
+			inner join TL_Plex_PN_Op_Map m 
+			on tl.processid = m.processid  -- 307
+		)tl 
+		group by Assembly_No,Part_No,Part_Revision,Operation
+	)ag	
+	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation = ag.Operation 
+	where tl.Part_No = '6788776'
+	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
+/*
+		select tl.Plant,tl.processid,tl.OperationDescription,tl.partNumber,tl.Plex_Part_No,tl.Revision,tl.Operation_Code,co.Count_CNC_Operations
+		from 
+		(
+			select tl.Plant,tl.processid,tl.OperationDescription,tl.partNumber,m.Plex_Part_No,m.Revision,m.Operation_Code 
+			from dbo.bvToolListsInPlants tl  -- 30
+		 	inner join TL_Plex_PN_Op_Map m 
+		 	on tl.processid = m.processid
+		) tl 
+		left outer join 
+		(
+		 	select m.Plex_Part_No, count(*) Count_CNC_Operations 
+			from dbo.bvToolListsInPlants tl  -- 30
+		 	inner join TL_Plex_PN_Op_Map m 
+		 	on tl.processid = m.processid
+		 	group by m.Plex_Part_No,m.Revision 
+		) co 
+		on tl.Plex_Part_no = co.Plex_Part_No
+		-- order by tl.Plex_Part_No
 
+ */
 /*
  * 
 62421	6788776	2	Machine A-WIP
 62422	6788776	2	Machine A-WIP
 62423	6788776	2	Machine Complete
  */
-
+/* Obsolete use TL_Plex_PN_Op_Map
+ * but only place that has the Busche ToolList part number
+ */
 create table TL_Plex_PN_Map
 (
 TL_Part_No	varchar (100), --Part No,
@@ -95,21 +155,6 @@ select * from TL_Plex_PN_Map order by TL_Part_No
 /*
  * All Assemblies for Edon ToolLists
  */
-(
-select 
-tl.processid,
-tl.descript,
-tl.partNumber 
--- select count(*)  --
--- select tl.processid 
-from dbo.bvToolListsInPlants tl  -- 30
---where tl.processid = 56730
-left outer join [ToolList Tool] tt  -- 307
-on tl.processid = tt.ProcessID
-where tl.plant = '12'
--- and tt.processID is null  -- 0
-)
-i
 select distinct processid,partNumber from dbo.bvToolListsInPlants where plant = '12'  -- 30
 
 
