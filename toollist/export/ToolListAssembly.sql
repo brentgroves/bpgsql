@@ -23,12 +23,13 @@ create table ToolListAssembly
 
 	select 
 	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
-	tl.Part_No,tl.Part_Revision,tl.Operation,
+	-- tl.Part_No,tl.Part_Revision,tl.Operation,
 	case 
 		when ag.Count_PN_Rev_Assembly_No > 1 then tl.Assembly_No + '-' + tl.OperationDescription 
 		else tl.Assembly_No
 	end Assembly_No,
-	tl.Tool_Assembly_Type,tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
+	tl.Tool_Assembly_Type,
+	tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
 	from 
 	(
 		select
@@ -85,6 +86,25 @@ create table ToolListAssembly
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
 /*
+ * select * 
+ * update TL_Plex_PN_Op_Map
+ set Operation_Code = 'Machine A - WIP'
+ from TL_Plex_PN_Op_Map m where m.plex_part_no = '6788776' and m.Operation_Code = 'Machine A-WIP'
+ * order by PLex_Part_No,Revision
+ * Machine A - WIP
+ * select * from [ToolList Tool] tt where processID in (62421,62422,62423)
+ * ProcessID|ToolNumber|OpDescription     
+---------|----------|------------------
+    62421|         1|CORE DRILL        
+    62421|         2|ID BORE AND FACE  
+    62421|         3|OD CHAMFER        
+    62421|         4|ROUGH BORE AND FAC
+    62422|         2|FINISH FACE       
+    62422|         3|ROUGH OD AND FACE 
+    62422|         4|FINISH OD         
+    62423|         1|STEP DRILL        
+    62423|         2|BEBURR AND CHAMFER
+    
 		select tl.Plant,tl.processid,tl.OperationDescription,tl.partNumber,tl.Plex_Part_No,tl.Revision,tl.Operation_Code,co.Count_CNC_Operations
 		from 
 		(
