@@ -19,18 +19,25 @@ on ap.operation_key=o.operation_key  -- 1 to 1
 -- Busche Tool List
 
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-create table ToolListAssembly
+select * from ToolListAssembly 
+-- drop table PlexToolListAssembly
+select * from dbo.PlexToolListAssembly 
+create table PlexToolListAssembly
 (
+	ProcessID int,
+	ToolNumber int,
 	Assembly_No	varchar (50), --Assembly No,
 	Part_No	varchar (100), --Part No,
 	Part_Revision	varchar (8), --Part Revision,
 	Operation_Code	varchar (30) --Operation_Code in Plex
 )
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-insert into ToolListAssembly (Assembly_No,Part_No,Part_Revision,Operation_Code )
+insert into PlexToolListAssembly (ProcessID,ToolNumber,Assembly_No,Part_No,Part_Revision,Operation_Code )
 	select 
 	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
 	-- tl.Part_No,tl.Part_Revision,tl.Operation,
+	tl.ProcessID,
+	tl.ToolNumber,
 	case 
 		when ag.Count_PN_Rev_Op_Assembly_No > 1 then tl.Assembly_No + '-' + tl.OperationDescription 
 		else tl.Assembly_No
@@ -41,6 +48,8 @@ insert into ToolListAssembly (Assembly_No,Part_No,Part_Revision,Operation_Code )
 	from 
 	(
 		select
+		tl.ProcessID,
+		tt.ToolNumber,
 		tl.OperationDescription,
 		case 
 			when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
@@ -78,52 +87,40 @@ insert into ToolListAssembly (Assembly_No,Part_No,Part_Revision,Operation_Code )
 	)ag	
 	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation_Code = ag.Operation_Code 
 	where tl.Part_No = '6788776'
-	order by tl.Part_No,tl.Part_Revision,tl.Operation_Code,tl.Assembly_No
--- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
-    
-		select tl.Plant,tl.processid,tl.OperationDescription,tl.partNumber,tl.Plex_Part_No,tl.Revision,tl.Operation_Code,co.Count_CNC_Operations
-		from 
-		(
-			select tl.Plant,tl.processid,tl.OperationDescription,tl.partNumber,m.Plex_Part_No,m.Revision,m.Operation_Code 
-			from dbo.bvToolListsInPlants tl  -- 30
-		 	inner join TL_Plex_PN_Op_Map m 
-		 	on tl.processid = m.processid
-		) tl 
-		left outer join 
-		(
-		 	select m.Plex_Part_No, count(*) Count_CNC_Operations 
-			from dbo.bvToolListsInPlants tl  -- 30
-		 	inner join TL_Plex_PN_Op_Map m 
-		 	on tl.processid = m.processid
-		 	group by m.Plex_Part_No,m.Revision 
-		) co 
-		on tl.Plex_Part_no = co.Plex_Part_No
-		-- order by tl.Plex_Part_No
 
- */
-/*
- * All Assemblies for Edon ToolLists
- */
-select distinct processid,partNumber from dbo.bvToolListsInPlants where plant = '12'  -- 30
-
-
-
-SELECT ToolID, ProcessID, ToolNumber, OpDescription, Alternate, PartSpecific, AdjustedVolume, ToolOrder, Turret, ToolLength, OffsetNumber
-FROM [Busche ToolList].dbo.[ToolList Tool];
+-- -- Assembly No,Part No,Part Revision,Operation Code,Tool No,Qty,Matched Set,Station,Optional,Workcenter,Sort Order
+create table PlexToolBOM
 (
--- Make sure to update ToolLists with current part numbers 
-select ToolID,max(PartNumber) Part_No from [ToolList ToolPartNumber] group by ToolID
--- select count(*) from [ToolList ToolPartNumber]  -- 46,986
+	processid int,
+	Assembly_No	varchar (50), --Assembly No,
+	Part_No	varchar (100), --Part No,
+	Part_Revision	varchar (8), --Part Revision,
+	Operation_Code	varchar (30) --Operation_Code in Plex
 )
+-- select top 10 * from  bvToolListItemsInPlants inner join [ToolList
+select a.Assembly_No,a.Part_No,a.Part_Revision,a.Operation_Code,
+lv1.itemNumber Tool_No, lv1.Quantity Qty,
+-- select Matched_Set_Key from part_v_tool_BOM where Matched_Set_Key is not null  -- 0
+'' Matched_Set,
+-- select Station_Key from part_v_tool_BOM where Station_Key is not null  -- 0
+'' Station,
+-- select Optional from part_v_tool_BOM where Optional <> 0  -- 0
+'' Optional,
+-- select Workcenter_Key from part_v_tool_BOM where Workcenter_Key is not null  -- 0
+'' Workcenter,
+-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
+0 Sort_Order
+from PlexToolListAssembly a	
+inner join bvToolListItemsOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
+on a.processid=lv1.processid   -- 1 to many
+and a.ToolNumber=lv1.ToolNumber
+order by a.Operation_Code,a.Assembly_No
 
-SELECT ItemID, ProcessID, Manufacturer, ToolType, ToolDescription, AdditionalNotes, Quantity, CribToolID, DetailNumber, ToolbossStock
-FROM [Busche ToolList].dbo.[ToolList Fixture];
+order by a.Part_No,a.Part_Revision,a.Operation_Code,a.Assembly_No
+-- select count(*) cnt from bvToolListItemsInPlants  -- 31332
+-- select count(*) cnt from bvToolListItemsInPlantsMoreInfo  -- 32578
+-- Tool No,Qty,Matched Set,Station,Optional,Workcenter,Sort Order
+--select count(*) cnt from PlexMasterToolList  -- 502
+select * from PlexMasterToolList
+select processid,itemNumber from bvToolListItemsInPlants where plant = '12'
 
-/*
-	assembly_no	Tool_Assembly_Type	Description	Part_No	Revision	Operation	Tool_Assembly_Status	Include_In_Analysis	Analysis_Note	Location	update_date
-1	T01	Machining	Renishaw Probe	10024895-JT	I	Machine Complete	Active	1			7/31/2020 1:51:00 PM
-2	T02	Machining	4" Face Mill	10024895-JT	I	Machine Complete	Active	1			7/31/2020 2:03:00 PM
-3	T03	Machining	1.25" Face Mill Cap Seats	10024895-JT	I	Machine Complete	Active	1			7/31/2020 2:07:00 PM
-4	T04	Machining	M12 Tap Drill 35MM DOC	10024895-JT	I	Machine Complete	Active	1			7/31/2020 2:10:00 PM
-5	T05	Machining	M12 TAP DRILL 38.5MM DOC
-*/    
