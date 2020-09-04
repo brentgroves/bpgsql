@@ -1,43 +1,53 @@
 -- Busche Tool List
 
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-create table ToolListAssembly
+/*
+-- truncate table PlexToolListAssemblyTemplate
+-- drop table PlexToolListAssemblyTemplate
+create table PlexToolListAssemblyTemplate
 (
+	ProcessID int NOT NULL,
+	ToolNumber int NOT NULL,
 	Assembly_No	varchar (50), --Assembly No,
 	Tool_Assembly_Type	varchar (50), --Tool Assembly Type,
 	Description	varchar (100), --Description,
 	Part_No	varchar (100), --Part No,
-	Revision	varchar (8), --Part Revision,
+	Part_Revision varchar (8), --Part Revision,
 	Operation	varchar (30), --Operation_Code in Plex,
 	Tool_Assembly_Status	varchar (50),  --Tool Assembly Status
 	Include_In_Analysis smallint,  --Include in Analysis
 	Analysis_Note	varchar (500), --Analysis Note,
 	Note	varchar (500), -- Note,
-	Location varchar (5), --	I don't know what this is 
-	-- ProcessID int NOT NULL,
-	-- Plex_Part_No varchar(100) NOT NULL,
-	-- Revision varchar(8) NOT NULL,
-	-- Operation_Code	varchar (30) NOT NULL
+	Location varchar (5) --	I don't know what this is 
 )
+select * from PlexToolListAssemblyTemplate
+*/
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-
+insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 	select 
 	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
 	-- tl.Part_No,tl.Part_Revision,tl.Operation,
+	/*
 	case 
 		when ag.Count_PN_Rev_Assembly_No > 1 then tl.Assembly_No + '-' + tl.OperationDescription 
 		else tl.Assembly_No
 	end Assembly_No,
+	*/
+	tl.ProcessID,
+	tl.ToolNumber,
+	tl.Assembly_No + '-' + tl.OperationDescription Assembly_No,
 	tl.Tool_Assembly_Type,
 	tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
 	from 
 	(
 		select
-		tl.OperationDescription,
+		tl.processid, 
+		tt.ToolNumber,
 		case 
 			when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
 			when (tt.ToolNumber >= 10) then 'T' + cast(tt.ToolNumber as varchar(3))
 		end Assembly_No,
+		tl.OperationDescription,
 		'Machining' Tool_Assembly_Type,
 		tt.OpDescription Description,
 		-- tl.PartNumber,
@@ -83,6 +93,63 @@ create table ToolListAssembly
 	)ag	
 	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation = ag.Operation 
 	where tl.Part_No = '6788776'
+
+	select * from PlexToolListAssemblyTemplate tl
+	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
+
+	
+/*
+ * For each ToolList create a TF Assembly.
+ */
+insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
+	
+select 
+tl.processid,
+111111 ToolNumber,
+'TF-' + tl.OperationDescription Assembly_No,
+'Machining' Tool_Assembly_Type,
+'Fixture' Description,
+m.Plex_Part_No Part_No,
+m.Revision Part_Revision,
+m.Operation_Code Operation,
+'Active' Tool_Assembly_Status,
+1 Include_In_Analysis,
+'' Analysis_Note,
+'' Note,
+'' Location
+-- m.Plex_Part_No Part_No,m.Revision Part_Revision,m.Operation_Code Operation,tl.OperationDescription 
+from bvToolListsInPlants tl
+inner join TL_Plex_PN_Op_Map m 
+on tl.processid = m.processid  -- 307
+where m.Plex_Part_No = '6788776'
+
+/*
+ * For each ToolList create a TM Miscellaneous Assembly.
+ */
+insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
+	
+select 
+tl.processid,
+222222 ToolNumber,
+'TM-' + tl.OperationDescription Assembly_No,
+'Machining' Tool_Assembly_Type,
+'Fixture' Description,
+m.Plex_Part_No Part_No,
+m.Revision Part_Revision,
+m.Operation_Code Operation,
+'Active' Tool_Assembly_Status,
+1 Include_In_Analysis,
+'' Analysis_Note,
+'' Note,
+'' Location
+-- m.Plex_Part_No Part_No,m.Revision Part_Revision,m.Operation_Code Operation,tl.OperationDescription 
+from bvToolListsInPlants tl
+inner join TL_Plex_PN_Op_Map m 
+on tl.processid = m.processid  -- 307
+where m.Plex_Part_No = '6788776'
+
+-- delete from PlexToolListAssemblyTemplate where Assembly_No like 'TM%'
+	select * from PlexToolListAssemblyTemplate tl
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
 /*
@@ -134,6 +201,8 @@ create table ToolListAssembly
 /* Obsolete use TL_Plex_PN_Op_Map
  * but only place that has the Busche ToolList part number
  */
+/*
+	
 create table TL_Plex_PN_Map
 (
 TL_Part_No	varchar (100), --Part No,
@@ -142,7 +211,7 @@ Revision	varchar (8) --Part Revision
 )
 
 insert into TL_Plex_PN_Map (TL_Part_No,Plex_Part_No,Revision)
-
+*/
 -- values ('6788776L','6788776','02')
 -- values ('6788776V',	'6788776','02')
 -- values ('10041563',	'10041563','H')
@@ -167,18 +236,18 @@ insert into TL_Plex_PN_Map (TL_Part_No,Plex_Part_No,Revision)
 -- values ('68480625AA','68480625AA','002B')
 -- values ('7614013080','7614013080','E2')
 -- values ('10099860',	'10099860','A')
-values ('6654026981','6654026981','A')
+-- values ('6654026981','6654026981','A')
 
 -- delete from TL_Plex_PN_Map where TL_Part_No= '7614013080'
-select * from TL_Plex_PN_Map order by TL_Part_No
+-- select * from TL_Plex_PN_Map order by TL_Part_No
 
 /*
  * All Assemblies for Edon ToolLists
  */
-select distinct processid,partNumber from dbo.bvToolListsInPlants where plant = '12'  -- 30
+-- select distinct processid,partNumber from dbo.bvToolListsInPlants where plant = '12'  -- 30
 
 
-
+/*
 SELECT ToolID, ProcessID, ToolNumber, OpDescription, Alternate, PartSpecific, AdjustedVolume, ToolOrder, Turret, ToolLength, OffsetNumber
 FROM [Busche ToolList].dbo.[ToolList Tool];
 (
@@ -189,7 +258,7 @@ select ToolID,max(PartNumber) Part_No from [ToolList ToolPartNumber] group by To
 
 SELECT ItemID, ProcessID, Manufacturer, ToolType, ToolDescription, AdditionalNotes, Quantity, CribToolID, DetailNumber, ToolbossStock
 FROM [Busche ToolList].dbo.[ToolList Fixture];
-
+*/
 /*
 	assembly_no	Tool_Assembly_Type	Description	Part_No	Revision	Operation	Tool_Assembly_Status	Include_In_Analysis	Analysis_Note	Location	update_date
 1	T01	Machining	Renishaw Probe	10024895-JT	I	Machine Complete	Active	1			7/31/2020 1:51:00 PM
