@@ -34,6 +34,7 @@ union
 create View [dbo].[bvToolListItemsOnlyLv1] 
 AS
 select lv2.*,ti.itemClass,ti.UDFGLOBALTOOL,ti.cost
+select *
 from
 (
 	select tl.partNumber,tl.Description as tlDescription, lv1.*
@@ -95,7 +96,12 @@ from
 	btDistinctToolLists tl
 	on lv1.ProcessID=tl.processid
 	--32571
-)lv2
+)lv2  -- 32,206
+/*
+left outer join toolitems ti 
+on lv2.itemNumber=ti.itemnumber
+where ti.itemnumber is null  -- 5 items
+*/
 -- drop items that are not in the crib
 inner join
 toolitems ti

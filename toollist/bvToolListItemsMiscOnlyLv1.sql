@@ -17,6 +17,8 @@ create View [dbo].[bvToolListItemsMiscOnlyLv1]
 AS
 select lv2.*,ti.itemClass,ti.UDFGLOBALTOOL,ti.cost
 from
+select count(*) cnt from  -- 407
+select lv2.itemNumber from
 (
 	select tl.partNumber,tl.Description as tlDescription, lv1.*
 	from
@@ -70,8 +72,13 @@ from
 	btDistinctToolLists tl
 	on lv1.ProcessID=tl.processid
 	--32571
-)lv2
+)lv2  -- 416
 -- drop items that are not in the crib
+/*  -- Only 1 itemnumber dropped 12,703
+left outer join toolitems ti 
+on lv2.itemNumber=ti.itemnumber
+where ti.itemnumber is null
+*/ 
 inner join
 toolitems ti
 on lv2.itemNumber=ti.itemnumber

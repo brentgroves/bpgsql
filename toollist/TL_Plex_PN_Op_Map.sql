@@ -1,6 +1,7 @@
 -- TL_Plex_PN_Op_Map
 
-select processid,count(*) cnt from TL_Plex_PN_Op_Map group by processid 
+select * from TL_Plex_PN_Op_Map 
+-- truncate table TL_Plex_PN_Op_Map
 CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map (
 	ProcessID int NOT NULL,
 	Plex_Part_No varchar(100) NOT NULL,
@@ -9,12 +10,18 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map (
 );
 select * 
 --update dbo.TL_Plex_PN_Op_Map 
-set Revision = '02'
-from dbo.TL_Plex_PN_Op_Map m where Plex_Part_No = '6788776'
+-- set Revision = '02'  -- 	Machine B - WIP
+ set Operation_Code = 'Machine B - WIP'
+-- select * 
+from dbo.TL_Plex_PN_Op_Map m  
+-- where Plex_Part_No = '10024896-JT'
+where Plex_Part_No like '%5K651%'
+where Plex_Part_No = '6788776'
+and Operation_Code = 'Machine A-WIP'
 processid	Plex_Part_No	Plex_Revision	Plex_Operation  -- 50542
 insert into TL_Plex_PN_Op_Map (ProcessID,Plex_Part_No,Revision,Operation_Code)
--- values (62516,'10024895-JT','I','Machine B-WIP')
--- values (62517,'10024896-JT','I','Machine B-WIP')
+-- values (62516,'10024895-JT','I','Machine B - WIP')
+-- values (62517,'10024896-JT','I','Machine B - WIP')
 -- values (61785,'10041563','H','Final')
 -- values (61786,'10041881','H','Final')
 -- values (62520,'10047275','D','Final')
@@ -26,26 +33,27 @@ insert into TL_Plex_PN_Op_Map (ProcessID,Plex_Part_No,Revision,Operation_Code)
 -- values (51919,'10099860','A','Final')
 -- values (62432,'10099860','A','Final')
 -- values (56692,'6654026981','A','Final')
--- values (56693,'6674013781','A','Machine A-WIP')
--- values (56694,'6674013781','A','Machine Complete')
+-- values (56693,'6674013781','A','Final')
+-- values (56694,'6674013781','A','Final')
 -- values (62421,'6788776','02','Machine A-WIP')
 -- values (62422,'6788776','02','Machine A-WIP')
--- values (62423,'6788776','02','Machine Complete')
--- values (54614,'68480625AA','002B','Machine Complete')
--- values (58931,'7614013080','E2','Machine Complete')
--- values (58930,'7614013080','E2','Machine Complete')
+-- values (62423,'6788776','02','Final')
+-- values (54614,'68480625AA','002B','Final')
+
+-- values (58931,'7614013080','E2','Final')
+-- values (58930,'7614013080','E2','Final')
 -- values (61290,'LB5C-5K651-BF','G8','Machine Complete')
 -- values (61291,'LB5C-5K652-BF','G8','Machine Complete')
--- values (61258,'LC5C-5K651-CE','F6','Machine Complete')
+-- values (61258,'LC5C-5K651-CE','F6','Machine Complete')  -- LC5C-5K651-CE DOES NOT EXIST IN PLEX
 -- values (61257,'LC5C-5K652-CE','F6','Machine Complete')
--- values (61254,'W10751752','E','Machine Complete')
--- values (61255,'W10751752','E','Machine Complete')
--- values (55977,'W10751752','E','Machine Complete')
--- values (61673,'W11033021','E','Machine Complete')
--- values (56546,'W11033021','E','Machine Complete')
--- values (55927,'W11033021','E','Machine Complete')
+-- values (61254,'W10751752','E','Final')
+-- values (61255,'W10751752','E','Final')
+-- values (55977,'W10751752','E','Final')
+-- values (61673,'W11033021','E','Final')
+-- values (56546,'W11033021','E','Final')
+-- values (55927,'W11033021','E','Final')
 
-select * from dbo.TL_Plex_PN_Op_Map 
+select * from dbo.TL_Plex_PN_Op_Map where Plex_Part_No = '10041563'
 
 select tl.processid,tl.customer,tl.partfamily,tl.OperationDescription,
 tl.partNumber TL_Part_No,m.Plex_Part_No,m.Revision

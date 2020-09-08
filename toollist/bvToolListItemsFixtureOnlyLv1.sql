@@ -50,8 +50,14 @@ from
 	btDistinctToolLists tl
 	on lv1.ProcessID=tl.processid
 	--32571
-)lv2
+)lv2  -- 1654
 -- drop items that are not in the crib
+/*
+left outer join toolitems ti 
+on lv2.itemNumber=ti.itemnumber
+where ti.itemnumber is null  -- 3  item numbers are null
+ */
+
 inner join
 toolitems ti
 on lv2.itemNumber=ti.itemnumber

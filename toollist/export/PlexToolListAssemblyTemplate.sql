@@ -1,6 +1,26 @@
 -- Busche Tool List
 
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
+
+select  
+Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
+-- select * 
+-- update PlexToolListAssemblyTemplate
+-- set Operation = 'Machine A - WIP'
+from PlexToolListAssemblyTemplate tl  -- 367
+-- where Part_No = '6788776' and Operation = 'Machine A-WIP'
+-- where Part_No = '10024895-JT' and Operation = 'Machine B-WIP'
+-- 61258|FORD - LC5C-5K651-CC CD6 CONTROL ARM - MILL COMPLETE  -- CAN'T FIND THIS IN PLEX
+where processid <> 61258  -- 353
+order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
+
+select * 
+from bvToolListsInPlants tl
+where processid = 61258  -- 353
+where partnumber like 'LC5C%'
+-- 	Machine B - WIP
+
+
 /*
 -- truncate table PlexToolListAssemblyTemplate
 -- drop table PlexToolListAssemblyTemplate
@@ -20,7 +40,7 @@ create table PlexToolListAssemblyTemplate
 	Note	varchar (500), -- Note,
 	Location varchar (5) --	I don't know what this is 
 )
-select * from PlexToolListAssemblyTemplate
+select * from PlexToolListAssemblyTemplate  -- 15
 */
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
 insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
@@ -38,6 +58,7 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 	tl.Assembly_No + '-' + tl.OperationDescription Assembly_No,
 	tl.Tool_Assembly_Type,
 	tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
+	-- select count(*) cnt  -- 307
 	from 
 	(
 		select
@@ -92,10 +113,17 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 		group by Assembly_No,Part_No,Part_Revision,Operation
 	)ag	
 	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation = ag.Operation 
-	where tl.Part_No = '6788776'
+	inner join dbo.TL_Plex_PN_Op_Map m 
+	on tl.ProcessID=m.ProcessID 
+	-- where tl.Part_No = '6788776'
 
 	select * from PlexToolListAssemblyTemplate tl
+	where tl.Part_No = '6788776'
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
+
+	select Part_No,Part_Revision, Assembly_No, Operation from PlexToolListAssemblyTemplate tl
+	-- where tl.Part_No = '6788776'
+	order by tl.Part_No,tl.Part_Revision,tl.Assembly_No,tl.Operation
 
 	
 /*
@@ -104,6 +132,13 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 	
 select 
+/*
+m.Plex_Part_No,
+m.revision,
+m.Operation_Code,
+'TF-' + tl.OperationDescription Assembly_No1,
+*/
+
 tl.processid,
 111111 ToolNumber,
 'TF-' + tl.OperationDescription Assembly_No,
@@ -121,6 +156,7 @@ m.Operation_Code Operation,
 from bvToolListsInPlants tl
 inner join TL_Plex_PN_Op_Map m 
 on tl.processid = m.processid  -- 307
+order by part_no,part_revision,assembly_no
 where m.Plex_Part_No = '6788776'
 
 /*
@@ -133,7 +169,7 @@ tl.processid,
 222222 ToolNumber,
 'TM-' + tl.OperationDescription Assembly_No,
 'Machining' Tool_Assembly_Type,
-'Fixture' Description,
+'Miscellaneous' Description,
 m.Plex_Part_No Part_No,
 m.Revision Part_Revision,
 m.Operation_Code Operation,
@@ -149,7 +185,7 @@ on tl.processid = m.processid  -- 307
 where m.Plex_Part_No = '6788776'
 
 -- delete from PlexToolListAssemblyTemplate where Assembly_No like 'TM%'
-	select * from PlexToolListAssemblyTemplate tl
+	select * from PlexToolListAssemblyTemplate tl  -- 367
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
 /*
