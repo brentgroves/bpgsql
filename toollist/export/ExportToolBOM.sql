@@ -21,7 +21,7 @@ create table PlexToolBOM
  * First insert ToolList Items
  */
 insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
-select count(*) from (
+-- select count(*) from (
 	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from 
 	(
@@ -49,14 +49,15 @@ select count(*) from (
 		where a.processid <> 61258  -- 1090
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
-)s2  -- 1044
+	-- THERE ARE DUPS BECAUSE MULTIPLE CNC OPERATIONS MAP TO A SINGLE PLEX OPERATION AND HAVE THE SAME TOOLNUMBER.
+--)s2  -- 1044
 -- where a.Operation <> 'Machine Complete'
 /*
  * 2nd insert ToolList Fixture items
  */
 insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
 
-select count(*) from (
+-- select count(*) from (
 	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from 
 	(
@@ -84,7 +85,7 @@ select count(*) from (
 		where a.processid <> 61258  -- 30
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
-)s2  -- 30 + 1044 
+-- )s2  -- 30 + 1044 
 
 select count(*) cnt from PlexToolBOM  -- 1120 
 
@@ -99,7 +100,7 @@ where lv1.processid = 61258
  */
 insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
 
-select count(*) from (
+-- select count(*) from (
 	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from 
 	(
@@ -127,15 +128,14 @@ select count(*) from (
 		where a.processid <> 61258  -- 9
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
-)s2  -- 30 + 1044 + 9 = 1083
+-- )s2  -- 30 + 1044 + 9 = 1083
 
 -- where a.Operation <> 'Machine Complete'
 
-select count(*) cnt from PlexToolBOM  -- 1129
+select count(*) cnt from PlexToolBOM  -- 1083
 
 select
 Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
-select Part_No,Part_Revision,Assembly_No,Tool_No,count(*) 
 FROM 
 (
 	select 
@@ -146,11 +146,6 @@ FROM
 	Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from dbo.PlexToolBOM b
 ) s1 
-group by Part_No,Part_Revision,Assembly_No,Tool_No 
-having count(*) > 1
-select * from PlexToolBOM
-
-where Tool_No in ('0003696')
 where s1.row_number > 600  
 -- 1130 parts sent only 1083 uploaded + 
 -- only got 1083 imported stopped on 0003696
