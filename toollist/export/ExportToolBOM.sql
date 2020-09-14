@@ -1,5 +1,10 @@
 
 -- -- Assembly No,Part No,Part Revision,Operation Code,Tool No,Qty,Matched Set,Station,Optional,Workcenter,Sort Order
+select *
+-- into dbo.PlexToolBOM0910B  -- 1083
+from dbo.PlexToolBOM 
+-- select * from PlexToolBOM0910B
+
 -- truncate table PlexToolBOM
 -- drop table PlexToolBOM
 create table PlexToolBOM
@@ -45,13 +50,17 @@ insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,To
 		-- select * from PlexToolListAssembly a	
 		inner join bvToolListItemsOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
-		and a.ToolNumber=lv1.ToolNumber  -- 1125
-		where a.processid <> 61258  -- 1090
+		and a.ToolNumber=lv1.ToolNumber  -- 1168
+		-- where a.processid <> 61258  -- 1090  'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
+		-- AFTER I UPDATE btDistinctToolList this count jumped to 1133
+		-- select * from [Toollist Master] tm where tm.processid = 61258 -- LC5C-5K651-CC CD6 CONTROL ARM
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	-- THERE ARE DUPS BECAUSE MULTIPLE CNC OPERATIONS MAP TO A SINGLE PLEX OPERATION AND HAVE THE SAME TOOLNUMBER.
 --)s2  -- 1044
 -- where a.Operation <> 'Machine Complete'
+
+	
 /*
  * 2nd insert ToolList Fixture items
  */
@@ -82,12 +91,14 @@ insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,To
 		inner join bvToolListItemsFixtureOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
 		and a.ToolNumber=lv1.ToolNumber  -- 30; = 111111
-		where a.processid <> 61258  -- 30
+		-- where a.processid <> 61258  -- 30
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
--- )s2  -- 30 + 1044 
+-- )s2  -- 30 + 1168 
 
-select count(*) cnt from PlexToolBOM  -- 1120 
+select count(*) cnt from PlexToolBOM  -- 1168 + 30 = 1198
+
+
 
 select * 
 from bvToolListItemsFixtureOnlyLv1 lv1
@@ -125,16 +136,18 @@ insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,To
 		inner join bvToolListItemsMiscOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
 		and a.ToolNumber=lv1.ToolNumber  -- 9
-		where a.processid <> 61258  -- 9
+		-- where a.processid <> 61258  -- 9
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
--- )s2  -- 30 + 1044 + 9 = 1083
+-- )s2
 
--- where a.Operation <> 'Machine Complete'
+	
+--Tool 16608 was already linked to Tool Assembly T03-MAKINO MILL COMPLETE for this the Part 10099858, Part Revision A, and Operation Final combination.
+	
+	select count(*) cnt from PlexToolBOM  -- 1168 + 30 + 10 = 1208
+	-- exec bpDistinctToolLists HAD TO UPDATE btDistinctToolList -- The Tool Assemblies were OK because they used a view but bvToolListItemsXLv1 used btDistinctToolList which was not updeate.
 
-select count(*) cnt from PlexToolBOM  -- 1083
-
-select
+	select
 Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 FROM 
 (
@@ -146,11 +159,15 @@ FROM
 	Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from dbo.PlexToolBOM b
 ) s1 
-where s1.row_number > 600  
--- 1130 parts sent only 1083 uploaded + 
--- only got 1083 imported stopped on 0003696
--- 	Tool 16793 was already linked to Tool Assembly TM-2ND OP LATHE for this the Part W11033021, Part Revision E, 
-order by b.Part_NoOperation_Code,b.Assembly_No
+where s1.Part_No like 'LC5C%'
+-- where s1.Part_No = 'LC5C 5K651 CE'
+-- where s1.Part_No in ('10099858','10099860')
+-- where s1.Part_No = '10049132'
+and s1.row_number > 600  
+-- 1083 to 1173  
+
+10099858
+order by b.Part_No,Operation_Code,b.Assembly_No
 
 order by a.Part_No,a.Part_Revision,a.Operation_Code,a.Assembly_No
 -- select count(*) cnt from bvToolListItemsInPlants  -- 31332

@@ -155,13 +155,15 @@ m.Operation_Code Operation,
 -- m.Plex_Part_No Part_No,m.Revision Part_Revision,m.Operation_Code Operation,tl.OperationDescription 
 from bvToolListsInPlants tl
 inner join TL_Plex_PN_Op_Map m 
-on tl.processid = m.processid  -- 307
+on tl.processid = m.processid  -- 30
 order by part_no,part_revision,assembly_no
 where m.Plex_Part_No = '6788776'
 
 /*
  * For each ToolList create a TM Miscellaneous Assembly.
  */
+select * from PlexToolListAssemblyTemplate
+select distinct part_no,Part_Revision from PlexToolListAssemblyTemplate  -- 20
 insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 	
 select 
@@ -184,10 +186,22 @@ inner join TL_Plex_PN_Op_Map m
 on tl.processid = m.processid  -- 307
 where m.Plex_Part_No = '6788776'
 
+-- select count(*) cnt from PlexToolListAssemblyTemplate tl  -- 367
 -- delete from PlexToolListAssemblyTemplate where Assembly_No like 'TM%'
-	select * from PlexToolListAssemblyTemplate tl  -- 367
+	select Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
+	from PlexToolListAssemblyTemplate tl  -- 367
+	where Part_No like 'LC5C%'
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
+	
+	select * from PlexToolListAssemblyTemplate tl  where tl.Part_No like 'LC5C%'
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
+-- select * FROM [Busche ToolList].dbo.[ToolList Master] 
+-- select * from [ToolList PartNumbers] n where partNumbers like 'W11033021%'
+select tm.* 
+FROM [ToolList Master] tm 
+inner join [ToolList PartNumbers] n 
+on tm.processid=n.processid
+where partNumbers like 'W11033021%'
 /*
  * select * 
  * update TL_Plex_PN_Op_Map
@@ -276,6 +290,7 @@ insert into TL_Plex_PN_Map (TL_Part_No,Plex_Part_No,Revision)
 
 -- delete from TL_Plex_PN_Map where TL_Part_No= '7614013080'
 -- select * from TL_Plex_PN_Map order by TL_Part_No
+-- FORD - LB5C-5K651- CD6 CONTROL ARM  - CD6 CONTROL
 
 /*
  * All Assemblies for Edon ToolLists

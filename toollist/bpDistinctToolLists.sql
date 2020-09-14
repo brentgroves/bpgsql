@@ -11,9 +11,8 @@ BEGIN
 	into btDistinctToolLists
 	from bvDistinctToollists
 end;
--- exec bpDistinctToolLists
-select count(*) cnt from dbo.btDistinctToolLists -- 757
-	select count(*) cnt from bvDistinctToollists -- 758
+
+
 -- dbo.bvDistinctToolLists source
 
 create view [dbo].[bvDistinctToolLists]
@@ -26,6 +25,32 @@ bvToolListsInPlants
 group by 
 OriginalProcessId,ProcessId,
 Customer,PartFamily,OperationDescription,PartNumber,Descript,descr;
+
+/*
+ * Map Plex part_number,revision, operation to (Multiple Tool lists)
+ * Each workcenter is assigned a part and operation number.
+ * Turbos
+ * T01-60 - Lathe 1, Plex operation 1 
+ * T01-70 - Lathe 2, Plex operation 1
+ * T01-80 - Mill, Plex operation 2
+ * 
+ * BMW
+ * 6788776L BMW-FRNT TOPMNT FLANGE
+ * 1ST OP LATHE
+ * 2ND OP LATHE
+ * 3RD OP DRILL/C'BORE
+ * 
+ * W11033021 WHIRLPOOL
+ * 1ST OP LATHE
+ * 2ND OP LATHE
+ * 3RD OP MILL
+ */
+
+
+
+
+
+
 
 create VIEW [dbo].[bvToolListsInPlants]
 AS
@@ -43,7 +68,7 @@ AS
 	INNER JOIN
 	[ToolList Plant] AS tp 
 	ON lv1.ProcessID = tp.ProcessID;
-
+	
 
 -- dbo.bvToolListsAssignedPN source
 
@@ -70,7 +95,7 @@ AS
 		-- tool lists with no part numbers assigned have been dropped
 		--732;
 		
-
+		
 -- dbo.bvListOfActiveApprovedToolLists source
 
 create view [dbo].[bvListOfActiveApprovedToolLists]
@@ -101,22 +126,7 @@ AS
 
 			--
 			-- If you try to open a tool list that a change has been commited but not
-	create VIEW [dbo].[bvToolListsInPlants]
-AS
-	select lv1.Originalprocessid,lv1.processid, 
-		lv1.customer,lv1.partfamily,lv1.OperationDescription,
-		lv1.descript,lv1.descr,	
-		lv1.subDescript,lv1.subDescr,
-		lv1.partNumber,tp.Plant 
-
-	from
-	( 
-		select * from bvToolListsAssignedPN
-		--732
-	) lv1
-	INNER JOIN
-	[ToolList Plant] AS tp 
-	ON lv1.ProcessID = tp.ProcessID;		-- approved by a supervisor,ie. revinprocess of 1, you
+			-- approved by a supervisor,ie. revinprocess of 1, you
 			-- will get the following message:  There is an uncompleted change..
 			-- it may not be opened until that is complete.
 
@@ -186,5 +196,3 @@ AS
 	on lv3.ProcessID = lv4.ProcessID
 	-- try to exclude original process id chains that have no items 
 	-- All released tool lists have at least one item so this check is probably not needed.;		
-	
-
