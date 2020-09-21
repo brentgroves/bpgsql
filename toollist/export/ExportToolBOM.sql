@@ -51,7 +51,7 @@ insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,To
 		inner join bvToolListItemsOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
 		and a.ToolNumber=lv1.ToolNumber  -- 1168
-		-- where a.processid <> 61258  -- 1090  'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
+		-- where a.processid <> 61258  -- 1090 LC5C 5K651 CE 'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
 		-- AFTER I UPDATE btDistinctToolList this count jumped to 1133
 		-- select * from [Toollist Master] tm where tm.processid = 61258 -- LC5C-5K651-CC CD6 CONTROL ARM
 	)s1 
@@ -159,9 +159,11 @@ FROM
 	Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from dbo.PlexToolBOM b
 ) s1 
-where s1.Part_No like 'LC5C%'
+-- where Part_No = '10099858' and Tool_No = '16608'
+--where s1.Part_No like '%ML3V%' -- waiting for JOSH to release these
+-- where s1.Part_No like 'LC5C%'
 -- where s1.Part_No = 'LC5C 5K651 CE'
--- where s1.Part_No in ('10099858','10099860')
+where s1.Part_No not in ('10099858','10099860')  -- These have already been added to production as a test of JT Knuckles.
 -- where s1.Part_No = '10049132'
 and s1.row_number > 600  
 -- 1083 to 1173  

@@ -5,12 +5,30 @@
  * Join to bvToolBossItemsInPlant view to change PlxMasterToolList StorageLocation field to say 'Tool Boss'
  * for items in vending machines.
  */
+-- select count(*) cnt from dbo.PlexMasterToolList  -- 502 
 /*
+select count(*) from (
 select
-itemNumber 
---count(*) cnt -- 888
-from bvToolListItemsInPlants 
-where plant = 12
+-- count(*) cnt 
+distinct itemNumber  --775
+from
+(
+	select
+	row_number() OVER(ORDER BY itemNumber ASC) AS Row_No,
+	
+	'(' + char(39) + itemNumber + char(39) + '),' itemNumber
+	-- count(*) cnt -- 888
+	from bvToolListItemsInPlants 
+	where plant = 11  --2854
+	-- and itemNumber = '14144'  This item is not in Albion Plex
+)s1
+)s2
+-- where Row_No between 1 and 500
+-- where Row_No between 501 and 1000
+-- where Row_No between 1001 and 1500
+-- where Row_No between 1501 and 2000
+-- where Row_No between 2001 and 2500
+where Row_No > 2500
 */
 /*
 --drop table PlexMasterToolList
@@ -147,6 +165,17 @@ from bvToolListItemsInPlants where plant = '12'
 select distinct item 
 into btToolBossItemsInPlant12  -- 164
 from bvToolBossItemsInPlants where plant = '12'  -- 512
+
+select 
+count(*) cnt
+from
+(
+select distinct item 
+into btToolBossItemsInPlant11  -- 
+from bvToolBossItemsInPlants where plant = '11'  -- 363
+)s
+
+select * from btToolBossItemsInPlant11
  	*/
 -- select char(39) + Tool_No + char(39) + ','
 -- select count(*) cnt
@@ -376,6 +405,16 @@ from EdonLocation l  -- 121
 inner join dbo.PlexMasterToolList p -- 121
 on l.item_no=p.Tool_No -- 
 */
+
+select 
+* from btToolBossItemsInPlant12 tb
+on tl.itemnumber=tb.item  -- 357 
+
+select 
+'('+char(39)+item+ char(39) + '),' 
+from btToolBossItemsInPlant11 tb
+where item = '0003050'
+
 
 
 

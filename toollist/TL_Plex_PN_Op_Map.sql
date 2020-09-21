@@ -20,6 +20,18 @@ where Plex_Part_No = '6788776'
 and Operation_Code = 'Machine A-WIP'
 processid	Plex_Part_No	Plex_Revision	Plex_Operation  -- 50542 --7614013080
 insert into TL_Plex_PN_Op_Map (ProcessID,Plex_Part_No,Revision,Operation_Code)
+-- Add these after josh releases the tool list.
+-- values (62237,'ML3V-5793-AC','AC','Final')
+-- values (62394,'ML3V-5793-BC','AC','Final')
+-- values (63170,'ML3V-5793-CA','','')  -- ML3V-5793-CA not in plex, awaiting word from eng.
+-- values (63093,'ML3V-5794-AC','AC','Final')
+-- values (63171,'ML3V-5794-BC','BC','Final')
+-- values (55957,'ML3V-5794-CA','','')  -- ML3V-5794-CA not in plex, awaiting word from eng.
+
+
+ML3V-5794-BC
+55957|ML3V-5794-CA ST RR SPG LH
+-- BELOW THIS LINE HAS ALREADY BEEN ADDED
 -- values (62516,'10024895-JT','I','Machine B - WIP')
 -- values (62517,'10024896-JT','I','Machine B - WIP')
 -- values (61785,'10041563','H','Final')
@@ -62,6 +74,7 @@ insert into TL_Plex_PN_Op_Map (ProcessID,Plex_Part_No,Revision,Operation_Code)
 54192|W11033021  N 3rd & 4th op Horizontal Mill  --obolete, not on list  -- Plant 7
 62099|W11033021L N 4th cell, 1st op lathe  -- obsolete,not on list  -- Plant 12
 62108|W11033021L N 4th cell, 2nd op lathe  -- obsolete not on list  -- Plant 12
+select * from dbo.TL_Plex_PN_Op_Map m where m.Plex_Part_No like '%5K651%' 
 
 select 
 -- p.plant,

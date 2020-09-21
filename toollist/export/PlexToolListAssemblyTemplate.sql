@@ -193,14 +193,18 @@ where m.Plex_Part_No = '6788776'
 	where Part_No like 'LC5C%'
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 	
-	select * from PlexToolListAssemblyTemplate tl  where tl.Part_No like 'LC5C%'
+	select * from PlexToolListAssemblyTemplate tl  
+	-- where tl.Part_No like 'LC5C%'
+	where tl.Part_No like '%ML3V%' -- waiting for JOSH to release these
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
 -- select * FROM [Busche ToolList].dbo.[ToolList Master] 
 -- select * from [ToolList PartNumbers] n where partNumbers like 'W11033021%'
 select tm.* 
 FROM [ToolList Master] tm 
+
 inner join [ToolList PartNumbers] n 
 on tm.processid=n.processid
+
 where partNumbers like 'W11033021%'
 /*
  * select * 
@@ -260,7 +264,7 @@ Plex_Part_No	varchar (100), --Part No,
 Revision	varchar (8) --Part Revision
 )
 
-insert into TL_Plex_PN_Map (TL_Part_No,Plex_Part_No,Revision)
+insert into TL_Plex_PN_Map (TL_Part_No,Plex_Part_No,Revision)r SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '= '2020-09-14 00:00:00'
 */
 -- values ('6788776L','6788776','02')
 -- values ('6788776V',	'6788776','02')
