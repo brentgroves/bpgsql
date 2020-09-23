@@ -1,26 +1,16 @@
 
+select * from [ToolList Master] 
+where processid = 61748
 
-select count(*) cnt from bvToolListItemsInPlantsMoreInfo  -- 32578
-select count(*) cnt from bvToolListItemsInPlants  -- 31332
-create view [dbo].[bvToolListItemsInPlants]
-as
-select distinct tl.originalprocessid,tl.processid,tl.descript,tl.partNumber,tl.plant,
-lv1.itemNumber,lv1.itemClass,lv1.UDFGLOBALTOOL,lv1.toolbossStock  
-from bvToolListsInPlants tl
-inner join
-bvToolListItemsLv1 lv1
-ON tl.processid = lv1.ProcessID
-where lv1.UDFGLOBALTOOL <> 'YES'
---27838
-union
-	-- 796 select count(*) from bvToolListsInPlants
-	select tl.originalprocessid,tl.processid,tl.descript,tl.partNumber,tl.plant
-	,ti.itemNumber, ti.itemclass, ti.UDFGLOBALTOOL, 0 as toolbossStock 
-	FROM  toolitems ti
-	CROSS JOIN
-	bvToolListsInPlants tl
-	WHERE (ti.UDFGLOBALTOOL = 'YES');
-	
+
+
+
+select OpDescription,itemNumber,Consumable,tooltype,tooldescription,
+Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges, 
+* 
+from bvToolListItemsOnlyLv1
+where processid = 61748
+order by tlDescription,toolNumber
 
 -- dbo.bvToolListItemsLv1 source
 
@@ -31,10 +21,11 @@ union
 -- so we have to choose the toolids items per part ratio
 -- for costing purposes.
 -- /////////////////////////////////////////////////
+-- dbo.bvToolListItemsOnlyLv1 source
+
 create View [dbo].[bvToolListItemsOnlyLv1] 
 AS
 select lv2.*,ti.itemClass,ti.UDFGLOBALTOOL,ti.cost
-select *
 from
 (
 	select tl.partNumber,tl.Description as tlDescription, lv1.*
@@ -96,12 +87,7 @@ from
 	btDistinctToolLists tl
 	on lv1.ProcessID=tl.processid
 	--32571
-)lv2  -- 32,206
-/*
-left outer join toolitems ti 
-on lv2.itemNumber=ti.itemnumber
-where ti.itemnumber is null  -- 5 items
-*/
+)lv2
 -- drop items that are not in the crib
 inner join
 toolitems ti
