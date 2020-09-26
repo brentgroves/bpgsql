@@ -65,7 +65,7 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 		from bvToolListsInPlants tl
 		inner join [ToolList Tool] tt  -- 307
 		on tl.processid = tt.ProcessID
-		inner join TL_Plex_PN_Op_Map m 
+		inner join TL_Plex_PN_Op_Map_Albion m 
 		on tl.processid = m.processid  -- 307
 	)tl
 	inner join 
@@ -86,15 +86,17 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 			from bvToolListsInPlants tl
 			inner join [ToolList Tool] tt  -- 307
 			on tl.processid = tt.ProcessID
-			inner join TL_Plex_PN_Op_Map m 
+			inner join TL_Plex_PN_Op_Map_Albion m 
 			on tl.processid = m.processid  -- 307
 		)tl 
 		group by Assembly_No,Part_No,Part_Revision,Operation
 	)ag	
 	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation = ag.Operation 
-	where tl.Part_No = '6788776'
+    -- where ag.Count_PN_Rev_Assembly_No > 1
+	-- where tl.Part_No = '6788776'
 
-	select * from PlexToolListAssemblyTemplate tl
+--	select * from PlexToolListAssemblyTemplate tl
+	select toolNumber tn,Description from PlexToolListAssemblyTemplate tl
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 
 	
@@ -150,6 +152,7 @@ where m.Plex_Part_No = '6788776'
 
 -- delete from PlexToolListAssemblyTemplate where Assembly_No like 'TM%'
 	select * from PlexToolListAssemblyTemplate tl
+	where processid = 61748
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 -- FROM [Busche ToolList].dbo.[ToolList Tool] tt;
 /*
@@ -197,9 +200,6 @@ where m.Plex_Part_No = '6788776'
 62421	6788776	2	Machine A-WIP
 62422	6788776	2	Machine A-WIP
 62423	6788776	2	Machine Complete
- */
-/* Obsolete use TL_Plex_PN_Op_Map
- * but only place that has the Busche ToolList part number
  */
 /*
 	

@@ -1,17 +1,30 @@
 
 select * from [ToolList Master] 
-where processid = 61748
+where processid = 61748  -- P558 Knuckles, plant 6
 
 
 
-
-select OpDescription,itemNumber,Consumable,tooltype,tooldescription,
-Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges, 
-* 
+/* START HERE */
+select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
+Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
+-- * 
+-- select toolNumber tn,itemNumber item,Quantity,QuantityPerCuttingEdge qtyPerCuttingEdge
 from bvToolListItemsOnlyLv1
 where processid = 61748
-order by tlDescription,toolNumber
+-- and toolNumber = 9
+ and Consumable = 1
+order by toolNumber,toolType
 
+
+select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
+Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges 
+--* 
+from bvToolListItemsOnlyLv1
+where processid = 61748
+and toolNumber = 6
+order by toolNumber,toolType
+
+--order by toolid
 -- dbo.bvToolListItemsLv1 source
 
 --////////////////////////////////////////////////

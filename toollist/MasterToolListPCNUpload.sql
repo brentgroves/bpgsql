@@ -1,29 +1,44 @@
 /*
- * Used Plex supply list to make table in MasterToolList upload template format.
- * Uploaded to PlxMasterToolList table.
+ * 1. Make set of supply items in desired tool lists.
+ * 2. Use Plex SPROC: ExportMasterToolListPlant6 with a list of Supply Items as a filter
+
  * Join to bvToolListItemsInPlant view to filter Plex supply items that are not on active tool lists.
  * Join to bvToolBossItemsInPlant view to change PlxMasterToolList StorageLocation field to say 'Tool Boss'
  * for items in vending machines.
+ * 
  */
 -- select count(*) cnt from dbo.PlexMasterToolList  -- 502 
 /*
 select count(*) from (
 select
--- count(*) cnt 
-distinct itemNumber  --775
+itemNumber
 from
 (
 	select
 	row_number() OVER(ORDER BY itemNumber ASC) AS Row_No,
-	
-	'(' + char(39) + itemNumber + char(39) + '),' itemNumber
-	-- count(*) cnt -- 888
-	from bvToolListItemsInPlants 
-	where plant = 11  --2854
-	-- and itemNumber = '14144'  This item is not in Albion Plex
-)s1
-)s2
+	itemNumber
+	from
+	(
+		select
+		-- count(*) cnt 
+		distinct itemNumber  -- 807/Plant6,775/Plant11
+		from
+		(
+			select
+			
+			-- '(' + char(39) + itemNumber + char(39) + '),' itemNumber  -- insert format
+			char(39) + itemNumber + char(39) + ',' itemNumber -- where in format
+			-- count(*) cnt -- 888
+			from bvToolListItemsInPlants 
+			where plant = 6   
+			-- and itemNumber = '010338'
+			-- where plant = 11  --2854
+			-- and itemNumber = '14144'  This item is not in Albion Plex
+		)s1
+	)s2
+)s3
 -- where Row_No between 1 and 500
+where Row_No > 500
 -- where Row_No between 501 and 1000
 -- where Row_No between 1001 and 1500
 -- where Row_No between 1501 and 2000
