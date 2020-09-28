@@ -1,9 +1,10 @@
 -- DO drops later in case you spot an error somewhere else in the process
 -- I messed up and called 1223 files 1213.
 select * 
-into station092120
+into station092820
 from STATION
-select count(*) cnt from station092120
+select count(*) cnt from station092820
+--12679 09/28
 --12679 09/21
 --12679 09/14
 --12679 09/08
@@ -43,17 +44,17 @@ select count(*) cnt from station092120
 --12624
 --verify backup of station
 
-select top 100 * from station092120
+select top 100 * from station092820
 -- Upload the item_location table into PlxSupplyItemLocation table.
-CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation092120 (
+CREATE TABLE Cribmaster.dbo.PlxSupplyItemLocation092820 (
 	item_no varchar(50),
 	location varchar(50),
 	quantity integer
 )
 
 -- Insert Plex item_location data into CM
-Bulk insert PlxSupplyItemLocation092120
-from 'c:\il0921GT12500.csv'
+Bulk insert PlxSupplyItemLocation092820
+from 'c:\il0928GT12500.csv'
 with
 (
 	fieldterminator = ',',
@@ -64,13 +65,14 @@ with
 select
 count(*)
 --top 1000 * 
-from PlxSupplyItemLocation092120 
+from PlxSupplyItemLocation092820 
 -- Check for duplicates
 select count(*)
 from 
 (
-select distinct item_no,location from PlxSupplyItemLocation092120
-)s1  
+select distinct item_no,location from PlxSupplyItemLocation092820
+)s1
+-- 14547 09/28
 -- 14487 09/21
 -- 14547 09/14
 -- 14685 09/08
@@ -96,10 +98,11 @@ select distinct item_no,location from PlxSupplyItemLocation092120
 
 
 select 
- il.item_no
+il.item_no
 --il.item_no,il.location,il.quantity
- into nic092120 --Plex supply items with the default location and a quantity = 0
+ into nic092820 --Plex supply items with the default location and a quantity = 0
 -- count(*) 
+ --3773 09/28
 --3714 09/21
 --3685 09/09
 -- 3678 09/08
@@ -118,7 +121,7 @@ select
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation092120
+	from PlxSupplyItemLocation092820
 ) il
 left outer join STATION st 
 on il.location=st.CribBin
@@ -135,7 +138,8 @@ and il.quantity = 0
 --and il.quantity <> 0 
 
 	select COUNT(*)
-	from nic092120
+	from nic092820
+	--3771 09/28
 	--3714 09/21
 	--3685 09/14
 	-- 3678 09/08
@@ -199,9 +203,10 @@ Quantity = 0
 	item in 
 	(
 	select item_no
-	from nic092120
+	from nic092820
 	)
 	and (st.BinQuantity<>0 or st.Quantity <> 0 )
+	-- 11 09/28/20
 	-- 11 09/21/20
 	-- 11 09/14/20
 	-- 11 09/08/20
@@ -233,16 +238,16 @@ Quantity = il.quantity
 from (
 	select --distinct incase I inserted items more than once
 		distinct item_no,location,quantity
-	from PlxSupplyItemLocation092120
+	from PlxSupplyItemLocation092820
 ) il
 inner join STATION st 
 on il.location=st.CribBin
 and il.item_no=st.Item
 --0729=10630, 0726=10630, --0628=11285
 where 
- il.quantity <> st.BinQuantity --291, 09/21,184 09/14,212 09/08, 581 09/01,158 08/17,261 07/20, 246 07/13, 386 07/01,309 06/30, 179 06/15,06/09 333,06/02 89,06/01 126, --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
--- il.quantity > st.BinQuantity --124 09/21,74 09/14,77 09/08, 211 09/01,48 08/17,50 07/20, 148 07/01,112 06/30,60 06/22,43 06/15,145 06/09,12 06/02,58 06/01 05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
--- il.quantity < st.BinQuantity --167 09/21,110 09/14,135 09/11, 370 09/01,110 08/17/20,211 07/20,173 07/13,238 07/01, 197 06/30,190 06/22,136 06/15,188 06/09, 77 06/02 --68 06/01--05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
+ il.quantity <> st.BinQuantity --267 09/28, 291, 09/21,184 09/14,212 09/08, 581 09/01,158 08/17,261 07/20, 246 07/13, 386 07/01,309 06/30, 179 06/15,06/09 333,06/02 89,06/01 126, --05/26=115,05/18=172,340,334,351,381,421,375,304,409,312, 213,177,1330,1319,510,293,376,416,417,472, 342,353, 455,406,384	
+-- il.quantity > st.BinQuantity --142 09/21,74 09/14,77 09/08, 211 09/01,48 08/17,50 07/20, 148 07/01,112 06/30,60 06/22,43 06/15,145 06/09,12 06/02,58 06/01 05/26=40,05/18=84,120,143,107,95,154,149,122, 124, 124,77,51, 492,538,134,140,171,172,177,120,138,131,61
+-- il.quantity < st.BinQuantity --125 09/28,167 09/21,110 09/14,135 09/11, 370 09/01,110 08/17/20,211 07/20,173 07/13,238 07/01, 197 06/30,190 06/22,136 06/15,188 06/09, 77 06/02 --68 06/01--05/26=75,05/18=88,220,191,244,286,267,226,182,285,188,136,126,838,781,376,168,236,245,245,295,222,311,215, 316,275,105
 --80 more items dropped in quantity 0820
 --385
 --0813=389
@@ -250,9 +255,9 @@ where
 --0801=181
 --0729=183
 -- DROP OLD TABLES
---drop table dbo.PlxSupplyItemLocation0908
---drop table station0908
---drop table dbo.nic0908
+--drop table PlxSupplyItemLocation092120
+--drop table station092120
+--drop table nic092120
 
 
 
