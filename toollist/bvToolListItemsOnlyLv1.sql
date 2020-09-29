@@ -11,7 +11,7 @@ Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
 -- select toolNumber tn,itemNumber item,Quantity,QuantityPerCuttingEdge qtyPerCuttingEdge
 from bvToolListItemsOnlyLv1
 where processid = 61748
--- and toolNumber = 9
+ and toolNumber = 6
  and Consumable = 1
 order by toolNumber,toolType
 
