@@ -92,13 +92,15 @@ ML3V-5794-BC
 62108|W11033021L N 4th cell, 2nd op lathe  -- obsolete not on list  -- Plant 12
 select * from dbo.TL_Plex_PN_Op_Map m where m.Plex_Part_No like '%5K651%' 
 
+
 select 
 -- p.plant,
-tm.* 
+n.*,tm.* 
 FROM [ToolList Master] tm 
-inner join [ToolList PartNumbers] n 
+left outer join [ToolList PartNumbers] n 
 on tm.processid=n.processid
-where partNumbers like 'SAT39685%'
+where tm.PartFamily like '%558%6K%LH%'  --TL = THERE ARE 3 OPERATIONS IN THE TOOL LIST
+--where partNumbers like 'SAT39685%'
 
 inner join [ToolList Plant] p 
 on tm.processid=p.processid

@@ -9,12 +9,27 @@ select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
 Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
 -- * 
 -- select toolNumber tn,itemNumber item,Quantity,QuantityPerCuttingEdge qtyPerCuttingEdge
+select toolNumber tn,itemNumber item,QuantityPerCuttingEdge qty
 from bvToolListItemsOnlyLv1
 where processid = 61748
- and toolNumber = 6
+-- and toolNumber = 6
  and Consumable = 1
 order by toolNumber,toolType
 
+select tt.ToolNumber,tt.OpDescription,tt.Alternate,ti.CribToolID,ti.QuantityPerCuttingEdge,ti.AdditionalNotes
+-- ti.*
+from [ToolList Tool] tt
+inner join [ToolList Item] ti
+on tt.processid = ti.processid 
+and tt.ToolID = ti.ToolID
+and ti.Consumable = 1
+and tt.ToolNumber = 12
+where tt.processid = 61748
+order by tt.ToolNumber
+
+61748|10103355 
+61744|10037973H
+58951|10037973 
 
 select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
 Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges 
