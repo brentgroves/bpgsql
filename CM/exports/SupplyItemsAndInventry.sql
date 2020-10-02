@@ -21,6 +21,12 @@ select *
 from INVENTRY
 where itemnumber = '0000066'
 
+SELECT top 10 * FROM bvCribItems
+where item_no like '%16408%'
+
+SELECT * FROM dbo.INVENTRY 
+where itemnumber like '%16680%'
+
 Create View bvCribItems
 as
 select item
