@@ -16,10 +16,10 @@ where processid = 61748
  and Consumable = 1
 order by toolNumber,toolType
 
-select tt.ToolNumber TN,ti.CribToolID CribId,ti.Quantity QtyReq,ti.NumberOfCuttingEdges Edges,ti.QuantityPerCuttingEdge TLife
--- ti.AdditionalNotes
+select tt.ToolNumber TN,ti.CribToolID CribId,ti.Quantity QtyReq,ti.NumberOfCuttingEdges Edges,ti.QuantityPerCuttingEdge TLife,
+-- ti.AdditionalNotes,
 -- ,ti.*
--- tt.OpDescription,tt.Alternate,ti.CribToolID,ti.QuantityPerCuttingEdge,ti.AdditionalNotes
+ tt.OpDescription,tt.Alternate,ti.CribToolID,ti.QuantityPerCuttingEdge,ti.AdditionalNotes
 -- ti.*
 from [ToolList Tool] tt
 inner join [ToolList Item] ti
@@ -27,8 +27,8 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and ti.Consumable = 1
 -- and tt.ToolNumber = 12
--- where tt.processid = 61748 -- P558 Knuckles
-where tt.processid = 61442 -- RDX 51393TJB A040M1
+where tt.processid = 61748 -- P558 Knuckles
+-- where tt.processid = 61442 -- RDX 51393TJB A040M1
 order by tt.ToolNumber
 
 61748|10103355 

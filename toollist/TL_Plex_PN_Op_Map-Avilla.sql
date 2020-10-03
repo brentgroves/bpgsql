@@ -11,6 +11,8 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Avilla (
 );
 select * from TL_Plex_PN_Op_Map_Avilla
 
+select * from TL_Plex_PN_Op_Map_Albion
+
 -- '10103355','A'
 select * 
 from dbo.TL_Plex_PN_Op_Map_Avilla  
