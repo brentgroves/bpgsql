@@ -9,17 +9,21 @@ select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
 Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
 -- * 
 -- select toolNumber tn,itemNumber item,Quantity,QuantityPerCuttingEdge qtyPerCuttingEdge
-select toolNumber tn,itemNumber item,QuantityPerCuttingEdge qty
+select toolNumber tn,itemNumber item,NumberOfCuttingEdges,QuantityPerCuttingEdge qty
+-- ,*
 from bvToolListItemsOnlyLv1
-where processid = 61748
+where processid = 61442
 -- and toolNumber = 6
  and Consumable = 1
+and NumberOfCuttingEdges <>1
 order by toolNumber,toolType
 
-select tt.ToolNumber TN,ti.CribToolID CribId,ti.Quantity QtyReq,ti.NumberOfCuttingEdges Edges,ti.QuantityPerCuttingEdge TLife,
+select * from [ToolList Master] where processid = 61748
+
+select tt.ToolNumber TN,ti.CribToolID CribId,ti.Quantity QtyReq,ti.NumberOfCuttingEdges Edges,ti.QuantityPerCuttingEdge TLife
 -- ti.AdditionalNotes,
 -- ,ti.*
- tt.OpDescription,tt.Alternate,ti.CribToolID,ti.QuantityPerCuttingEdge,ti.AdditionalNotes
+-- tt.OpDescription,tt.Alternate,ti.CribToolID,ti.QuantityPerCuttingEdge,ti.AdditionalNotes
 -- ti.*
 from [ToolList Tool] tt
 inner join [ToolList Item] ti
@@ -27,8 +31,8 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and ti.Consumable = 1
 -- and tt.ToolNumber = 6
--- where tt.processid = 61748 -- P558 Knuckles
-where tt.processid = 61442 -- RDX 51393TJB A040M1
+where tt.processid = 61748 -- P558 Knuckles
+-- where tt.processid = 61442 -- RDX 51393TJB A040M1
 -- where ti.CribToolID = '15843'
 -- 15843,14855
 order by tt.ToolNumber
