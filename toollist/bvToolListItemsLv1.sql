@@ -24,8 +24,36 @@ where customer = 'JOHN DEERE'
 ) jd 
 on i.job=jd.originalprocessid
 
-
+/*
+ * A list of item you can copy and paste into Plex temp table.
+ */
+select 
+'(''' + i.item + '''),'
+from 
+(
+	select distinct item from dbo.bfToolBossItemsInPlant(12) i
+) i
+order by i.item
 -- dbo.bvToolListItemsLv1 source
+
+select 
+'''' + i.itemNumber + ''','
+from 
+(
+	-- select count(*) cnt from ( -- 336
+	select distinct i.itemNumber 
+	from 
+	(
+		select distinct processid,itemNumber from bvToolListItemsLv1 i
+	) i
+	inner join 
+	(
+		select  processid from dbo.bfToolListsInPlant(12) 
+	) tl 
+	on i.processid = tl.ProcessId 
+	-- )s1
+)i
+order by i.itemNumber
 
 --////////////////////////////////////////////////
 -- Each toolid/item could have a different items
