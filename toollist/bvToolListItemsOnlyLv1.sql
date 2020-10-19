@@ -9,14 +9,28 @@ select toolNumber,OpDescription,itemNumber,Consumable,tooltype,tooldescription,
 Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
 -- * 
 -- select toolNumber tn,itemNumber item,Quantity,QuantityPerCuttingEdge qtyPerCuttingEdge
-select toolNumber tn,itemNumber item,NumberOfCuttingEdges,QuantityPerCuttingEdge qty
+ select lv1.toolNumber tn,lv1.itemNumber item
+ ,ti.ToolDescription,ti.Quantity,ti.QuantityPerCuttingEdge qtyPerCuttingEdge,ti.Regrindable,ti.QtyPerRegrind,ti.NumOfRegrinds,
+ ti.AdditionalNotes
+ 
+ 
+ -- Quantity,NumberOfCuttingEdges,QuantityPerCuttingEdge qty
 -- ,*
-from bvToolListItemsOnlyLv1
-where processid = 61442
--- and toolNumber = 6
- and Consumable = 1
-and NumberOfCuttingEdges <>1
-order by toolNumber,toolType
+-- select *
+from bvToolListItemsOnlyLv1 lv1
+inner join [ToolList Tool] tt
+on lv1.toolNumber=tt.toolNumber
+and lv1.processid = tt.processid
+inner join [ToolList Item] ti
+on tt.processid = ti.processid 
+and tt.ToolID = ti.ToolID
+and lv1.itemNumber = ti.CribToolId
+-- where lv1.processid = 61442  -- RDX RH Bracket, plant 11
+ where lv1.processid = 61748  -- P558 Knuckles, plant 6
+and lv1.toolNumber = 14
+ and lv1.Consumable = 1
+-- and NumberOfCuttingEdges <>1
+order by lv1.toolNumber,lv1.toolType
 
 select * from [ToolList Master] where processid = 61748
 
@@ -31,8 +45,8 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and ti.Consumable = 1
 -- and tt.ToolNumber = 6
-where tt.processid = 61748 -- P558 Knuckles
--- where tt.processid = 61442 -- RDX 51393TJB A040M1
+-- where tt.processid = 61748 -- P558 Knuckles
+where tt.processid = 61442 -- RDX 51393TJB A040M1
 -- where ti.CribToolID = '15843'
 -- 15843,14855
 order by tt.ToolNumber
