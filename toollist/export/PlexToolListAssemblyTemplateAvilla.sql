@@ -125,7 +125,7 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 	select Part_No,Part_Revision, Assembly_No, Operation from PlexToolListAssemblyTemplate tl
 	-- where tl.Part_No = '6788776'
 	order by tl.Part_No,tl.Part_Revision,tl.Assembly_No,tl.Operation
-
+SELECT * FROM TL_Plex_PN_Op_Map_Avilla
 	
 /*
  * For each ToolList create a TF Assembly.
