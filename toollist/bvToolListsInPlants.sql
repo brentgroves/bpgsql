@@ -20,8 +20,11 @@
 
 
 
-
-
+select * from bvToolListsInPlants
+-- where processid = 56473
+-- where partfamily like '%761.%'
+where partfamily like '%HR3%'
+ where partfamily like '%5K562%'
 
 
 create VIEW [dbo].[bvToolListsInPlants]
