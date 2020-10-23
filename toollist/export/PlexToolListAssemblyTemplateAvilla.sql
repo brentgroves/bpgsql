@@ -19,6 +19,11 @@ from bvToolListsInPlants tl
 where processid = 61258  -- 353
 where partnumber like 'LC5C%'
 -- 	Machine B - WIP
+/* All item numbers for tool list make sure they are in plex */
+select 
+distinct '(''' + itemNumber + '''),'
+from dbo.bvToolListItemsLv1 
+where processid = 62615
 
 
 /*
@@ -89,33 +94,7 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 		inner join TL_Plex_PN_Op_Map_Avilla m 
 		on tl.processid = m.processid  -- 307
 	)tl
-	inner join 
-	(
-		select Assembly_No,Part_No,Part_Revision,Operation,count(*) Count_PN_Rev_Assembly_No
-		from 
-		(
-			select 
-			case 
-				when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
-				when (tt.ToolNumber >= 10) then 'T' + cast(tt.ToolNumber as varchar(3))
-			end Assembly_No,
-			m.Plex_Part_No Part_No,
-			m.Revision Part_Revision,
-			m.Operation_Code Operation
-			-- select * from bvToolListsInPlants where partNumber = '10049132' -- ,pid= 50542,  in map pid 61788
-			-- select count(*) cnt
-			from bvToolListsInPlants tl
-			inner join [ToolList Tool] tt  -- 307
-			on tl.processid = tt.ProcessID
-			inner join TL_Plex_PN_Op_Map_Avilla m 
-			on tl.processid = m.processid  -- 307
-		)tl 
-		group by Assembly_No,Part_No,Part_Revision,Operation
-	)ag	
-	on tl.Assembly_No=ag.Assembly_No and tl.Part_No=ag.Part_No and tl.Part_Revision=ag.Part_Revision and tl.Operation = ag.Operation 
-	inner join dbo.TL_Plex_PN_Op_Map_Avilla m 
-	on tl.ProcessID=m.ProcessID 
-	where m.ProcessID = 61442
+
 	select * from TL_Plex_PN_Op_Map_Avilla
 	-- where tl.Part_No = '6788776'
 	select * from PlexToolListAssemblyTemplate tl
@@ -126,7 +105,7 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 	-- where tl.Part_No = '6788776'
 	order by tl.Part_No,tl.Part_Revision,tl.Assembly_No,tl.Operation
 SELECT * FROM TL_Plex_PN_Op_Map_Avilla
-	
+	select * from PlexToolListAssemblyTemplate
 /*
  * For each ToolList create a TF Assembly.
  */
@@ -189,9 +168,13 @@ where m.Plex_Part_No = '6788776'
 
 -- select count(*) cnt from PlexToolListAssemblyTemplate tl  -- 367
 -- delete from PlexToolListAssemblyTemplate where Assembly_No like 'TM%'
-	select Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
+	select Assembly_No,Tool_Assembly_Type,
+  	SUBSTRING(REPLACE(rtrim(Description), CHAR(216),''),1,50) Description,
+	-- Description,
+	Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
 	from PlexToolListAssemblyTemplate tl  -- 367
-	where Part_No like 'LC5C%'
+
+	-- where Part_No like 'LC5C%'
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 	
 	select * from PlexToolListAssemblyTemplate tl  

@@ -1,7 +1,7 @@
 -- TL_Plex_PN_Op_Map
 --select * into Plex_PN_Op_Map_Edon from TL_Plex_PN_Op_Map 
--- truncate table TL_Plex_PN_Op_Map_Albion
--- drop table TL_Plex_PN_Op_Map_Albion
+-- truncate table TL_Plex_PN_Op_Map_Avilla
+-- drop table TL_Plex_PN_Op_Map_Avilla
 CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Avilla (
 	ProcessID int NOT NULL,
 	TL_Part_No	varchar (100), 
@@ -19,7 +19,10 @@ from dbo.TL_Plex_PN_Op_Map_Avilla
 where Plex_Part_No = ''
 
 insert into TL_Plex_PN_Op_Map_Avilla (ProcessID,TL_Part_No,Plex_Part_No,Revision,Operation_Code)
-values(61442,'51393-TJB-A040-M1','51393TJB A040M1','40-M1-','Final')
+values
+-- (62615,'HR3V-5K651-BA','HR3V-5K651-BA','A','Final')
+(62615,'HR3V-5K652-BA','HR3V-5K652-BA','A','Final')
+-- values(61442,'51393-TJB-A040-M1','51393TJB A040M1','40-M1-','Final')
 
 
 select * from dbo.TL_Plex_PN_Op_Map_Avilla m where m.Plex_Part_No like '%100248%' 
@@ -38,9 +41,10 @@ n.*,tm.*
 FROM [ToolList Master] tm 
 left outer join [ToolList PartNumbers] n 
 on tm.processid=n.processid
-where tm.PartFamily like '%558%6K%LH%'  --TL = THERE ARE 3 OPERATIONS IN THE TOOL LIST
+-- where tm.PartFamily like '%558%6K%LH%'  --TL = THERE ARE 3 OPERATIONS IN THE TOOL LIST
 -- where tm.PartFamily like '%RDX%'  --TL = 51393-TJB-A040-M1 RH RDX COMPLIANCE BRACKET, G-Code,
-where tm.processid = 62517
+where tm.processid = 62615
+-- where tm.processid = 62517
 where partNumbers like '10024895%'
 
 inner join [ToolList Plant] p 

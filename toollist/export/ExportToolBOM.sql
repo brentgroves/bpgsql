@@ -1,7 +1,7 @@
 
 -- -- Assembly No,Part No,Part Revision,Operation Code,Tool No,Qty,Matched Set,Station,Optional,Workcenter,Sort Order
 select *
--- into dbo.PlexToolBOM0910B  -- 1083
+into dbo.PlexToolBOM1023  -- 1083
 from dbo.PlexToolBOM 
 -- select * from PlexToolBOM0910B
 
@@ -60,7 +60,8 @@ insert into dbo.PlexToolBOM (Assembly_No,Part_No,Part_Revision,Operation_Code,To
 --)s2  -- 1044
 -- where a.Operation <> 'Machine Complete'
 
-	
+	select * from PlexToolBOM
+	order by Assembly_No,Part_No,Tool_No 
 /*
  * 2nd insert ToolList Fixture items
  */
@@ -190,6 +191,7 @@ FROM
 	Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	from dbo.PlexToolBOM b
 ) s1 
+order by Assembly_No,Part_No,Tool_No 
 where Tool_No in ('16793')
 and Part_No = 'W11033021'
 

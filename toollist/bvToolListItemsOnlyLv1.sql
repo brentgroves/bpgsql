@@ -26,7 +26,8 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and lv1.itemNumber = ti.CribToolId
 -- where lv1.processid = 61442  -- RDX RH Bracket, plant 11
- where lv1.processid = 61748  -- P558 Knuckles, plant 6
+-- where lv1.processid = 61748  -- P558 Knuckles, plant 6
+ where lv1.processid  = 62615
 and lv1.toolNumber = 14
  and lv1.Consumable = 1
 -- and NumberOfCuttingEdges <>1
@@ -43,10 +44,12 @@ from [ToolList Tool] tt
 inner join [ToolList Item] ti
 on tt.processid = ti.processid 
 and tt.ToolID = ti.ToolID
-and ti.Consumable = 1
+-- and ti.Consumable = 1
 -- and tt.ToolNumber = 6
 -- where tt.processid = 61748 -- P558 Knuckles
-where tt.processid = 61442 -- RDX 51393TJB A040M1
+where tt.processid = 62615 -- RDX 51393TJB A040M1
+
+-- where tt.processid = 61442 -- RDX 51393TJB A040M1
 -- where ti.CribToolID = '15843'
 -- 15843,14855
 order by tt.ToolNumber

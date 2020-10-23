@@ -1,13 +1,22 @@
 select
-itemNumber 
+processid,itemNumber 
 --count(*) cnt -- 888
 from bvToolListItemsInPlants 
 where plant = 12
+and processid = 62615
+select 
+itemNumber
+from dbo.bvToolListItemsLv1 
+where processid = 62615
 
+select * 
+--	into btDistinctToolLists
+	from bvDistinctToollists
+where processid = 62615
 
-select * from [ToolList Master] tm 
+	select * from [ToolList Master] tm 
 where
-tm.ProcessId = 	62521  -- there are 2 tool lists for the same part and operation so I will pick the newest one.
+tm.ProcessId = 	62615  -- there are 2 tool lists for the same part and operation so I will pick the newest one.
 --tm.ProcessId = 	62521 -- OPID=50542,10049132 JT REAR CARRIER-NON ELD,Released
 
 
