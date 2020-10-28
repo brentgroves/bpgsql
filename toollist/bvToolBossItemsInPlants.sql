@@ -1,5 +1,11 @@
 -- dbo.bvToolBossItemsInPlants source
-select * from dbo.bvToolBossItemsInPlants where plant = '12'
+select count(*) cnt
+from 
+(
+select 
+distinct item 
+from dbo.bvToolBossItemsInPlants where plant = '11'  -- 1452
+)s1
 create view [dbo].[bvToolBossItemsInPlants] 
 as
 -- toollists items that have a category that is to be stocked in the toolbosses

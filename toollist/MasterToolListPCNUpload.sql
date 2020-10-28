@@ -4,16 +4,25 @@
 
  * Join to bvToolListItemsInPlant view to filter Plex supply items that are not on active tool lists.
  * Join to bvToolBossItemsInPlant view to change PlxMasterToolList StorageLocation field to say 'Tool Boss'
+ * select distinct item from bvToolBossItemsInPlants where plant = '11' order by item
  * for items in vending machines.
  * 
  */
--- select count(*) cnt from dbo.PlexMasterToolList  -- 502 
-/*
-select count(*) from (
-select
-itemNumber
-from
+
+select count(*) cnt 
+from 
 (
+  select distinct itemnumber from bvToolListItemsInPlants where plant = '11' order by itemnumber 
+)s1  -- 681	
+
+
+drop table tmpToolListItemsAvilla 
+create table tmpTooListItemsAvilla
+(
+	Row_No int,
+	itemNumber varchar(50)
+)
+insert into tmpTooListItemsAvilla (Row_No,itemNumber)
 	select
 	row_number() OVER(ORDER BY itemNumber ASC) AS Row_No,
 	itemNumber
@@ -26,25 +35,24 @@ from
 		(
 			select
 			
-			-- '(' + char(39) + itemNumber + char(39) + '),' itemNumber  -- insert format
-			char(39) + itemNumber + char(39) + ',' itemNumber -- where in format
+			'(' + char(39) + itemNumber + char(39) + '),' itemNumber  -- insert format
+			-- char(39) + itemNumber + char(39) + ',' itemNumber -- where in format
 			-- count(*) cnt -- 888
 			from bvToolListItemsInPlants 
-			where plant = 6   
+			where plant = 11 
 			-- and itemNumber = '010338'
 			-- where plant = 11  --2854
 			-- and itemNumber = '14144'  This item is not in Albion Plex
 		)s1
 	)s2
-)s3
+select itemNumber from tmpTooListItemsAvilla
 -- where Row_No between 1 and 500
-where Row_No > 500
+ where Row_No > 500
 -- where Row_No between 501 and 1000
 -- where Row_No between 1001 and 1500
 -- where Row_No between 1501 and 2000
 -- where Row_No between 2001 and 2500
 where Row_No > 2500
-*/
 /*
 --drop table PlexMasterToolList
 create table PlexMasterToolList
@@ -129,7 +137,7 @@ count(*) cnt  --321
 from
 (
 	select itemNumber from 
- 	bvToolListItemsInPlants  where plant = '12'  -- 993
+ 	bvToolListItemsInPlants  where plant = '11'  -- 993
 ) p
 left outer join PlexMasterToolList tl
 on p.itemNumber = tl.Tool_No  -- 504
@@ -142,8 +150,8 @@ from dbo.PlexMasterToolList p -- 502
 select count(*) cnt 
 from 
 (
-  select distinct itemnumber from bvToolListItemsInPlants where plant = '12'
-)s1  -- 357	
+  select distinct itemnumber from bvToolListItemsInPlants where plant = '11'
+)s1  -- 681	
 
 select count(*) cnt 
 from dbo.PlexMasterToolList p -- 502
@@ -170,7 +178,7 @@ on tl.itemnumber=tb.item
  */
 /*
 select distinct processid from 
- 	bvToolListItemsInPlants  where plant = '12'  -- 30
+ 	bvToolListItemsInPlants  where plant = '11'  -- 39
 */
 /*
 select distinct itemnumber 

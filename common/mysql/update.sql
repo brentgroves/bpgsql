@@ -47,3 +47,17 @@ BEGIN
 	
 END;	
 
+OPTION #2
+	select 
+	-- p.CNC_Key,p.Part_Key,p.Operation_Key,b.Set_No,b.Block_No,b.Assembly_Key,
+	a.Increment_By into pIncrementBy  --<-- HERE
+	from CNC_Part_Operation p
+	inner join CNC_Part_Operation_Set_Block b 
+	on p.CNC_Key = b.CNC_Key
+	and p.Part_Key = b.Part_Key
+	and p.Operation_Key = b.Operation_Key
+	inner join CNC_Part_Operation_Assembly a
+	on b.CNC_Key = a.CNC_Key
+	and b.Part_Key = a.Part_Key
+	and b.Operation_Key = a.Operation_Key
+	and b.Assembly_Key = a.Assembly_Key
