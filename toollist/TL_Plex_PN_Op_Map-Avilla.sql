@@ -39,18 +39,19 @@ select
 -- p.plant,
 n.*,tm.* 
 FROM [ToolList Master] tm 
-left outer join [ToolList PartNumbers] n 
+left outer join [ToolList PartNumbers] n  -- 1 to 1 
 on tm.processid=n.processid
 -- where tm.PartFamily like '%558%6K%LH%'  --TL = THERE ARE 3 OPERATIONS IN THE TOOL LIST
 -- where tm.PartFamily like '%RDX%'  --TL = 51393-TJB-A040-M1 RH RDX COMPLIANCE BRACKET, G-Code,
-where tm.processid = 62615
+-- where tm.processid = 62615
 -- where tm.processid = 62517
-where partNumbers like '10024895%'
+-- where partNumbers like '10024895%'
 
 inner join [ToolList Plant] p 
-on tm.processid=p.processid
+on tm.processid=p.processid  -- 1 to many
+where p.Plant = 11
+select * from dbo.TL_Plex_PN_Op_Map_Avilla tppoma
 
-select * from dbo.TL_Plex_PN_Op_Map where Plex_Part_No = 'LC5C-5K652-CE'
 -- update dbo.TL_Plex_PN_Op_Map 
 set Operation_Code = 'Final'
 where Plex_Part_No = 'LC5C-5K652-CE'
@@ -60,8 +61,10 @@ tl.partNumber TL_Part_No,m.Plex_Part_No,m.Revision
 from dbo.bvToolListsInPlants tl 
 left outer join TL_Plex_PN_Map m 
 on tl.partNumber = m.TL_Part_No
-where plant = '12'
+where plant = '11'
 order by m.Plex_Part_No,m.Revision 
+
+select * from TL_Plex_PN_Map m
 
 select 
 tl.*,

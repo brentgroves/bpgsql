@@ -14,8 +14,13 @@ from PlexToolListAssemblyTemplate tl  -- 367
 where processid <> 61748  -- 353
 order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 
-select * 
+
+select descript,partNumber 
 from bvToolListsInPlants tl
+where Plant = 11  -- 39
+order by descript
+
+
 where processid = 61258  -- 353
 where partnumber like 'LC5C%'
 -- 	Machine B - WIP
