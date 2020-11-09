@@ -15,7 +15,8 @@ where processid <> 61748  -- 353
 order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
 
 
-select descript,partNumber 
+select processid,partNumber 
+-- descript,partNumber 
 from bvToolListsInPlants tl
 where Plant = 11  -- 39
 order by descript
@@ -34,7 +35,7 @@ where processid = 62615
 /*
 -- truncate table PlexToolListAssemblyTemplate
 -- drop table PlexToolListAssemblyTemplate
-create table PlexToolListAssemblyTemplateAlbion
+create table PlexToolListAssemblyTemplateAvilla
 (
 	ProcessID int NOT NULL,
 	ToolNumber int NOT NULL,
@@ -53,7 +54,7 @@ create table PlexToolListAssemblyTemplateAlbion
 select * from PlexToolListAssemblyTemplate  -- 15
 */
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
-insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
+insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 	select 
 	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
 	-- tl.Part_No,tl.Part_Revision,tl.Operation,
@@ -98,13 +99,15 @@ insert into PlexToolListAssemblyTemplate (ProcessID,ToolNumber,Assembly_No,Tool_
 		on tl.processid = tt.ProcessID
 		inner join TL_Plex_PN_Op_Map_Avilla m 
 		on tl.processid = m.processid  -- 307
-	)tl
+	)tl  -- 331
 
 	select * from TL_Plex_PN_Op_Map_Avilla
 	-- where tl.Part_No = '6788776'
-	select * from PlexToolListAssemblyTemplate tl
-	where tl.Part_No = '6788776'
-	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
+	select 
+	-- Part_No,Part_Revision,Operation, Assembly_No,Description 
+	count(*) cnt
+	from PlexToolListAssemblyTemplateAvilla tl  -- 331
+	order by Part_No,Part_Revision,Operation,Assembly_No
 
 	select Part_No,Part_Revision, Assembly_No, Operation from PlexToolListAssemblyTemplate tl
 	-- where tl.Part_No = '6788776'
