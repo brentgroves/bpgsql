@@ -32,8 +32,8 @@ values
 (62019,'28245973L','28245973','03D','Machine B - WIP'),
 (62543,'68328258AE','68328258AE','001A','Final'),
 (62544,'68328259AE','68328259AE','001A','Final'),
-(61444,'68284688AC','68285992AF','03b','Final'), -- WILL BE GONE BY JANUARY	
-(61952,'68284689AC','68285991AF','03b','Final'), -- WILL BE GONE BY JANUARY	
+-- (61444,'68284688AC','68285992AF','03b','Final'), -- WILL BE GONE BY JANUARY	NO PROCESS ROUTING
+-- (61952,'68284689AC','68285991AF','03b','Final'), -- WILL BE GONE BY JANUARY	NO PROCESS ROUTING
 (55909,'68284726AB','68285996AC','004','Final'),
 (55910,'68284727AB','68285995AC','004','Final'),
 -- (61446,'68288580AB','68288578AF','B5','Final'),  -- DO NOT MAKE ANYMORE
@@ -73,7 +73,7 @@ left outer join [ToolList PartNumbers] n  -- 1 to 1
 on tm.processid=n.processid
 -- where tm.PartFamily like '%558%6K%LH%'  --TL = THERE ARE 3 OPERATIONS IN THE TOOL LIST
 -- where tm.PartFamily like '%RDX%'  --TL = 51393-TJB-A040-M1 RH RDX COMPLIANCE BRACKET, G-Code,
--- where tm.processid = 62615
+where tm.processid = 56673
 -- where tm.processid = 62517
 -- where partNumbers like '10024895%'
 

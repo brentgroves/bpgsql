@@ -31,7 +31,14 @@ distinct '(''' + itemNumber + '''),'
 from dbo.bvToolListItemsLv1 
 where processid = 62615
 
-
+select tl.processid,tt.ToolNumber, count(*) toolCnt
+from bvToolListsInPlants tl
+inner join [ToolList Tool] tt  -- 307
+on tl.processid = tt.ProcessID
+inner join TL_Plex_PN_Op_Map_Avilla m 
+on tl.processid = m.processid  -- 307
+group by tl.processid,tt.ToolNumber 
+having count(*) > 1
 /*
 -- truncate table PlexToolListAssemblyTemplate
 -- drop table PlexToolListAssemblyTemplate
@@ -54,6 +61,7 @@ create table PlexToolListAssemblyTemplateAvilla
 select * from PlexToolListAssemblyTemplate  -- 15
 */
 -- Assembly No,Tool Assembly Type,Description,Part No,Part Revision,Operation,Tool Assembly Status,Include in Analysis,Analysis Note,Note,Location
+-- truncate table PlexToolListAssemblyTemplateAvilla
 insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 	select 
 	-- ag.Count_PN_Rev_Assembly_No, tl.OperationDescription, 
@@ -66,7 +74,11 @@ insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No
 	*/
 	tl.ProcessID,
 	tl.ToolNumber,
-	tl.Assembly_No + '-' + tl.OperationDescription Assembly_No,
+	case 
+	when ((tl.CellIndex <> 0) and (tl.ToolCount>1)) then substring(tl.Assembly_No + '-' + tl.Cell + '-' + tl.OperationDescription,1,50)
+	else substring(tl.Assembly_No + '-' + tl.OperationDescription,1,50) 
+	end Assembly_No,
+	-- tl.Assembly_No + '-' + tl.OperationDescription Assembly_No,
 	tl.Tool_Assembly_Type,
 	tl.Description,tl.Part_No,tl.Part_Revision,tl.Operation,tl.Tool_Assembly_Status,tl.Include_In_Analysis,tl.Analysis_Note,tl.Note,tl.Location 
 	-- select count(*) cnt  -- 307
@@ -75,6 +87,17 @@ insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No
 		select
 		tl.processid, 
 		tt.ToolNumber,
+		tc.ToolCount,
+/*
+ * ADD TO CASE STATEMENT
+ * T09-CELL2-1ST OP LATHE
+	T09-CELL3-1ST OP LATHE
+	T11-CELL2 1ST OP LATHE
+	T11-CELL3 1ST OP LATHE
+case 
+when tl.Part_No
+ */
+		
 		case 
 			when (tt.ToolNumber < 10) then 'T0' + cast(tt.ToolNumber as varchar(3)) 
 			when (tt.ToolNumber >= 10) then 'T' + cast(tt.ToolNumber as varchar(3))
@@ -83,6 +106,9 @@ insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No
 		'Machining' Tool_Assembly_Type,
 		tt.OpDescription Description,
 		-- tl.PartNumber,
+		CHARINDEX('CELL', tt.OpDescription) CellIndex,
+		substring(tt.OpDescription,CHARINDEX('CELL', tt.OpDescription),6) Cell,
+
 		m.Plex_Part_No Part_No,
 		m.Revision Part_Revision,
 		m.Operation_Code Operation,
@@ -99,14 +125,176 @@ insert into PlexToolListAssemblyTemplateAvilla (ProcessID,ToolNumber,Assembly_No
 		on tl.processid = tt.ProcessID
 		inner join TL_Plex_PN_Op_Map_Avilla m 
 		on tl.processid = m.processid  -- 307
-	)tl  -- 331
+		left outer join 
+		(
+			select tl.processid,tt.ToolNumber, count(*) toolCount
+			from bvToolListsInPlants tl
+			inner join [ToolList Tool] tt  -- 307
+			on tl.processid = tt.ProcessID
+			inner join TL_Plex_PN_Op_Map_Avilla m 
+			on tl.processid = m.processid  -- 307
+			group by tl.processid,tt.ToolNumber 
+			having count(*) > 1		
+		) tc 
+		on tl.processid = tc.processid 
+		and tt.toolNumber = tc.ToolNumber
+	)tl  -- 305
+
+	where tl.Part_No = '28245973' 
+--	and operation = 'Machine Complete' -- 4, OK
+and tl.OperationDescription like '%1ST OP%' 
+order by tl.Assembly_No
+
+ and operation = 'Machine B - WIP'
+--	and Assembly_No like '%2ND OP%' -- 5
+	and Assembly_No like '%1ST OP%' -- 5
+	order by Operation, Assembly_No
 
 	select * from TL_Plex_PN_Op_Map_Avilla
+	where Plex_Part_No = '28245973'
+--	where ProcessID = 56679  -- Machine Complete
+--	where ProcessID = 61581 -- Machine B - WIP
+	where ProcessID = 62019 -- Machine B - WIP
+	-- where Plex_Part_No = '26090196'
+	-- where ProcessID = 56673  -- Machine Complete
+	-- where ProcessID = 62568 -- Machine B - WIP
+	-- where ProcessID = 56675 -- Machine B - WIP
 	-- where tl.Part_No = '6788776'
+	select tl.descript, tt.*
+	from bvToolListsInPlants tl
+	inner join [ToolList Tool] tt  -- 307
+	on tl.processid = tt.ProcessID
+--	where tl.ProcessID = 62019 -- Machine B - WIP
+	--	where tl.ProcessID = 56679  -- Machine Complete
+	where tl.ProcessID = 61581 -- Machine B - WIP
+	and tt.ToolNumber = 9
+/*
+ 2nd op lathe
+	where ProcessID = 62019 -- Machine B - WIP
+3	THREAD OD
+2	FACE AND FINISH OD
+4	CENTER DRILL
+6	FACE IDENTIFICATION GROOVE
+1	TURN GEAR OD ROUGH FACE/OD
+ */
 	select 
-	-- Part_No,Part_Revision,Operation, Assembly_No,Description 
-	count(*) cnt
+	-- part_no,part_revision,operation,assembly_no, count(*)
+	--  Part_No,Part_Revision,Operation, Assembly_No,Description 
+	-- count(*) cnt
+	from PlexToolListAssemblyTemplateAvilla tl  -- 305
+	group by part_no,part_revision,operation,assembly_no
+	having count(*) > 1
+	where 
+	where Part_No = '28245973' 
+--	and operation = 'Machine Complete' -- 4, OK
+ and operation = 'Machine B - WIP'
+	and Assembly_No like '%2ND OP%' -- 5
+--	and Assembly_No like '%1ST OP%' -- 5
+	order by Operation, Assembly_No
+
+	/*
+	 * 	varchar (50)
+1st op lathe
+	where tl.ProcessID = 61581 -- Machine B - WIP
+11	THREAD I.D.-CELL 3
+9	ROUGH DRILL HOLE-CELL 3
+1	FACE AND FINISH OD
+7	BORE ID PROFILE-CELL 3
+5	DRILL 1/2" HOLE
+9	THREAD I.D.-CELL 2
+11	ROUGH DRILL HOLE-CELL 2
+3	BORE ID PROFILE-CELL 2
+ */	
+	select 
+	Part_No,Part_Revision,Operation, Assembly_No,Description 
+	-- count(*) cnt
 	from PlexToolListAssemblyTemplateAvilla tl  -- 331
+	where Part_No = '28245973' 
+	order by Operation, Assembly_No
+
+--	and operation = 'Machine Complete' -- 4, OK
+ and operation = 'Machine B - WIP'
+--	and Assembly_No like '%2ND OP%' -- 5
+	and Assembly_No like '%1ST OP%' -- 5
+	order by Operation, Assembly_No
+
+		/*
+3rd op mill
+ * 	where ProcessID = 56679  -- Machine Complete
+3	CUT INSIDE TEETH
+1	MILL OUTSIDE TEETH AND KEYWAY
+ */	
+	select 
+	Part_No,Part_Revision,Operation, Assembly_No,Description 
+	-- count(*) cnt
+	from PlexToolListAssemblyTemplateAvilla tl  -- 331
+	where Part_No = '28245973' 
+	and operation = 'Machine Complete' -- 4, OK
+ and operation = 'Machine B - WIP'
+--	and Assembly_No like '%2ND OP%' -- 5
+	and Assembly_No like '%1ST OP%' -- 5
+	order by Operation, Assembly_No
+
+	select Assembly_No,Tool_Assembly_Type,
+  	SUBSTRING(REPLACE(rtrim(Description), CHAR(216),''),1,50) Description,
+	-- Description,
+	Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
+	from PlexToolListAssemblyTemplateAvilla tl  -- 367
+	where Part_No = '28245973' 
+	order by Assembly_No
+/*
+ * 
+ */
+--	where tl.ProcessID = 61581 -- Machine B - WIP
+--	where tl.ProcessID = 62019 -- Machine B - WIP
+
+	-- where tl.ProcessID = 56673 -- Machine Complete
+	-- where tl.ProcessID = 62568 -- Machine B - WIP
+	-- where tl.ProcessID = 56675 -- Machine B - WIP
+/*	
+where tl.ProcessID = 56673 
+3rd op mill / Machine Complete
+1 MILL OUTSIDE TEETH AND KEYWAY
+3 CUT INSIDE TEETH
+*/
+/*
+1st op lathe / Machine B - WIP
+1	FACE AND FINISH OD
+3	ROUGH DRILL HOLE
+11	DRILL 1/2" HOLE
+7	BORE ID PROFILE
+9	THREAD ID
+*/
+/*
+ * 2nd op lathe / Machine B - WIP
+3	THREAD OD
+4	CENTER DRILL
+1	TURN GEAR OD ROUGH FACE
+2	FACE AND FINISH OD 
+ * 
+ */
+	select Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,
+Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
+from PlexToolListAssemblyTemplateAvilla
+where Part_No = '28245973' 
+and Assembly_No like '%1ST%'
+order by Operation,Assembly_No 
+
+	select 
+	Part_No,Part_Revision,Operation, Assembly_No,Description 
+	-- count(*) cnt
+	from PlexToolListAssemblyTemplateAvilla tl  -- 331
+	-- where Part_No = '68285992AF'
+
+	where Part_No = '26090196' 
+--	and operation = 'Machine Complete' -- 4, OK
+ and operation = 'Machine B - WIP'
+--	and Assembly_No like '%2ND OP%' -- 5
+	and Assembly_No like '%1ST OP%' -- 5
+	order by Operation, Assembly_No
+	
+	
+	
 	order by Part_No,Part_Revision,Operation,Assembly_No
 
 	select Part_No,Part_Revision, Assembly_No, Operation from PlexToolListAssemblyTemplate tl
@@ -180,7 +368,8 @@ where m.Plex_Part_No = '6788776'
   	SUBSTRING(REPLACE(rtrim(Description), CHAR(216),''),1,50) Description,
 	-- Description,
 	Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
-	from PlexToolListAssemblyTemplate tl  -- 367
+	from PlexToolListAssemblyTemplateAvilla tl  -- 367
+	where Part_No = '28245973' 
 
 	-- where Part_No like 'LC5C%'
 	order by tl.Part_No,tl.Part_Revision,tl.Operation,tl.Assembly_No
