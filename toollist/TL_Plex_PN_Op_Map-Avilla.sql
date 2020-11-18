@@ -21,13 +21,14 @@ where Plex_Part_No = ''
 truncate table TL_Plex_PN_Op_Map_Avilla
 insert into TL_Plex_PN_Op_Map_Avilla (ProcessID,TL_Part_No,Plex_Part_No,Revision,Operation_Code)
 values
-(56673,'26090196','26090196','04E','Machine Complete'),
+(56673,'26090196','26090196','04E','Final'),
 (62568,'26090196L','26090196','04E','Machine B - WIP'),
 (56675,'26090196L','26090196','04E','Machine B - WIP'),
-(56676,'26090199','26090199','04E','Machine Complete'),
+(56676,'26090199','26090199','04E','Final'),
 (62569,'26090199L','26090199','04E','Machine B - WIP'),
 (61768,'26090199L','26090199','04E','Machine B - WIP'),
-(56679,'28245973','28245973','03D','Machine Complete'),
+(56679,'28245973','28245973','03D','Final'),  -- CHANGED THIS 
+-- (56679,'28245973','28245973','03D','Machine Complete'),  -- CHANGED THIS '28245973'
 (61581,'28245973L','28245973','03D','Machine B - WIP'),
 (62019,'28245973L','28245973','03D','Machine B - WIP'),
 (62543,'68328258AE','68328258AE','001A','Final'),
@@ -52,7 +53,7 @@ values
 (63176,'51216-TBC-A012-M1V','51216-TBC-A012-M1','02','Machine Complete'),
 (61442,'51393-TJB-A040-M1','51393TJB A040M1','40-M1-','Final'),
 (61443,'51394-TJB-A040-M1','51394TJB A040M1','40-M1-','Final')
-select * from dbo.TL_Plex_PN_Op_Map_Avilla m where m.Plex_Part_No like '%100248%' 
+select * from dbo.TL_Plex_PN_Op_Map_Avilla m where m.Plex_Part_No like '28245973' 
 select * from dbo.TL_Plex_PN_Op_Map_Albion
 	GA - 68284688AC RH KL MCA FLCA ON-ROAD - MILL	61444	68284688AC	68285992AF	03b	Final	WILL BE GONE BY JANUARY				
 	GA - 68284689AC LH KL MCA FLCA ON-ROAD - MILL	61952	68284689AC	68285991AF	03b	Final	WILL BE GONE BY JANUARY	

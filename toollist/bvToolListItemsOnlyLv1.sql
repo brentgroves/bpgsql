@@ -26,9 +26,9 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and lv1.itemNumber = ti.CribToolId
 -- where lv1.processid = 61442  -- RDX RH Bracket, plant 11
--- where lv1.processid = 61748  -- P558 Knuckles, plant 6
- where lv1.processid  = 62615
-and lv1.toolNumber = 14
+where lv1.processid = 61748  -- P558 Knuckles, plant 6
+-- where lv1.processid  = 62615
+and lv1.toolNumber = 9
  and lv1.Consumable = 1
 -- and NumberOfCuttingEdges <>1
 order by lv1.toolNumber,lv1.toolType
@@ -79,6 +79,8 @@ order by toolNumber,toolType
 -- so we have to choose the toolids items per part ratio
 -- for costing purposes.
 -- /////////////////////////////////////////////////
+-- dbo.bvToolListItemsOnlyLv1 source
+
 -- dbo.bvToolListItemsOnlyLv1 source
 
 create View [dbo].[bvToolListItemsOnlyLv1] 
