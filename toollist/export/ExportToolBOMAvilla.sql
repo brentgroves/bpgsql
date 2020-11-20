@@ -1,7 +1,8 @@
 
 -- -- Assembly No,Part No,Part Revision,Operation Code,Tool No,Qty,Matched Set,Station,Optional,Workcenter,Sort Order
-select *
-from dbo.PlexToolBOMAvilla 
+select count(*)
+from dbo.PlexToolBOMAvilla -- 1291
+
 -- select * from PlexToolBOM0910B
 
 -- truncate table PlexToolBOMAvilla
@@ -56,42 +57,88 @@ insert into dbo.PlexToolBOMAvilla (Assembly_No,Part_No,Part_Revision,Operation_C
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 	-- THERE ARE DUPS BECAUSE MULTIPLE CNC OPERATIONS MAP TO A SINGLE PLEX OPERATION AND HAVE THE SAME TOOLNUMBER.
---)s2  -- 1171
+-- )s2  -- 1171
+-- having Part_No = '26090196'
 -- where a.Operation <> 'Machine Complete'
 
 	/*
 	 * Test regular items only
 	 */
 	select count(*) cnt from PlexToolBOMAvilla -- 1171
-	select * from PlexToolBOMAvilla 
-	where Part_No = '28245973' -- 72
-	-- and Assembly_No like '%T01%1ST%'
+	-- select * from PlexToolBOMAvilla where tool_no  = '14758'
+	where Part_No != '28245973' -- 1198
+	where Part_No = '26090196' 
+	-- where tool_no = '16219'
+	-- where Part_No = '28245973' -- 93
+	and Assembly_No like '%T01%3RD%'
 	order by Assembly_No,Part_No,Tool_No 
 
 	select tm.processid,tm.PartFamily,tm.OperationDescription,tt.ToolNumber,tt.OpDescription
 	,tt.ToolID,ti.CribToolID,ti.ToolType,ti.Manufacturer
 	from [Toollist Master] tm
+	inner join [Toollist Partnumbers] pn 
+	on tm.processid=pn.processid
 	inner join [ToolList Tool] tt  
 	on tm.processid = tt.ProcessID  -- 1 to many
 	inner join [TOOLLIST ITEM] as ti 
 	-- when a tool gets deleted the toollist item remains?
 	on ti.toolid=tt.toolid  -- 1 to many
-	 where tm.ProcessID = 61581  -- 1ST OP LATHE
+	-- where PartNumbers = '26090196L'
+	-- where tm.ProcessID = 62568  -- 1ST OP LATHE
+	-- where tm.ProcessID = 56675  -- 2ND OP LATHE
+	 where tm.ProcessID = 56673  -- 3RD OP MILL
+	and tt.ToolNumber = 1
+	order by tm.OperationDescription,ti.CribToolID	-- 72
+	/*
+	 where tm.ProcessID = 56673  -- 3RD OP MILL
+	and tt.ToolNumber = 1
+370944|0003966 
+370944|0005114 
+370944|0005495 
+370944|006829  
+370944|006830  
+370944|006831  
+370944|006832  
+370944|006833  
+370944|006839  
+370944|007052  
+370944|007106  
+370944|007319  
+370944|007320  */
+
+	where tm.ProcessID = 61581  -- 1ST OP LATHE
 	-- where tm.ProcessID = 62019 -- 2ND OP LATHE
 	-- where tm.ProcessID = 56679 -- 3RD OP MILL
 	-- where tm.ProcessID in (56679,62019,61581)  -- 72
-	and tt.ToolNumber = 1
+	and tt.toolid = 384818
+	-- and tt.ToolNumber = 1
 	order by tm.OperationDescription,ti.CribToolID	-- 72
 	/*
 	where tm.ProcessID = 61581  -- 1ST OP LATHE
 	and tt.ToolNumber = 1
-FACE AND FINISH OD|384818|0002445
-FACE AND FINISH OD|384818|0003730
-FACE AND FINISH OD|384818|0003881
-FACE AND FINISH OD|384818|0003882
-FACE AND FINISH OD|384818|0003883
-FACE AND FINISH OD|384818|16219  	
+FACE AND FINISH OD|384818|0002445  
+FACE AND FINISH OD|384818|0003730  
+FACE AND FINISH OD|384818|0003881  
+FACE AND FINISH OD|384818|0003882  
+FACE AND FINISH OD|384818|0003883  
+FACE AND FINISH OD|384818|16219    	
 */
+select * from bvToolListItemsOnlyLv1	where processid = 61581 
+and toolid = 384818
+and toolNumber = 1 order by itemNumber 
+select a.processid,a.toolid, a.toolnumber from PlexToolListAssemblyTemplateAvilla a  where processid = 61581 and a.toolid = 384818 order by a.ToolNumber 
+
+select *
+from PlexToolListAssemblyTemplateAvilla a  -- 359 
+-- select * from PlexToolListAssembly a	
+inner join bvToolListItemsOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
+on a.processid=lv1.processid   -- 1 to many
+and a.ToolID=lv1.ToolID 
+-- where processid = 61581 and toolid = 384818
+where a.processid = 61581 
+ and a.toolid = 384818
+order by itemNumber 
+
 	/*
 	where tm.ProcessID = 62019 -- 2ND OP LATHE
 	and tt.ToolNumber = 1

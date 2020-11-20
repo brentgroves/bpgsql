@@ -25,7 +25,8 @@ ToolNumber,Assembly_No,
 Description,
 Part_No,Part_Revision,Operation
 --|Tool_Assembly_Status 
-from PlexToolListAssemblyTemplateAvilla where Part_No = '28245973' 
+from PlexToolListAssemblyTemplateAvilla where Part_No = '26090196' 
+-- from PlexToolListAssemblyTemplateAvilla where Part_No = '28245973' 
 and Assembly_No like '%3RD%'
 order by Assembly_No
 select count(*) cnt from PlexToolListAssemblyTemplateAvilla -- 359

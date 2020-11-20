@@ -4,3 +4,4 @@ set InactiveItem = 0
 -- select * from inventry 
 where itemNumber in ('17242','17243')
 --17242 and 17243
+select * from inventry where itemNumber = '14758'
