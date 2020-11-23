@@ -6,7 +6,7 @@
 -- bvToolBossItemsInPlants to determine items to be stocked in the ToolBosses.
 -- This list would be appropriate to list restrictions for the Cribmaster if you
 -- grouped the recordset on all fields except plant.
-select * from dbo.bvToolListItemsInPlants 
+select * from dbo.bvToolListItemsInPlants where processid = 63647
 --///////////////////////////////////////////////////////////////////////////////
 create view [dbo].[bvToolListItemsInPlants]
 as

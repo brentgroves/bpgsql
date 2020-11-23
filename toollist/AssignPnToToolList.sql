@@ -1,8 +1,15 @@
-select * from [ToolList Master] tm
+select plt.Plant, pn.PartNumbers, tm.* from [ToolList Master] tm
 left outer join [ToolList PartNumbers] pn 
 on tm.processId= pn.processid
---where customer = 'FCA'
-where tm.processid = '54614'
+
+left outer join [ToolList Plant] plt 
+on tm.processid = plt.processid
+-- where PartNumbers like '%101%'
+-- WHERE customer = 'TRX'
+where customer = 'COPELAND'
+and PartNumbers like '501-1234-00'
+and tm.processid = '63647'
+
 
 --insert into [ToolList PartNumbers] (ProcessId,PartNumbers)
 values (54614,'68480625AA')
