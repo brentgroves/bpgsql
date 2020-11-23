@@ -1,11 +1,8 @@
 -- dbo.bvToolBossItemsInPlants source
-select count(*) cnt
-from 
-(
-select 
-distinct item 
-from dbo.bvToolBossItemsInPlants where plant = '11'  -- 1452
-)s1
+SELECT * FROM bvToolBossItemsInPlants
+
+-- dbo.bvToolBossItemsInPlants source
+
 create view [dbo].[bvToolBossItemsInPlants] 
 as
 -- toollists items that have a category that is to be stocked in the toolbosses
@@ -20,6 +17,7 @@ as
 			(
 				select * from bvToolListItemsInPlants
 				where toolbossstock=0 and UDFGLOBALTOOL <> 'YES'
+				and processid = 12818
 				--27791
 			) lv1
 			inner join
