@@ -13,7 +13,37 @@ Quantity,QuantityPerCuttingEdge,NumberOfCuttingEdges
  ,ti.ToolDescription,ti.Quantity,ti.QuantityPerCuttingEdge qtyPerCuttingEdge,ti.Regrindable,ti.QtyPerRegrind,ti.NumOfRegrinds,
  ti.AdditionalNotes
  
- 
+ select * from [ToolList Item] ti where ti.processid = 63647
+ select * from [TOOLLIST TOOL] as tt where tt.processid = 63647
+
+select ti.*
+FROM [TOOLLIST ITEM] as ti 
+-- when a tool gets deleted the toollist item remains?
+inner join [TOOLLIST TOOL] as tt on ti.toolid=tt.toolid
+INNER JOIN 
+(
+	-- these are the toollist which are added to the toolbosses
+	select tm.* 
+	from
+	btDistinctToolLists tb
+	inner join
+	[ToolList Master] tm
+	on tb.ProcessId=tm.ProcessID
+	--731
+) as tm 
+ON tt.PROCESSID = tm.PROCESSID 
+where tt.processid = 63647
+
+select * from btDistinctToolLists where processid = 63647
+
+
+	select * 
+	into btDistinctToolLists
+	from bvDistinctToollists
+	where processid = 63647
+
+
+
  -- Quantity,NumberOfCuttingEdges,QuantityPerCuttingEdge qty
 -- ,*
 -- select *
@@ -26,7 +56,8 @@ on tt.processid = ti.processid
 and tt.ToolID = ti.ToolID
 and lv1.itemNumber = ti.CribToolId
 -- where lv1.processid = 61442  -- RDX RH Bracket, plant 11
-where lv1.processid = 61748  -- P558 Knuckles, plant 6
+-- where lv1.processid = 61748  -- P558 Knuckles, plant 6
+where lv1.processid = 63647
 -- where lv1.processid  = 62615
 and lv1.toolNumber = 9
  and lv1.Consumable = 1

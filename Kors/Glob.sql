@@ -17,6 +17,10 @@ Create table Part_v_Container_Piece
 	Record_Date datetime NOT NULL,  -- Passed as param.
 )
 
+TST LH 324
+TST LH 324 20 4 087,TST LH 324 20 4 088,TST LH 324 20 4 089,TST LH 324 20 4 090,TST LH 324 20 4 091,TST LH 324 20 4 092,TST LH 324 20 4 093,TST LH 324 20 4 094,TST LH 324 20 4 095,TST LH 324 20 4 096
+
+
 /*
 Stored procedure needed to record Grob Line pieces, please note the piece serial number will be provided as a comma separated CSV string.  
 The quantity will be for the number of serial numbers in the CSV string.  
@@ -31,7 +35,7 @@ EXEC @ReturnCode = InsertContainerPiece
 	@Workcenter_Code = 'Workcenter_Code',
    	@Job_No  = 'Job_No',
 	@Part_No = 'Part_No',
-   	@Piece_Serial_No = '5,6,7,8',
+   	@Piece_Serial_No = 'MYTEST LH 324 20 4 087,MYTEST LH 324 20 4 088,MYTEST LH 324 20 4 089,MYTEST LH 324 20 4 090,MYTEST LH 324 20 4 091,MYTEST LH 324 20 4 092,MYTEST LH 324 20 4 093,MYTEST LH 324 20 4 094,MYTEST LH 324 20 4 095,MYTEST LH 324 20 4 096',
 	@Piece_Status = 'Piece_Status',
 	@Reject_Code ='Reject_Code', 
 	@Container_No ='Container_No',
@@ -40,13 +44,18 @@ EXEC @ReturnCode = InsertContainerPiece
 	@Record_Date = '2020-01-16 12:32:00'
    	
 	-- truncate table Kors.dbo.Part_v_Container_Piece
-select * from Kors.dbo.Part_v_Container_Piece
+select * from Kors.dbo.Part_v_Container_Piece 
+where Piece_Serial_No = 'TST LH 324 20 4 056'
+
+TST LH 324
+TST LH 324 20 4 087,TST LH 324 20 4 088,TST LH 324 20 4 089,TST LH 324 20 4 090,TST LH 324 20 4 091,TST LH 324 20 4 092,TST LH 324 20 4 093,TST LH 324 20 4 094,TST LH 324 20 4 095,TST LH 324 20 4 096
+
 -- drop procedure InsertContainerPiece;
 CREATE PROCEDURE InsertContainerPiece
 	@Workcenter_Code varchar(50),
 	@Job_No varchar(20),
 	@Part_No varchar(100),
-	@Piece_Serial_No varchar(50),
+	@Piece_Serial_No varchar(max),
 	@Piece_Status varchar(20),
 	@Reject_Code varchar(60), 
 	@Container_No varchar(50),
@@ -79,21 +88,28 @@ BEGIN
 
 
 End;
--- Table variable   
-DECLARE @MyTableVar table( Container_Piece_Key int, Piece_Serial_No varchar(25));
 
-INSERT INTO Kors.dbo.Part_v_Container_Piece
-(Workcenter_Code,Job_No,Part_No,Piece_Serial_No,Piece_Status,Reject_Code,Container_No,Plex_Instance_No,Quantity,Record_Date)
-OUTPUT INSERTED.Container_Piece_Key,INSERTED.Piece_Serial_No
-into @MyTableVar
-VALUES(@Workcenter_Code,@Job_No,@Part_No,@Piece_Serial_No,@Piece_Status,@Reject_Code,@Container_No,@Plex_Instance_No,1,@Record_Date);
--- VALUES(@Workcenter_Code,@Job_No,@Part_No,@Ind_Piece_Serial_No,@Reject_Code,@Container_No,@Plex_Instance_No,1,@Record_Date);
+EXEC GetContainerPiece 
+--   	@Piece_Serial_No = '1,2,3,4',
+	@Piece_Serial_No = 'TST LH 324 20 4 056',
+-- drop PROCEDURE GetContainerPiece
+CREATE PROCEDURE GetContainerPiece
+	@Piece_Serial_No varchar(50)
+AS
+BEGIN 
 
---Display the result set of the table variable.
-SELECT Container_Piece_Key,Piece_Serial_No FROM @MyTableVar;
---Display the result set of the table.
-select * from Part_v_Container_Piece;
+	DECLARE @Record_Count int
+	DECLARE @Record_Found varchar(5)
 
+	SELECT @Record_Count =count(*)
+	FROM Part_v_Container_Piece
+	WHERE Piece_Serial_No = @Piece_Serial_No
+	-- select @Record_Count
+
+	IF @Record_Count = 1   	
+	   select 'true' as Record_Found
+	ELSE 
+		select 'false' as Record_Found
 END;
 
 
@@ -119,7 +135,8 @@ DECLARE @Record_Date datetime
 -- Execute the stored procedure and specify which variables
 -- are to receive the output parameter and return code values.
 EXEC @ReturnCode = GetContainerPiece 
-   	@Piece_Serial_No = '1,2,3,4',
+--   	@Piece_Serial_No = '1,2,3,4',
+	@Piece_Serial_No = 'TST LH 324 20 4 056',
    	@Record_Found = @Record_Found OUTPUT,
 	@Workcenter_Code = @Workcenter_Code OUTPUT,
    	@Job_No = @Job_No OUTPUT,
@@ -148,8 +165,8 @@ PRINT 'Return code = ' + CAST(@ReturnCode AS CHAR(10))
 PRINT 'Maximum Quantity = ' + CAST(@MaxTotalVariable AS CHAR(10))
 
 -- Create a procedure that takes one input parameter and returns one output parameter and a return code.
--- drop PROCEDURE GetContainerPiece 
-CREATE PROCEDURE GetContainerPiece 
+-- drop PROCEDURE GetContainerPieceOP 
+CREATE PROCEDURE GetContainerPieceOP 
 	@Piece_Serial_No varchar(50),
     @Record_Found varchar(5) OUTPUT,
 	@Workcenter_Code varchar(50) OUTPUT,
