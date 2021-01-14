@@ -1,0 +1,22 @@
+#sales_release_part 
+Filter: Parts who have workcenters setup to run in a specific
+building and releases that are active.
+rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
+-- does not include Canceled, Hold,Closed
+
+
+#sales_active_shipper_container = loaded, 
+All shipper containers with an active shipper, not release, status type, (Open,Pending)
+--  select shipper_status_key,shipper_status,active from sales_v_shipper_status
+-- 	shipper_status_key	shipper_status	active
+--	90	Open	1
+--	91	Shipped	0
+--	92	Canceled	0
+--	93	Pending	1  --??
+
+
+#sales_active_shipper_container_group_release = quantity_loaded tied to a release_key.
+
+
+#sales_all_shipper_container
+All shipper containers no matter the shipper status.

@@ -1,6 +1,10 @@
 DECLARE	@return_value int
 DECLARE @plant INT
-set @plant = 2
+set @plant = 11
+select * from bfGetToolBossJobList(@plant)
+where alias like '001-0408%'
+or alias like '001-0518%'
+order by Descr
 
 EXEC	@return_value = [dbo].[bpGetToolBossJobList] @plant
 
@@ -38,6 +42,7 @@ as
 		1 AS JOBENABLE, 
 		0 AS DATERANGEENABLE
 		from bvToolListsInPlants
+		
 		--803;
 		
 create VIEW [dbo].[bvToolListsInPlants]
@@ -80,3 +85,34 @@ AS
 		-- tool lists with no part numbers assigned have been dropped
 		--732;
 
+		select * from bvListOfActiveApprovedToolLists tl where tl.processid in (63734,63735,63736)
+					select * from bvToolListsAssignedPN where processid in (63734,63735,63736)
+		ProcessID|PartNumbers
+---------|-----------
+    63734|001-0408-04
+    63735|001-0408-05
+    63736|001-0408-06
+
+    	select lv1.Originalprocessid,lv1.processid, 
+		lv1.customer,lv1.partfamily,lv1.OperationDescription,
+		lv1.descript,lv1.descr,	
+		lv1.subDescript,lv1.subDescr,
+		lv1.partNumber,tp.Plant 
+		from
+		( 
+			select * from bvToolListsAssignedPN
+			--732
+		) lv1
+		INNER JOIN
+		[ToolList Plant] AS tp 
+		ON lv1.ProcessID = tp.ProcessID
+		 where lv1.processid in (63734,63735,63736)
+
+	
+	select  ProcessID, PartNumbers
+			FROM   [ToolList PartNumbers] 
+			where partnumbers like '%0408%'
+			
+			select * from bvListOfActiveApprovedToolLists
+			where 
+			

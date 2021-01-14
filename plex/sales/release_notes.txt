@@ -1,0 +1,7 @@
+There is a 1 to many relation between release_no and release_key.
+Why:
+I looked at release_no 644.
+select * from sales_v_release where release_no = '644'
+There were 4 release_keys with status of open, forecast.
+There were 5 release keys with status of closed.
+The add_date spanned a long period of time.

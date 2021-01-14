@@ -1,0 +1,92 @@
+This is used by the same named Intelliplex report.
+fixed a bug in customer_release_albion having to do with ordering of the 
+WIP and Ready parts
+and spent alot of time on part_wip_ready_loaded changing from part_ops to 
+job_ops to determine if the next op is wip or ready.
+Have not thouroughly tested these changes.
+
+Update of customer_release made on 01/12/2021 specifically for the Albion PCN.
+Shippers field replaced by last_shipped_shipper and last_active_shipper
+
+Depends:
+sales_release_albion(release_key,part_key,customer,po,release,ship_to,part_no,cust_part,part_name,ship_date,
+last_shipped_shipper,last_active_shipper,due_date,rel_qty,qty_loaded, shipped,rel_bal,release_status,release_type)
+sproc300758_11728751_1823661
+
+part_wip_ready_loaded (part_key,qty_wip,qty_ready,qty_loaded)
+sproc300758_11728751_1660208
+We are using this for the qty_ready and qty_wip but not the quantity_loaded
+because the algorithm was copied from a web service which is based on 
+the part_v_container instead of the shiper_container.
+
+#sales_release_row_number
+is based on #sales_release_albion
+with rows partitioned by part_key and ordered by ship_date,release_key 
+  PARTITION BY sr.part_key
+  ORDER BY sr.ship_date,sr.release_key
+
+
+#sales_release_rel_due
+--At the due date of the sales release what quantity 
+--is already needed by all earlier sales release items.
+rel_due and total_rel_due are calculated using subqueries
+and are exactly the same values.
+
+#sales_release_qty_ready_avail
+--Add the total part quanty ready for shipment 
+-- and quantity where the final operation has
+-- not been completed, ie WIP.
+-- Determine the qty ready that is still avail after
+-- filling all previous sales release item orders.
+Use #sales_release_rel_due
+add more info to each record: 
+wrl.qty_ready as tot_qty_ready,
+wrl.qty_wip as tot_qty_wip,
+case
+  when wrl.qty_ready is null then 0
+  when (wrl.qty_ready >= rd.rel_due) then wrl.qty_ready - rel_due
+  else 0
+end as qty_ready_avail = at this release_key's ship_date we can fullfill 
+all the previous release_key rel_due with this much extra
+
+
+#sales_release_qty_ready
+determine the qty_ready for this release_key based upon the previous 
+qty_ready_avail calc from #sales_release_qty_ready_avail
+also calc rel_bal2 which is the new release_balance after 
+using all of the qty_ready_avail parts.
+case
+  when (rel_bal >= qty_ready_avail) then rel_bal-qty_ready_avail
+  else 0
+end as rel_bal2
+
+#sales_release_rel_due2
+calc a new rel_due2 based upon the previous release_keys newly calculated
+release_balances.
+ISNULL((
+  select sum(rel_bal2)
+  from #sales_release_qty_ready rd2
+  where rd2.part_key=rd.part_key
+  and rd2.row_number<rd.row_number
+),0) as rel_due2
+
+
+--//////////////////////////////////////////////////////
+--From the new release due values calculate the quantity
+--WIP available subtracting from the new release balance
+--////////////////////////////////////////////////////////
+#sales_release_wip_avail
+case
+when (tot_qty_wip >= rel_due2) then tot_qty_wip - rel_due2
+else 0
+end as qty_wip_avail
+
+--//////////////////////////////////////////////////////
+--Determine WIP quantity from the previously calculated
+--WIP quantity available and the new release balance.
+--////////////////////////////////////////////////////////
+#sales_release_wip
+case
+  when (rel_bal2 >= qty_wip_avail) then qty_wip_avail
+  else rel_bal2
+end as qty_wip

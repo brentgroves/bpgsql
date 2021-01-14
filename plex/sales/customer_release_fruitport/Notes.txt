@@ -1,0 +1,6 @@
+Started this for casey but did not finish it because I 
+fixed a bug in customer_release_albion having to do with ordering of the 
+WIP and Ready parts
+and spent alot of time on part_wip_ready_loaded changing from part_ops to 
+job_ops to determine if the next op is wip or ready.
+Have not thouroughly tested these changes.

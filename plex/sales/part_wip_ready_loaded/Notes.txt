@@ -1,0 +1,35 @@
+part_wip_ready_loaded
+sproc300758_11728751_1660208
+
+Main table
+part_v_container
+
+Filter
+part_v_container.active = 1
+and container_status.allow_ship = 1 
+and container.quantity > 0
+
+Primary_Key:
+part_key 
+
+
+Next_operation:
+I think we got this strange code from a Plex web service. It is based on the part_operation and not on the job_operation
+because this is how the web service did it.
+where po.part_key = c.part_key
+    and po.operation_no > 
+    (  -- find the part operation number for the container
+        select
+        po2.operation_no 
+        from part_v_part_operation as po2
+        where c.part_key = po2.part_key 
+        and c.part_operation_key = po2.part_operation_key 
+        and po2.active = 1  -- there can be only active part_operation_key record for a part operation number
+    )
+    and po.active = 1  -- I don't think this is necessary?
+    and (pot.[Standard] = 1 OR pot.test = 1)  -- What is the brackets for?  Could we have put this in the inner select abov
+    and po.suboperation = 0
+
+Notes:
+The quantity_loaded is directly from the container_status, but the quantity_ready and quantity_wip is deduced by some found 
+web service logic.

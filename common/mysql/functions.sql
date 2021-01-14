@@ -39,6 +39,27 @@ BEGIN
 	return firstDay;
 END;	
 
+select 'first'
+set @Shift = Shift_Start(NOW());
+select @Shift;
+drop function Shift_Start; 
+CREATE FUNCTION Shift_Start(pDateTime DATETIME)
+RETURNS DATETIME DETERMINISTIC
+BEGIN
+	-- set @pDateTime = NOW();
+	set @Hour = hour(pDateTime);
+
+	set @Shift_Start = case 
+		when ((@Hour>=7) and (@Hour < 15)) then concat(month(pDateTime),'/',day(pDateTime),'/',year(pDateTime),' 07:00:00')
+		when ((@Hour>=15) and (@Hour < 23)) then concat(month(pDateTime),'/',day(pDateTime),'/',year(pDateTime),' 15:00:00')
+		else concat(month(pDateTime),'/',day(pDateTime),'/',year(pDateTime),' 23:00:00')
+	end;
+
+	-- select @Shift_Start;
+	return STR_TO_DATE(@Shift_Start,'%m/%d/%Y %H:%i:%s');
+	-- return @Shift_Start;
+END;
+
 -- SELECT If(COALESCE(`price`, 0) < 5, 5, `price`) AS `Item_Price'
 set @startDate ='2020-02-15 00:00:00';
 set @endDate ='2020-02-09 23:59:59';	
@@ -182,4 +203,7 @@ BEGIN
 END; 
 
 call check_table_exists('HourlyOEEValues');
+
+
+
 
