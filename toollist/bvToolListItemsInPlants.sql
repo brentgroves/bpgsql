@@ -1,6 +1,30 @@
--- dbo.bvToolListItemsInPlants source
+SELECT * 
+from bvToolListsInPlants tl
+where processid in (49995,49716)
+where plant = 112;
 
---///////////////////////////////////////////////////////////////////////////////
+select * from bvToolBossItemsInPlants
+
+select * from bvToolListItemsInPlants
+where processid in (49995,49716)
+
+select distinct tl.originalprocessid,tl.processid,tl.descript,tl.partNumber,tl.plant,
+lv1.itemNumber,lv1.itemClass,lv1.UDFGLOBALTOOL,lv1.toolbossStock  
+from bvToolListsInPlants tl
+inner join
+bvToolListItemsLv1 lv1
+ON tl.processid = lv1.ProcessID
+where lv1.UDFGLOBALTOOL <> 'YES'
+
+			select * 
+			from
+			btDistinctToolLists tb
+			inner join
+			[ToolList Master] tm
+			on tb.ProcessId=tm.ProcessID
+where tb.processid in (49995,49716)
+
+			--///////////////////////////////////////////////////////////////////////////////
 -- This view does not take into consideration the [ToolList Toolboss Stock Items]
 -- table which lists the item classes to be stocked in the toolbosses. See
 -- bvToolBossItemsInPlants to determine items to be stocked in the ToolBosses.
@@ -26,7 +50,10 @@ union
 	CROSS JOIN
 	bvToolListsInPlants tl
 	WHERE (ti.UDFGLOBALTOOL = 'YES');
-	
+
+SELECT * 
+from bvToolListsInPlants tl
+where processid in (49995,49716)
 
 SELECT * 
 from bvToolListsInPlants tl
@@ -37,6 +64,7 @@ where tl.processid = 63647
 
 -- dbo.bvToolListItemsLv1 source
 
+select * from bvToolListItemsLv1
 --////////////////////////////////////////////////
 -- Each toolid/item could have a different items
 -- per part ratio, but the toolbosses dont currently
@@ -86,6 +114,7 @@ from
 			when tt.PartSpecific = 1 and ti.Consumable = 1  then (ti.Quantity * (tt.AdjustedVolume/365)) / cast((QuantityPerCuttingEdge * NumberOfCuttingEdges) as numeric(19,8))
 			when ti.Consumable = 0 then ti.Quantity/30
 		end DailyUsage  
+		-- select ti.*
 		FROM [TOOLLIST ITEM] as ti 
 		-- when a tool gets deleted the toollist item remains?
 		inner join [TOOLLIST TOOL] as tt on ti.toolid=tt.toolid
@@ -185,5 +214,22 @@ inner join
 toolitems ti
 on lv2.itemNumber=ti.itemnumber
 --32438;
+select * from toolitems010921 
+-- truncate table toolitems
+SELECT itemnumber, description1, itemclass, UDFGLOBALTOOL, cost
+FROM [Busche ToolList].dbo.toolitems;
 
+-- [Busche ToolList].dbo.toolitems definition
+
+-- Drop table
+
+-- DROP TABLE [Busche ToolList].dbo.toolitems GO
+
+CREATE TABLE [Busche ToolList].dbo.toolitems (
+	itemnumber varchar(12) NOT NULL,
+	description1 varchar(50) NULL,
+	itemclass varchar(15) NOT NULL,
+	UDFGLOBALTOOL varchar(20) NOT NULL,
+	cost numeric(19,4) NOT NULL
+) GO;
 

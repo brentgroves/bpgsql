@@ -46,27 +46,34 @@ order by Descr
 /*
  * Get restrictions from the source Tool Boss
  */
-
+select * from dbo.btDistinctToolLists bdtl 
 select count(*) from -- 579
 (
 SELECT DISTINCT [User], Job, Machine, D_Consumer, item, D_Item, plant
 FROM         dbo.bvToolBossRestrictions2
-WHERE     (Job IN (12857,
-13821,
-12858,
-12788,
-740,  
-12587,
-12859,
-12860,
-12861,
-2092, 
-12791,
-12593,
-12590,
-741  )) AND (plant = 11)
+WHERE     (processid IN 
+(  
+63810,63811
+)) AND (plant = 8)
 )s1
+/*
+ * 	where ProcessId in (63810,63811)
+	OriginalProcessId in (49396,49265)
+SELECT DISTINCT [User], Job, Machine, D_Consumer, item, D_Item, plant
+FROM         dbo.bvToolBossRestrictions2
+WHERE     (processid IN (63810,63811) AND (plant = 8))
+SELECT DISTINCT [User], Job, Machine, D_Consumer, item, D_Item, plant
+FROM         dbo.bvToolBossRestrictions2
+WHERE     processid IN (63810,63811)
+WHERE     (processid IN (63810,63811) AND (plant = 8))
 
+
+
+SELECT     COUNT(item) AS Expr1
+FROM         (SELECT DISTINCT item
+                       FROM          bvToolBossRestrictions2
+                       WHERE      (processid IN (63810, 63811)) AND (plant = 8)) AS s1
+ */
 /*
  * Distinct count of items in tool lists to move
  */

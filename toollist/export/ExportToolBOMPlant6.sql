@@ -3,7 +3,13 @@
 select count(*)
 from dbo.PlexToolBOMPlant6
 
+/*
+ * BACKUP WHAT HAS ALREADY BEEN IMPORTED INTO PLEX
+select *
+into PlexToolBOMPlant6_6K_Knuckles_Horz
+from dbo.PlexToolBOMPlant6
 
+*/
 
 -- truncate table PlexToolBOMPlant6
 -- drop table PlexToolBOMPlant6
@@ -46,7 +52,7 @@ insert into dbo.PlexToolBOMPlant6 (Assembly_No,Part_No,Part_Revision,Operation_C
 		-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
 		0 Sort_Order
 		-- select count(*) cnt
-		from PlexToolListAssemblyTemplatePlant6 a  -- 16
+		from PlexToolListAssemblyTemplatePlant6 a  -- 8 
 		-- select * from PlexToolListAssembly a	
 		inner join bvToolListItemsOnlyLv1 lv1 -- No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
@@ -66,7 +72,7 @@ insert into dbo.PlexToolBOMPlant6 (Assembly_No,Part_No,Part_Revision,Operation_C
 	/*
 	 * Test regular items only
 	 */
-	select count(*) cnt from PlexToolBOMPlant6 -- 76
+	select count(*) cnt from PlexToolBOMPlant6 -- 51
 	select * from PlexToolBOMPlant6 
 	-- where tool_no  = '14758'
 	-- where Part_No != '28245973' -- 
@@ -245,7 +251,7 @@ where tl.ProcessID = 61581 -- Machine B - WIP
 /*
  * 2nd insert ToolList Fixture items
  */
-insert into dbo.PlexToolBOMAvilla(Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
+insert into dbo.PlexToolBOMPlant6 (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
 
 -- select count(*) from (
 	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
@@ -267,19 +273,18 @@ insert into dbo.PlexToolBOMAvilla(Assembly_No,Part_No,Part_Revision,Operation_Co
 		-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
 		0 Sort_Order
 		-- select count(*) cnt
-		from PlexToolListAssemblyTemplateAvilla a  -- 367
+		from PlexToolListAssemblyTemplatePlant6 a  -- 367
 		-- select * from PlexToolListAssembly a	
 		inner join bvToolListItemsFixtureOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
-		and a.ToolNumber=lv1.ToolNumber  -- 30; = 111111
-		-- where a.processid <> 61258  -- 30
+		and a.ToolNumber=lv1.ToolNumber  -- 0; = 111111
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
 -- )s2  -- 94 + 1171 
 
-select count(*) cnt from PlexToolBOMAvilla -- 1265
-
-select * from PlexToolBOMAvilla 
+select count(*) cnt from PlexToolBOMPlant6 --4
+select count(*) from toolitems  -- 17034
+select * from PlexToolBOMPlant6 
 where Part_No = '28245973' -- 93
 and Assembly_No like '%3RD%'
 -- and Assembly_No like '%TF%1ST%'
@@ -336,7 +341,7 @@ order by tf.CribToolID	-- 72
 /*
  * 3rd insert ToolList Misc items
  */
-insert into dbo.PlexToolBOMAvilla (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
+insert into dbo.PlexToolBOMPlant6 (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
 
 -- select count(*) from (
 	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
@@ -358,18 +363,19 @@ insert into dbo.PlexToolBOMAvilla (Assembly_No,Part_No,Part_Revision,Operation_C
 		-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
 		0 Sort_Order
 		-- select count(*) cnt
-		from PlexToolListAssemblyTemplateAvilla a  -- 367
+		from PlexToolListAssemblyTemplatePlant6 a  -- 367
 		-- select * from PlexToolListAssembly a	
 		inner join bvToolListItemsMiscOnlyLv1 lv1 --  119, No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
-		and a.ToolNumber=lv1.ToolNumber  -- 9
+		and a.ToolNumber=lv1.ToolNumber  -- 0
 		-- where a.processid <> 61258  -- 9
 	)s1 
 	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
  -- )s2  -- 26
 
 	
-select count(*) cnt from PlexToolBOMAvilla -- 1291
+select count(*) cnt from PlexToolBOMPlant6 -- 4
+select * from PlexToolBOMPlant6 --4
 
 select * from PlexToolBOMAvilla 
 where Part_No = '28245973' -- 72

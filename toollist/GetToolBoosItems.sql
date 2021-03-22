@@ -1,3 +1,12 @@
+SELECT * 
+from bvToolListsInPlants tl
+where processid in (49995,49716)
+where plant = 112;
+
+select * from bvToolBossItemsInPlants
+
+select * from bvToolListItemsInPlants
+where processid in (49995,49716)
 create function [dbo].[bfToolBossItemsInPlant]
 (  
  @plant int

@@ -1,3 +1,9 @@
+-- Plant 8 contains the Plant 11 and Plant 8 tool boss
+select distinct plant from bvToolListItemsInPlants 
+select distinct descript,partNumber from bvToolListItemsInPlants where plant = 11
+select top 10 * from bvToolListItemsInPlants where plant = 11
+
+
 select rs.itemNumber
 -- select count(*)  -- 1295
 from 
@@ -16,6 +22,9 @@ where Row# between 0 and 400
 where Row# between 401 and 800
 where Row# between 801 and 1000
 where Row# between 1001 and 1400  -- 1295
+
+
+
 /*
  * BETWEEN returns TRUE if the value of test_expression is greater than or equal to the value of begin_expression and less than or equal to the value of end_expression.
  */

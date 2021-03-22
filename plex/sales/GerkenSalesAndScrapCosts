@@ -1,0 +1,107 @@
+/*
+	PCN
+	310507/Avilla
+	300758/Albion
+	295933/Franklin
+	300757/Alabama
+	306766/Edon
+	312055/ BPG WorkHolding
+	1	123681
+2	295932 Fruit Port
+3	295933
+4	300757
+5	300758
+6	306766
+7	310507
+8	312055
+	*/
+/*
+select 
+sc.plexus_customer_no,
+sc.part_key,
+sc.scrap_date,
+sc.quantity
+
+from part_v_scrap_e as sc
+pc.pcn,
+cg.Plexus_Customer_Code,
+p.part_no,
+p.revision,
+cc.cost_model_key,
+cc.cost_component_key,
+pc.part_key,
+cc.Part_Operation_Key,
+cc.note,
+cc.calc_note,
+cc.material_key,
+cc.item_key,
+cc.cost
+
+
+*/
+-- What is in part_cost? Cost of producing the part?
+-- What is a cost model key? In case you wanted to have multiple cost models for the same part? 
+-- What is a cost_component? Price for a specific part operation; also has item and material keys.
+-- ctrl-m cost structure
+select
+top 180 
+p.part_no,
+p.revision,
+pc.cost_model_key,
+pc.Recalc_Date,
+pc.cost part_cost,
+po.operation_no,
+poc.cost_model_key,
+poc.Incremental_Cost,
+poc.cost part_op_cost,
+-- cc.material_key,
+-- cc.item_key,
+cc.cost_component_key cc_key,
+cc.calc_note cc_calc_note,
+cc.cost cc_cost
+-- select count(*)
+from part_v_part_e as p  -- 3559,1
+inner join part_v_part_cost_e as pc  -- 1 to many
+on p.plexus_customer_no= pc.pcn
+and p.part_key = pc.part_key -- 45720,21 -- COST MODELS
+
+inner join part_v_part_operation_e po -- 259797,84 -- 4 OPERATIONS
+on p.plexus_customer_no=po.plexus_customer_no
+and p.part_key=po.part_key  -- 1 to many
+
+inner join part_v_part_operation_cost poc  --36712,83
+on po.plexus_customer_no=poc.pcn
+and po.part_key=poc.part_key  -- 
+and po.part_operation_key=poc.part_operation_key 
+and pc.cost_model_key = poc.cost_model_key -- 1 to 1
+
+inner join part_v_Cost_Component cc  -- 34089,126
+on poc.pcn=cc.pcn
+and poc.cost_model_key=cc.cost_model_key
+and poc.part_key=cc.part_key
+and poc.part_operation_key=cc.part_operation_key -- 1 to many
+
+
+where p.plexus_customer_no = 300758 
+AND p.part_key = 	2684942
+
+order by poc.cost_model_key,poc.part_key,poc.part_operation_key
+
+/*
+from part_v_part_cost_e as pc  -- 45720
+left outer join part_v_cost_component_e as cc  -- 137230
+-- inner join part_v_cost_component_e as cc  -- 131353 -- SOME PARTS DO NOT HAVE A COST COMPONENT RECORD
+on pc.pcn = cc.pcn
+and pc.part_key = cc.part_key
+and pc.cost_model_key = cc.cost_model_key  -- 1 to many
+inner join part_v_part_e p
+on pc.pcn=p.plexus_customer_no
+and pc.part_key = p.part_key
+inner join Plexus_Control_v_Customer_Group_Member cg 
+on pc.pcn = cg.plexus_customer_no
+where pc.pcn = 300758 
+AND pc.part_key = 	2684942
+order by pc.pcn,pc.part_key,cc.cost_model_key,cc.part_operation_key,cost_component_key
+*/
+-- where pc.pcn IN (300757, 300758, 310507, 306766, 295932, 295933, 123681)  -- 137230 this filter does not reduce the set 3/17/21
+-- group by pc.pcn, pc.part_key, cc.cost

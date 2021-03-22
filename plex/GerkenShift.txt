@@ -1,0 +1,55 @@
+/*
+Questions: Should we include Active -Temp2 
+Employee_Status
+1033  Active 
+79 	  Active - TEMP
+5     Active - TEMP2
+select e.Employee_Status,count(*)
+from personnel_v_employee_e as e  -- 5147
+group by e.Employee_Status
+*/
+
+create table #Active
+(
+  pcn int,
+  employee_status varchar(50)
+);
+insert into #Active (pcn,employee_status)
+select distinct plexus_customer_no pcn, employee_status 
+from personnel_v_employee_e where upper(employee_status) like 'ACTIVE%' or upper(employee_status) like 'TRANS%'
+
+-- select * from #ActiveStatus
+select
+u.plexus_customer_no, 
+u.main_plexus_customer_no,
+-- p.position_key,
+-- s.shift_key,
+
+s.shift_group,
+p.position,
+u.department_no,
+u.last_name,
+u.first_name,
+e.employee_status,
+e.pay_type,
+e.payroll_no
+-- select count(*) cnt -- 1074 active employees
+-- select e.plexus_customer_no,-- 295933
+-- e.shift_key
+from personnel_v_employee_e e  -- 5161
+inner join plexus_control_v_plexus_user_e as u  -- 5045
+on e.plexus_customer_no = u.plexus_customer_no
+and e.plexus_user_no = u.plexus_user_no  -- 1 to 1
+left outer join common_v_shift_e as s  -- 4538
+on e.plexus_customer_no = s.plexus_customer_no
+and e.shift_key = s.shift_key  -- 1 to 1
+inner join common_v_position_e as p  -- 4488
+on u.plexus_customer_no = p.plexus_customer_no
+and u.position_key = p.position_key  -- 1 to 1
+inner join #Active a -- 
+on u.plexus_customer_no = a.pcn
+and e.employee_status = a.employee_status 
+where s.shift_key is null
+-- where u.plexus_user_no = 2461408 
+-- and p.position_key = 54982
+order by shift_group,last_name,first_name 

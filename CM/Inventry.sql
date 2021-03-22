@@ -5,3 +5,4 @@ set InactiveItem = 0
 where itemNumber in ('17242','17243')
 --17242 and 17243
 select * from inventry where itemNumber = '14758'
+select top 10 * from dbo.btToolItems 

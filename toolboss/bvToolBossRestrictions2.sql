@@ -1,4 +1,37 @@
 -- dbo.bvToolBossRestrictions2 source
+SELECT     [User], Job, Machine, D_Consumer, item, D_Item, plant
+FROM         dbo.bfToolBossItemsInPlant(112) AS bfToolBossItemsInPlant_1
+
+select char(39) + item + char(39) + ',' from 
+(
+SELECT DISTINCT item
+FROM         bvToolBossRestrictions2
+WHERE     (processid IN (63269,63270))
+)s1
+where item not in 
+(
+'0002021',
+'0000138',
+'0003144',
+'0003262',
+'0003491',
+'0003600',
+'0005187',
+'0005188',
+'0005203',
+'007157',
+'007808',
+'007809',
+'007811',
+'007864',
+'009445',
+'009624',
+'010560',
+'14217',
+'15653',
+'16186',
+'16520'
+)
 
 create view dbo.bvToolBossRestrictions2
 as
