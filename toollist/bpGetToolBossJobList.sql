@@ -31,6 +31,7 @@ WHERE     (processid IN (63269,63270))
 
 
 select * from bvToolBossJobList
+where descr like '%COPELAND%'
 where descr like '%TRX%CARRIER%'
 
 originalprocessid|ProcessID|PartFamily            |OperationNumber|OperationDescription|Obsolete|Customer  
