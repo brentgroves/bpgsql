@@ -1,3 +1,14 @@
+create PROCEDURE [dbo].[bpGetToolBossJobList] 
+	-- Add the parameters for the stored procedure here
+	@plant int
+AS
+BEGIN
+select * from bfGetToolBossJobList(@plant)
+order by Descr
+END;
+
+EXEC	[dbo].[bpGetToolBossJobList] 8
+
 SELECT DISTINCT [User], Job, Machine, D_Consumer, item, D_Item, plant
 FROM         bvToolBossRestrictions2
 where job in (43114,9323)
