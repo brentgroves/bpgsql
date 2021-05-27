@@ -1,18 +1,20 @@
 --//////////////////////////////////////////////////////////////////////
 -- Potential Problems:
--- 1. To determine if a container quantity is WIP or Ready we look at the
--- Next part operation instead of the Next job operation.  This
--- method will probably fail when a part container is being reworked.
--- No testing has been performed.
+-- 1. To determine if a container quantity is WIP or Ready we now look at the
+-- look at the next part operation instead of the next job operation.
+-- This is to be consistent with the Plex inventory screen
 
 -- Notes:
 -- 1. There are two ways to retrieve the quantity Loaded. We are summing
--- the part_container quantities.  The other way is to sum the part
--- containers with container_status = 'Loaded'. From testing it seems 
+-- the part_container quantities with container_status = 'Loaded'.  
+-- The other way is to sum the shipper
+-- containers. From testing it seems 
 -- the container serial number is the same in both tables and the sum
 -- is the same also.  
 -- The advantage of using the shipper_container is because the 
--- shipper_container has a sales_v_release.release_key.  Since we know
+-- shipper_container has a sales_v_release.release_key.  
+--  i.e. shipping has loaded the finished goods container to a shipper.
+-- Since we know
 -- what release_key the container is for there is no guessing as to 
 -- which release_key the quantity loaded should be associated with.
 -- * Actually there are three methods of calculating quantity_loaded.
@@ -138,8 +140,8 @@ insert into #part_container (
 -- select distinct container_status from part_v_container   
 --  ( Consignment Accepted,Hold,Impreg,Loaded,OK,Receiving,Rework,Scrap,Setup Part,Shipped,	Supplier Labeled,	Supplier Shipped ) = container_status
     case
-    when s1.container_status != 'Loaded' and s1.next_job_op is not null  then 'WIP'
-    when s1.container_status != 'Loaded' and s1.next_job_op is null then 'Ready'
+    when s1.container_status != 'Loaded' and s1.next_operation is not null  then 'WIP'
+    when s1.container_status != 'Loaded' and s1.next_operation is null then 'Ready'
     else 'Loaded'
     end status,
     --add_to_qty_wip,
@@ -257,11 +259,11 @@ insert into #part_container (
       on c.container_status = cs.container_status
       left outer join part_v_job_op jo  -- 1 to 1
       on c.job_op_key= jo.job_op_key
-      left outer join part_v_operation o
-      on jo.operation_key=o.operation_key
       left outer join part_v_part_operation po
       on c.part_key = po.part_key 
       and c.part_operation_key = po.part_operation_key       
+      left outer join part_v_operation o
+      on po.operation_key=o.operation_key
       left outer join part_v_part p
       on c.part_key=p.part_key
       left outer join common_v_location l
@@ -272,7 +274,11 @@ insert into #part_container (
       where 
       --c.part_key = 	2684943
       c.active = 1
-      and cs.allow_ship = 1 
+      -- 05/27/21 changed this because the plex inventory screen show Hold parts
+      -- Note the plex inventory screen shows all parts no matter there container_status 
+      -- or there allow_ship status.
+      -- and cs.allow_ship = 1
+      -- and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold')))
       and c.quantity > 0
       --and l.shippable = 1
     )s1
@@ -281,7 +287,16 @@ insert into #part_container (
     left outer join part_v_part_operation AS po
     on s1.next_operation = po.part_operation_key
 
+-- select * from #part_container c where c.serial_no in ('AB838755') 
 /*
+We are not showing containers that are on hold but Plex is showing these containers on the inventory screen both for Wip and Final operations.
+
+select c.active,cs.allow_ship,* 
+from part_v_container c 
+left outer join part_v_container_status AS cs -- 1 to 1
+on c.container_status = cs.container_status
+where c.serial_no = 'AB838755'
+
 This is the set of containers that we can ship.
 We can tell if they are loaded the only question
 is to find out if they are WIP or ready.
@@ -308,7 +323,7 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
 
   select
   part_key,
-  sum(jo_add_to_qty_wip) qty_wip,
+  sum(po_add_to_qty_wip) qty_wip,
   (
     SELECT SUBSTRING
     (
@@ -317,7 +332,7 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
         FROM #part_container pcx
         WHERE pcx.part_key = pc.part_key
         and pcx.container_status != 'Loaded'
-        and pcx.next_job_op is not null
+        and pcx.next_operation is not null
         order by pcx.serial_no desc
         FOR XML PATH('')
       ), 
@@ -325,7 +340,7 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
       200000
     )    
   ) as wip_containers,
-  sum(jo_add_to_qty_ready) qty_ready,
+  sum(po_add_to_qty_ready) qty_ready,
   (
     SELECT SUBSTRING
     (
@@ -335,7 +350,7 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
         FROM #part_container pcx
         WHERE pcx.part_key = pc.part_key
         and pcx.container_status != 'Loaded'
-        and pcx.next_job_op is null
+        and pcx.next_operation is null
         order by pcx.serial_no desc
         FOR XML PATH('')
       ), 
@@ -364,9 +379,23 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
   from #part_container pc
   group by pc.part_key 
 )
--- 05/27/2021 took filter off ,  where qty_ready > 0 
-select part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded where qty_ready > 0
--- select part_key,qty_wip,wip_containers,qty_ready,ready_containers,qty_loaded,loaded_containers from #part_wip_ready_loaded where qty_ready > 0
+select part_no,r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
+left outer join part_v_part p
+on r.part_key=p.part_key
+order by p.part_no
+-- where p.part_no = '10103357'
+
+-- select count(*) cnt from #part_wip_ready_loaded 
+-- select count(*) cnt from #part_wip_ready_loaded where qty_ready > 0
+-- select part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded where qty_ready <= 0
+-- select part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded where qty_ready > 0
+-- select r.part_key,p.part_no,qty_wip,wip_containers,qty_ready,ready_containers,qty_loaded,loaded_containers 
+-- from #part_wip_ready_loaded r
+-- left outer join part_v_part p
+-- on r.part_key=p.part_key
+-- where p.part_no = '10103357'
+
+--where qty_ready > 0
 --select count(*) #part_container_wip_ready_loaded from #part_container_wip_ready_loaded  --415
 -- select job_key,job_op_key,* from part_v_container where serial_no = 'AB757307'
 /*
