@@ -40,8 +40,13 @@ and item not in
 )
 WHERE     (processid IN (63269,63270))
 
+select * from TL_Plex_PN_Map tppm 
+select * from TL_Plex_PN_Op_Map_Albion 
 
+-- HXE10397HX1
 select * from bvToolBossJobList
+-- where descr like '%HXE%'
+where JobNumber like '%1010335%'
 where descr like '%COPELAND%'
 where descr like '%TRX%CARRIER%'
 

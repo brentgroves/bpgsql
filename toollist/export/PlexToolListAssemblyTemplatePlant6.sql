@@ -2,6 +2,7 @@
  * Create Tool List Plex Mapping
  */
 -- truncate table TL_Plex_PN_Op_Map_Plant6 
+/*
 CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant6 (
 	ProcessID int NULL,
 	TL_Part_No nvarchar(50) NULL,
@@ -9,6 +10,7 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant6 (
 	Revision varchar(1) NOT NULL,
 	Operation_Code varchar(16) NOT NULL
 );
+*/
 insert into TL_Plex_PN_Op_Map_Plant6 
 values
 -- The following tool list has already been added to plex.
@@ -41,7 +43,7 @@ tl.plant
 -- select *
 from bvToolListsInPlants tl
 where plant = 6
-and partnumber like '2007669%'
+and partnumber like '10103357%'
 order by tl.customer,tl.partfamily,tl.partNumber 
 -- R559432,R218919
 select Originalprocessid,* from [ToolList Master] tm where processid in (54529,
