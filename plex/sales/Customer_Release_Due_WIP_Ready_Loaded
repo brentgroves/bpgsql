@@ -1,3 +1,30 @@
+/*
+All parts for a building with status of production
+*/
+create table #part_building
+(
+part_key int not null
+)
+insert into #part_building (part_key)
+(
+
+select p.part_key
+--,b.building_code 
+-- into #parts_assigned_plt6
+from part_v_part_e p
+inner join common_v_building_e b
+on p.plexus_customer_no = b.plexus_customer_no
+and p.building_key=b.building_key
+where p.building_key = @Building_Key
+and p.part_status='Production'
+and p.part_type <> 'Raw Material'
+and p.plexus_customer_no = @PCN
+)
+
+-- select * from #part_building  -- 31
+--select count(*) #part_building from #part_building  --31
+
+
 --//////////////////////////////////////////////////////////////////////
 -- Potential Problems:
 -- 1. To determine if a container quantity is WIP or Ready we now look at the
@@ -26,6 +53,7 @@
 
 create table #part_container
 (
+  pcn int,
   part_key int,
   part_no varchar(100),
   operation_code varchar(30),
@@ -62,6 +90,7 @@ create table #part_container
 );
 
 insert into #part_container (
+  pcn,
   part_key,
   part_no,
   operation_code,
@@ -98,6 +127,7 @@ insert into #part_container (
 )
 
     select 
+    s1.pcn,
     s1.part_key,
     s1.part_no,
     s1.operation_code,
@@ -175,6 +205,7 @@ insert into #part_container (
     
       select 
       --top 10
+      c.plexus_customer_no pcn,
       c.part_key,
       p.part_no,
       o.operation_code,
@@ -197,37 +228,43 @@ insert into #part_container (
       (  -- examine job operations
         select top(1)  --Nex job operation for job
           jo2.job_op_key 
-        from part_v_job_op AS jo2 
-        join part_v_part_operation AS po1  
+        from part_v_job_op_e AS jo2 
+        join part_v_part_operation_e AS po1  
           on po1.part_operation_key = jo2.part_operation_key
-        left outer join part_v_part_op_type AS pot 
+          and po1.plexus_customer_no=jo2.pcn      
+        left outer join part_v_part_op_type_e AS pot 
           on po1.part_op_type_key = pot.part_op_type_key
+          and po1.plexus_customer_no=pot.pcn      
         where jo2.job_key=c.job_key  -- many to 1  all job ops for containers job
           and jo2.op_no > jo.op_no  -- INTERESTING --- Only job ops > containers job op
           and ( (cs.test_material = 1 and ISNULL(pot.test,0) = 1)  --(test_material && !test) 
                 or (cs.test_material = 0 and ISNULL(pot.standard,1) = 1)) --Not test_material && standard operation type
+          and jo2.pcn = @PCN      
         order by
           jo2.op_no
       ) next_job_op,
       (  --examine all part operations
         select top(1)
           po.part_operation_key
-        from part_v_part_operation as po
-        join part_v_part_op_type as pot --1 to 1
-          on po.part_op_type_key=po.part_op_type_key
+        from part_v_part_operation_e as po
+        join part_v_part_op_type_e as pot --1 to 1
+          on po.part_op_type_key=pot.part_op_type_key
+          and po.plexus_customer_no=pot.pcn      
         where po.part_key = c.part_key
           and po.operation_no > 
             (  -- find the part operation number for the container
               select
                 po2.operation_no 
-              from part_v_part_operation as po2
-              where c.part_key = po2.part_key 
-                and c.part_operation_key = po2.part_operation_key 
+              from part_v_part_operation_e as po2
+              where po2.part_key = c.part_key 
+                and po2.part_operation_key = c.part_operation_key 
                 and po2.active = 1  -- there can be only active part_operation_key record for a part operation number
+                and po2.plexus_customer_no = @PCN
             )
           and po.active = 1  -- I don't think this is necessary?
           and (pot.[Standard] = 1 OR pot.test = 1)  -- What is the brackets for?  Could we have put this in the inner select abov
           and po.suboperation = 0
+          and po.plexus_customer_no = @PCN          
         order by
           po.operation_no asc 
       ) as next_operation,
@@ -254,38 +291,53 @@ insert into #part_container (
       c.note,
       c.add_date
 --      jo.
-      from part_v_container AS c
-      left outer join part_v_container_status AS cs -- 1 to 1
+      from part_v_container_e AS c
+      left outer join part_v_container_status_e AS cs -- 1 to 1
       on c.container_status = cs.container_status
-      left outer join part_v_job_op jo  -- 1 to 1
+      and c.plexus_customer_no=cs.plexus_customer_no
+      left outer join part_v_job_op_e jo  -- 1 to 1
       on c.job_op_key= jo.job_op_key
-      left outer join part_v_part_operation po
+      and c.plexus_customer_no=jo.pcn      
+      left outer join part_v_part_operation_e po
       on c.part_key = po.part_key 
       and c.part_operation_key = po.part_operation_key       
-      left outer join part_v_operation o
+      and c.plexus_customer_no=po.plexus_customer_no      
+      left outer join part_v_operation_e o
       on po.operation_key=o.operation_key
-      left outer join part_v_part p
+      and po.plexus_customer_no=o.plexus_customer_no      
+      left outer join part_v_part_e p
       on c.part_key=p.part_key
-      left outer join common_v_location l
+      and c.plexus_customer_no=p.plexus_customer_no      
+      left outer join common_v_location_e l
       on c.location=l.location
-      left outer join material_v_material as m  
+      and c.plexus_customer_no=l.plexus_customer_no      
+      left outer join material_v_material_e as m  
       ON c.material_key=m.material_key 
+      and c.plexus_customer_no=m.plexus_customer_no      
     
-      where 
-      --c.part_key = 	2684943
-      c.active = 1
+      where c.part_key in  -- Limit to sales_release being filled by workcenters in a specific building.
+      (
+        select part_key from #part_building  --parts being filled by workcenters in specific building.
+      )
+      and c.plexus_customer_no = @PCN
+  --c.part_key = 	2684943
+      and c.active = 1
       -- 05/27/21 changed this because the plex inventory screen show Hold parts
       -- Note the plex inventory screen shows all parts no matter there container_status 
       -- or there allow_ship status.
-      and cs.allow_ship = 1
-      -- and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold')))
+      -- and cs.allow_ship = 1
+      and cs.allow_ship = 1 
+--      and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold')))
       and c.quantity > 0
       --and l.shippable = 1
     )s1
-    left outer join part_v_job_op AS jo
+    left outer join part_v_job_op_e AS jo
     on s1.next_job_op = jo.job_op_key
-    left outer join part_v_part_operation AS po
+    and s1.pcn=jo.pcn      
+    
+    left outer join part_v_part_operation_e AS po
     on s1.next_operation = po.part_operation_key
+    and s1.pcn=po.plexus_customer_no      
 
 -- select * from #part_container c where c.serial_no in ('AB838755') 
 /*
@@ -379,12 +431,13 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
   from #part_container pc
   group by pc.part_key 
 )
-select r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
 
--- select part_no,r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
--- left outer join part_v_part p
--- on r.part_key=p.part_key
--- order by p.part_no
+-- select r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
+
+ select part_no,r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
+ left outer join part_v_part p
+ on r.part_key=p.part_key
+ order by p.part_no
 -- where p.part_no = '10103357'
 
 -- select count(*) cnt from #part_wip_ready_loaded 
@@ -396,10 +449,123 @@ select r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r
 -- left outer join part_v_part p
 -- on r.part_key=p.part_key
 -- where p.part_no = '10103357'
-
 --where qty_ready > 0
 --select count(*) #part_container_wip_ready_loaded from #part_container_wip_ready_loaded  --415
 -- select job_key,job_op_key,* from part_v_container where serial_no = 'AB757307'
+
+
+/*
+	PCN
+	310507/Avilla
+	300758/Albion
+	295933/Franklin
+	300757/Alabama
+	306766/Edon
+	312055/ BPG WorkHolding
+	295932 Fruit Port
+	*/
+	
+
+
+--///////////////////////////////////////////////////////////////////////////
+-- All active sales releases for the building before the due date parameter. 
+--//////////////////////////////////////////////////////////////////////////
+create table #sales_release_part
+(
+  pcn int,
+  release_key int,
+  po_line_key int,
+  release_status_key int,
+  release_type_key int,
+  part_key int,
+  release_no varchar(50), 
+  ship_to	varchar(50),  
+  ship_date datetime,
+  due_date datetime,
+  quantity decimal, 
+  quantity_shipped int  
+)
+
+
+insert into #sales_release_part (pcn,release_key,po_line_key,release_status_key,release_type_key,part_key,release_no,ship_to,ship_date, due_date,quantity,quantity_shipped)
+select 
+--top 10
+sr.pcn,
+sr.release_key,
+pl.po_line_key,
+sr.release_status_key,
+release_type_key,
+pl.part_key,
+release_no,
+ship_to,
+ship_date, 
+due_date,
+quantity,
+quantity_shipped
+from sales_v_release_e sr
+-- This has the part key. If there is no po_line we don't know what part the sales release is for.
+inner join sales_v_po_line_e pl --1 to 1
+on sr.pcn = pl.pcn
+and sr.po_line_key=pl.po_line_key 
+inner join sales_v_release_status_e rs  -- 1 to 1
+on sr.pcn = rs.pcn
+and sr.release_status_key=rs.release_status_key  
+where pl.part_key in  -- Limit to sales_release being filled by workcenters in a specific building.
+(
+  select part_key from #part_building  --parts being filled by workcenters in specific building.
+)
+and rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
+-- does not include Canceled, Hold,Closed
+and due_date <= @Due_Date --193
+and sr.pcn = @PCN
+
+-- select count(*) #sales_release_part from #sales_release_part -- 34
+/*
+select * from #sales_release_part r -- 34
+inner join part_v_part p 
+on r.pcn=p.plexus_customer_no
+and r.part_key=p.part_key
+where p.part_no = '10103357'
+*/
+
+
+create table #sales_release_totals
+(
+pcn int,
+part_key int,
+qty_due decimal,
+qty_shipped decimal
+)
+
+insert into #sales_release_totals (pcn,part_key,qty_due,qty_shipped)
+select
+r.pcn,
+r.part_key,
+sum(quantity) qty_due,
+sum(quantity_shipped) qty_shipped
+from #sales_release_part r
+group by r.pcn,r.part_key
+
+select * from #sales_release_totals r
+where r.part_key = 2794748
+
+create table #Customer_Release_Due_Plant_6
+(
+pcn int not null,
+customer varchar(35),
+part_key int,
+part_no varchar(112), 
+cust_part varchar(101), 
+part_name varchar(100), 
+qty_due decimal,
+qty_shipped decimal,
+qty_ready decimal,
+qty_loaded decimal,
+qty_wip decimal
+-- qty_loaded decimal (18,3)
+)
+
+
 /*
 The release item will be for HXE66422
 but the painting is for HXE66422R

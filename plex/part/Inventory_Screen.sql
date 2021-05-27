@@ -277,7 +277,7 @@ insert into #part_container (
       -- 05/27/21 changed this because the plex inventory screen show Hold parts
       -- Note the plex inventory screen shows all parts no matter there container_status 
       -- or there allow_ship status.
-      and cs.allow_ship = 1
+      -- and cs.allow_ship = 1
       -- and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold')))
       and c.quantity > 0
       --and l.shippable = 1
