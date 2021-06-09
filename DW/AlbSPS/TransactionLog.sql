@@ -26,8 +26,9 @@ select j.*
 from MSC.Job j 
 where j.descr like '%2009828%'
 
+SELECT * from AlbSPS.TransactionLog tl 
 select DISTINCT  j.JOBNUMBER, j.DESCR
-from MSC.TransactionLog tl 
+from AlbSPS.TransactionLog tl 
 /*
 CREATE TABLE myDW.MSC.TransactionLog (
 	PCN int NOT NULL,

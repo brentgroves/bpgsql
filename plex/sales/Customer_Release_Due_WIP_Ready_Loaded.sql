@@ -22,7 +22,7 @@ and p.plexus_customer_no = @PCN
 )
 
 -- select * from #part_building  -- 31
---select count(*) #part_building from #part_building  --31
+-- select count(*) #part_building from #part_building  --31
 
 
 --//////////////////////////////////////////////////////////////////////
@@ -31,6 +31,10 @@ and p.plexus_customer_no = @PCN
 -- look at the next part operation instead of the next job operation.
 -- This is to be consistent with the Plex inventory screen.  For completion, both 
 -- the part and job operations are reported in this query.
+-- The hard part is figuring out the filter for the WIP quantity
+-- the filter for each plex screen is different.  I believe we have 
+-- found the correct filter for the PRP screen which is the one
+-- we are trying to duplicate
 
 -- Notes:
 -- 1. There are two ways to retrieve the quantity Loaded. We are summing
@@ -312,7 +316,10 @@ insert into #part_container (
       and c.plexus_customer_no=p.plexus_customer_no      
       left outer join common_v_location_e l
       on c.location=l.location
-      and c.plexus_customer_no=l.plexus_customer_no      
+      and c.plexus_customer_no=l.plexus_customer_no   
+      left outer join common_v_location_group_e lg 
+      on l.location_group_key=lg.location_group_key
+      and l.plexus_customer_no=lg.pcn
       left outer join material_v_material_e as m  
       ON c.material_key=m.material_key 
       and c.plexus_customer_no=m.plexus_customer_no      
@@ -324,14 +331,18 @@ insert into #part_container (
       and c.plexus_customer_no = @PCN
   --c.part_key = 	2684943
       and c.active = 1
-      -- 05/27/21 changed this because the plex inventory screen show Hold parts
-      -- Note the plex inventory screen shows all parts no matter there container_status 
-      -- or there allow_ship status.
-      -- and cs.allow_ship = 1
-      and cs.allow_ship = 1 
---      and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold')))
+      and ((cs.allow_ship = 1) and (l.location not like '%Hold%'))  -- this is the only filter that I found that gives the same results as the prp screen
+--      and ((cs.allow_ship = 1) and (l.shippable = 1))  -- does not pass like prp
+--      and ((cs.allow_ship = 1) and (lg.location_group <> 'Holding Area'))  -- does not pass
+--      and cs.defective <> 1  -- does not pass like prp
+--      and cs.container_status not in ('Scrap') -- does not pass like prp
+--      and ((cs.allow_ship = 1) or ((cs.allow_ship = 0) and (c.Container_Status='Hold'))) -- does not pass like prp
+    --  and (c.container_type <> 'Red Tote' and l.shippable = 1) -- does not pass like prp
+    --  and not ((c.container_type = 'Red Tote') and (cs.container_status = 'OK')) -- not used by PRP
+      -- and c.container_type <> 'Red Tote' -- not used by PRP
+      -- and lg.location_group <> 'Holding Area'  -- not used by prp
+      -- and l.shippable = 1  -- not used by prp
       and c.quantity > 0
-      --and l.shippable = 1
     )s1
     left outer join part_v_job_op_e AS jo
     on s1.next_job_op = jo.job_op_key
@@ -341,30 +352,17 @@ insert into #part_container (
     on s1.next_operation = po.part_operation_key
     and s1.pcn=po.plexus_customer_no      
 
--- Is this data identical to that found in the Plex PRP and Customer Release screens?
+-- Is this data identical to that found in the Plex PRP? Yes
 
 -- select * from #part_container c where c.serial_no in ('AB838755') 
 /*
-We are not showing containers that are on hold but Plex is showing these containers on the inventory screen both for Wip and Final operations.
-
-select c.active,cs.allow_ship,* 
-from part_v_container c 
-left outer join part_v_container_status AS cs -- 1 to 1
-on c.container_status = cs.container_status
-where c.serial_no = 'AB838755'
-
-This is the set of containers that we can ship.
-We can tell if they are loaded the only question
-is to find out if they are WIP or ready.
-Sometimes there is a next part op but not a next job op.
+This is the set of containers that we assume that we can ship and has the same values as
+the PRP screen; although the PRP screen does not distinguish between ready and loaded containers.
 */
--- select * from part_v_container_status Allow_Ship=OK,Loaded,Staged,Impreg. 
--- select container_status,next_job_op,jo_add_to_qty_ready,* from #part_container
--- where jo_add_to_qty_ready > 0
--- where jo_add_to_qty_wip <> po_add_to_qty_wip
 
 create table #part_wip_ready_loaded
 (
+pcn int,
 part_key int,
 qty_wip decimal (19,5),
 wip_containers varchar(max),  -- DEBUG ONLY
@@ -374,10 +372,11 @@ qty_loaded decimal (19,5),
 loaded_containers varchar(max)
 );
 
-insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,ready_containers,qty_loaded,loaded_containers)
+insert into #part_wip_ready_loaded (pcn,part_key,qty_wip,wip_containers,qty_ready,ready_containers,qty_loaded,loaded_containers)
 (
 
   select
+  pcn,
   part_key,
   sum(po_add_to_qty_wip) qty_wip,
   (
@@ -433,31 +432,19 @@ insert into #part_wip_ready_loaded (part_key,qty_wip,wip_containers,qty_ready,re
   ) as loaded_containers
 
   from #part_container pc
-  group by pc.part_key 
+  group by pc.pcn,pc.part_key 
 )
 
 -- select r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
+
 /*
+Debugging query
  select part_no,r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
  left outer join part_v_part p
  on r.part_key=p.part_key
  order by p.part_no
- */
--- where p.part_no = '10103357'
 
--- select count(*) cnt from #part_wip_ready_loaded 
--- select count(*) cnt from #part_wip_ready_loaded where qty_ready > 0
--- select part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded where qty_ready <= 0
--- select part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded where qty_ready > 0
--- select r.part_key,p.part_no,qty_wip,wip_containers,qty_ready,ready_containers,qty_loaded,loaded_containers 
--- from #part_wip_ready_loaded r
--- left outer join part_v_part p
--- on r.part_key=p.part_key
--- where p.part_no = '10103357'
---where qty_ready > 0
---select count(*) #part_container_wip_ready_loaded from #part_container_wip_ready_loaded  --415
--- select job_key,job_op_key,* from part_v_container where serial_no = 'AB757307'
-
+*/
 
 /*
 	PCN
@@ -487,6 +474,7 @@ create table #sales_release_part
   po_line_key int,
   release_status_key int,
   release_type_key int,
+  po_status_key int,
   part_key int,
   release_no varchar(50), 
   ship_to	varchar(50),  
@@ -497,7 +485,7 @@ create table #sales_release_part
 )
 
 
-insert into #sales_release_part (pcn,release_key,po_line_key,release_status_key,release_type_key,part_key,release_no,ship_to,ship_date, due_date,quantity,quantity_shipped)
+insert into #sales_release_part (pcn,release_key,po_line_key,release_status_key,release_type_key,po_status_key,part_key,release_no,ship_to,ship_date, due_date,quantity,quantity_shipped)
 select 
 --top 10
 sr.pcn,
@@ -505,6 +493,7 @@ sr.release_key,
 pl.po_line_key,
 sr.release_status_key,
 release_type_key,
+po.po_status_key,
 pl.part_key,
 release_no,
 ship_to,
@@ -517,6 +506,9 @@ from sales_v_release_e sr
 inner join sales_v_po_line_e pl --1 to 1
 on sr.pcn = pl.pcn
 and sr.po_line_key=pl.po_line_key 
+inner join sales_v_po_e po  -- 1 to 1
+on pl.pcn = po.pcn
+and pl.po_key=po.po_key  
 inner join sales_v_release_status_e rs  -- 1 to 1
 on sr.pcn = rs.pcn
 and sr.release_status_key=rs.release_status_key  
@@ -526,87 +518,75 @@ where pl.part_key in  -- Limit to sales_release being filled by workcenters in a
 )
 and rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
 -- does not include Canceled, Hold,Closed
-and due_date <= @Due_Date --193
+and due_date < @Due_Date --193
 and sr.pcn = @PCN
 
--- select count(*) #sales_release_part from #sales_release_part -- 34
-
+-- 2994,712,680,1632
+-- select count(*) #sales_release_part from #sales_release_part -- 31
 /*
-I validate the WIP query already so
-next validate the customer release portion against all of 
-the part numbers below.
-If success then join the 2 queries.
-
-*/
-select p.part_no,p.name,r.* from #sales_release_part r -- 34
-inner join part_v_part p 
+Debugging line
+select p.part_no,p.name,ps.po_status,po.Expiration_Date,rs.release_status,rt.release_type,rt.allow_ship,r.* 
+from #sales_release_part r -- 34
+inner join sales_v_po_line_e pl --1 to 1
+on r.pcn = pl.pcn
+and r.po_line_key=pl.po_line_key 
+inner join sales_v_po_e po  -- 1 to 1
+on pl.pcn = po.pcn
+and pl.po_key=po.po_key  
+inner join sales_v_po_status_e ps  -- 1 to 1
+on po.pcn = ps.pcn
+and po.po_status_key=ps.po_status_key  
+inner join sales_v_release_status_e rs  -- 1 to 1
+on r.pcn = rs.pcn
+and r.release_status_key=rs.release_status_key  
+inner join sales_v_release_type_e rt  -- 1 to 1
+on r.pcn = rt.pcn
+and r.release_type_key=rt.release_type_key  
+inner join part_v_part_e p 
 on r.pcn=p.plexus_customer_no
 and r.part_key=p.part_key
-where p.part_no = '10103353'
-
-/*
-1	10103353
-2	10103353CX
-3	10103355
-4	10103355CX
-5	10103357
-6	10103357CD
-7	10103358
-8	10103358CD
-9	2010928
-10	2015897
-11	2015898
+where p.part_no like '2015898' order by part_no, due_date asc
 */
 
+select rp.pcn,rp.part_key,sum(rp.quantity) qty_due, sum(rp.quantity_shipped) qty_shipped
+into #sales_release_due
+from #sales_release_part rp -- 34
+group by rp.pcn,rp.part_key
 
-create table #sales_release_totals
+create table #customer_release_summary_info
 (
 pcn int,
 part_key int,
-qty_due decimal,
-qty_shipped decimal
+qty_due int,
+qty_shipped int,
+qty_wip int,
+qty_ready int,
+qty_loaded int,
+qty_ready_or_loaded int,
+less_than_due_date datetime,
 )
 
-insert into #sales_release_totals (pcn,part_key,qty_due,qty_shipped)
-select
-r.pcn,
-r.part_key,
-sum(quantity) qty_due,
-sum(quantity_shipped) qty_shipped
-from #sales_release_part r
-group by r.pcn,r.part_key
+insert into #customer_release_summary_info (pcn,part_key,qty_due,qty_shipped,qty_wip,qty_ready,qty_loaded,qty_ready_or_loaded,less_than_due_date)
+-- select rd.* from #sales_release_due rd
+select wr.pcn,wr.part_key,
+isnull(rd.qty_due,0) qty_due,
+isnull(rd.qty_shipped,0) qty_shipped,
+wr.qty_wip,wr.qty_ready,wr.qty_loaded,wr.qty_ready+wr.qty_loaded qty_ready_or_loaded,@Due_Date less_than_due_date 
+from  #part_wip_ready_loaded wr 
+left outer join #sales_release_due rd
+on wr.pcn=rd.pcn
+and wr.part_key=rd.part_key
 
 
--- select * from #sales_release_totals r
--- where r.part_key = 2794748
-/*
-select p.part_no
---,p.name,r.* 
-from #sales_release_totals r 
-inner join part_v_part p 
-on r.pcn=p.plexus_customer_no
-and r.part_key=p.part_key
-order by p.part_no
-*/
-create table #Customer_Release_Due_Plant_6
-(
-pcn int not null,
-part_key int,
--- part_no varchar(112), 
--- part_name varchar(100), 
-qty_due decimal,
-qty_shipped decimal,
-qty_ready decimal,
-qty_loaded decimal,
-qty_wip decimal
--- qty_loaded decimal (18,3)
-)
+select si.pcn,
+-- p.part_no,
+si.part_key,si.qty_due,si.qty_shipped,
+si.qty_wip,si.qty_ready,si.qty_loaded,si.qty_ready_or_loaded,si.less_than_due_date 
+from #customer_release_summary_info si
+inner join part_v_part_e p 
+on si.pcn=p.plexus_customer_no
+and si.part_key=p.part_key
+order by p.part_no  --12
 
 
-/*
-The release item will be for HXE66422
-but the painting is for HXE66422R
-containers for HXE66422 will be at the final operation so will show as Ready but they still need to be painted 
-How do we know when we have made enough?  We have made enough if they just need painted
-*/
--- select * from #part_wip_ready_loaded
+

@@ -116,4 +116,28 @@ where transtartdatetime BETWEEN '2021-05-13 00:00:00' AND '2021-05-14 00:00:00'
 and ITEMGROUP = 'INSERTS'
 
 
+SELECT '300758' PCN,
+tlid,
+VMID,
+transtartdatetime,
+TRANENDDATETIMe,
+TRANSCODE,
+USERNUMBER,
+USERGROUP01, 
+JOBNUMBER, 
+ITEMNUMBER,
+UNITCOST,
+qty,
+QTYNEW,
+QTYONORDER,
+ITEMGROUP, 
+ITEMALIASNUMBER, 
+SUPPLIERNUMBER,
+SUPPLIERPARTNUMBER
+-- select count(*) -- 1213, 6/8/2021
+FROM sps.dbo.TransactionLog
+ where VMID = 4 -- Plant 6
+and transcode = 'WN'
+and jobnumber <> ''
+and tranenddatetime > '2021-04-27 00:00:00'
 

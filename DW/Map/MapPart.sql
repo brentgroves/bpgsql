@@ -43,6 +43,8 @@ CREATE TABLE myDW.[Map].Tool_Part_Op (
 );
 select * from [Map].Part
 
+select * from AlbSPS.Jobs j 
+
 -- TRUNCATE table  myDW.Map.Tool_Part_Op
 INSERT INTO myDW.[Map].Tool_Part_Op
 (PCN, original_process_id,part_key, accounting_job_key, part_key)

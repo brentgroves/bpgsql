@@ -1,7 +1,7 @@
 select * from jobs
 where jobnumber in ('28079')
 
-
+select JOBNUMBER,DESCR from Jobs
 select 
 j.*
 --j.JOBNUMBER,j.DESCR 
