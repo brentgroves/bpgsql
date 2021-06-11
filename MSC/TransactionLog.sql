@@ -1,74 +1,9 @@
-SELECT -- * from TransactionLog tl 
--- TLID,
--- VMID, 
-transtartdatetime,
-TRANENDDATETIMe,
-TRANSCODE,
-USERNUMBER,
-USERGROUP01, 
-JOBNUMBER, 
-ITEMNUMBER,
-UNITCOST,
-qty,
-QTYNEW,
-QTYONORDER,
-ITEMGROUP, 
-ITEMALIASNUMBER, 
-SUPPLIERNUMBER
--- SUPPLIERPARTNUMBER
--- select *
-FROM sps.dbo.TransactionLog
--- FROM sps.dbo.InvAdjTransactionLog iatl 
-where VMID = 4
-and transcode = 'WN'
---and transtartdatetime > '2021-05-13 00:00:00' -- AND '2021-05-18 00:00:00'
-and jobnumber <> ''
---and ITEMGROUP = 'INSERTS'
-order by TRANENDDATETIME 
+-- select distinct transcode from Transactions t 
 
+-- select * from sps.dbo.TransactionLog tl where TRANSTARTDATETIME > '2021-06-9 00:00:00'
 
-SELECT -- * from TransactionLog tl 
-TLID,
-VMID, 
-transtartdatetime,
-TRANENDDATETIMe,
-TRANSCODE,
-USERNUMBER,
-USERGROUP01, 
-JOBNUMBER, 
-ITEMNUMBER,
-UNITCOST,
-qty,
-QTYNEW,
-QTYONORDER,
-ITEMGROUP, 
-ITEMALIASNUMBER, 
-SUPPLIERNUMBER,
-SUPPLIERPARTNUMBER
--- select *
-FROM sps.dbo.TransactionLog
--- FROM sps.dbo.InvAdjTransactionLog iatl 
-where VMID = 4
-and transcode = 'WN'
---and transtartdatetime BETWEEN '2021-05-13 00:00:00' AND '2021-05-18 00:00:00'
---and ITEMGROUP = 'INSERTS'
-order by TRANENDDATETIME 
-
-select distinct transcode from Transactions t 
-select 
---itemaliannumber = 36207330
--- SUPPLIERPARTNUMBER = 2960855
-
-select 
-j.JOBNUMBER,j.DESCR 
-from Jobs j  -- 37
--- 1 job is Marker
-
-select * 
-from Jobs_VendingMachineAssignment jvma  
--- where vmid = 2 -- 36
-where vmid = 1 -- 36
-[ADO NET Source [47]] Error: An error occurred executing the provided SQL command: "SELECT 
+SELECT 
+'300758' PCN,
 tlid,
 VMID,
 transtartdatetime,
@@ -86,10 +21,17 @@ ITEMGROUP,
 ITEMALIASNUMBER, 
 SUPPLIERNUMBER,
 SUPPLIERPARTNUMBER
+-- select count(*) -- 1316, 6/8/2021
 FROM sps.dbo.TransactionLog
-where transtartdatetime > Apr 27 2021 12:00AM". Incorrect syntax near '27'.
+where VMID in (4) -- vmid 4/Plant 6 tooling
+and transcode = 'WN'
+and jobnumber <> ''
+ and tranenddatetime > '2021-04-27 00:00:00'
+-- and ITEMNUMBER like '%R'
 
-select * from sps.dbo.TransactionLog tl where TRANSTARTDATETIME > '2021-05-17 00:00:00'
+select * from albsps.import
+/*
+ * 
 SELECT 
 t.tlid,
 t.VMID, 
@@ -112,32 +54,10 @@ t.SUPPLIERPARTNUMBER
 FROM sps.dbo.TransactionLog t 
 inner join Jobs j 
 on t.JOBNUMBER = j.JOBNUMBER 
-where transtartdatetime BETWEEN '2021-05-13 00:00:00' AND '2021-05-14 00:00:00'
+where transtartdatetime BETWEEN '2021-05-13 00:00:00' AND '2021-06-11 00:00:00'
 and ITEMGROUP = 'INSERTS'
+and t.VMID <> 4
 
 
-SELECT '300758' PCN,
-tlid,
-VMID,
-transtartdatetime,
-TRANENDDATETIMe,
-TRANSCODE,
-USERNUMBER,
-USERGROUP01, 
-JOBNUMBER, 
-ITEMNUMBER,
-UNITCOST,
-qty,
-QTYNEW,
-QTYONORDER,
-ITEMGROUP, 
-ITEMALIASNUMBER, 
-SUPPLIERNUMBER,
-SUPPLIERPARTNUMBER
--- select count(*) -- 1213, 6/8/2021
-FROM sps.dbo.TransactionLog
- where VMID = 4 -- Plant 6
-and transcode = 'WN'
-and jobnumber <> ''
-and tranenddatetime > '2021-04-27 00:00:00'
-
+ */
+*/

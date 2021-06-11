@@ -21,5 +21,6 @@ values
 (1,'Albion MSC Jobs Import',0),
 (2,'Albion MSC TransactionLog Import',0),
 (3,'customer_release_due_WIP_ready_loaded',0),
-(4,'part_op_with_tool_list',0);
+(4,'part_op_with_tool_list',0),
+(5,'part_tool_assembly',0)
 */

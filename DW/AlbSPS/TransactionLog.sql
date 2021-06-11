@@ -1,54 +1,44 @@
--- DROP TABLE myDW.MSC.TransactionLog;
--- TRUNCATE table myDW.MSC.TransactionLog
-select j.jobnumber,j.DESCR,tl.itemgroup,tl.ITEMNUMBER,count(*) withdrawals from MSC.TransactionLog tl
-inner join MSC.Job j 
-on tl.jobnumber=j.JOBNUMBER 
-where j.jobnumber ='54484'
-group by j.JOBNUMBER,j.DESCR,tl.itemgroup,tl.ITEMNUMBER 
-order by count(*) desc
 
-select distinct j.JOBNUMBER, j.DESCR
--- select j.JOBNUMBER,tl.USERGROUP01,tl.usernumber,j.DESCR,tl.TRANSTARTDATETIME,tl.TRANSCODE,tl.ITEMNUMBER,tl.ITEMGROUP,tl.unitcost,tl.QTY,tl.QTYNEW,tl.QTYONORDER,tl.SUPPLIERNUMBER 
-from MSC.TransactionLog tl 
-inner join MSC.Job j 
-on tl.jobnumber=j.JOBNUMBER 
---where transtartdatetime > '2021-05-06 00:00:00'
-order by j.jobnumber
 
-select tl.jobnumber,j.DESCR,count(*) cnt
-from MSC.TransactionLog tl
-inner join MSC.Job j 
-on tl.jobnumber=j.JOBNUMBER 
-group by tl.jobnumber,j.DESCR 
-order by count(*) DESC 
+select tl.*
+from AlbSPS.TransactionLog tl  
 
-select j.*
-from MSC.Job j 
-where j.descr like '%2009828%'
-
-SELECT * from AlbSPS.TransactionLog tl 
-select DISTINCT  j.JOBNUMBER, j.DESCR
-from AlbSPS.TransactionLog tl 
+select * from albsps.import
 /*
-CREATE TABLE myDW.MSC.TransactionLog (
+update albsps.import
+set LastSuccess='2021-04-27 00:00:00'
+where id=1
+ */
+select *
+select count(*) cnt  -- 1389
+from myDW.AlbSPS.TransactionLog
+/*
+-- myDW.AlbSPS.TransactionLog definition
+
+-- Drop table
+
+-- DROP TABLE myDW.AlbSPS.TransactionLog;
+-- truncate table AlbSPS.TransactionLog   
+
+CREATE TABLE myDW.AlbSPS.TransactionLog (
 	PCN int NOT NULL,
 	TLID decimal(27,15) NOT NULL,
 	VMID int NULL,
 	TRANSTARTDATETIME datetime NULL,
 	TRANENDDATETIME datetime NULL,
-	TRANSCODE nvarchar(3) NULL,
-	ITEMNUMBER nvarchar(32) NULL,
-	ITEMGROUP nvarchar(32) NULL,
-	ITEMALIASNUMBER nvarchar(32) NULL,
+	TRANSCODE nvarchar(3) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	ITEMNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	ITEMGROUP nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	ITEMALIASNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	UNITCOST decimal(12,4) NULL,
 	QTY int NULL,
 	QTYNEW int NULL,
 	QTYONORDER int NULL,
-	SUPPLIERNUMBER nvarchar(32) NULL,
-	SUPPLIERPARTNUMBER nvarchar(50) NULL,
-	USERGROUP01 nvarchar(50) NULL,
-	USERNUMBER nvarchar(32) NULL,
-	JOBNUMBER nvarchar(32) NULL,
-	CONSTRAINT PK_TRANSACTIONLOG PRIMARY KEY (PCN,TLID)
+	SUPPLIERNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	SUPPLIERPARTNUMBER nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	USERGROUP01 nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	USERNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	JOBNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	CONSTRAINT PK_TRANSACTIONLOG PRIMARY KEY (TLID)
 );
 */

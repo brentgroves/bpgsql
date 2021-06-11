@@ -1,5 +1,28 @@
 /*
 All parts for a building with status of production
+Whevever you want to use @Due_Date you must convert it to datetime.
+-- CONVERT(datetime, @Due_Date)  less_than_due_date
+*/
+/*
+DECLARE @Due_Date varchar(50);
+-- SET @Due_Date = @By_Due_Date
+SET @Due_Date = '20210701'
+-- SELECT CONVERT(datetime, @Due_Date)
+-- select @Due_Date;
+*/
+--SELECT CONVERT(datetime, @By_Due_Date)
+
+/*
+SET @By_Due_Date = '2019-08-16 09:37:00'
+SELECT CONVERT(datetime, @By_Due_Date)
+select @varchar_date;
+select top 10 * from part_v_part
+declare @Due_Date date
+select CAST(''' + @By_Due_Date + ''' AS datetime)
+-- SELECT convert(datetime, '20210704', 112);
+-- set @Due_Date = convert(datetime, @By_Due_Date, 112);
+select convert(datetime, @By_Due_Date, 112);
+
 */
 create table #part_building
 (
@@ -331,7 +354,8 @@ insert into #part_container (
       and c.plexus_customer_no = @PCN
   --c.part_key = 	2684943
       and c.active = 1
-      and ((cs.allow_ship = 1) and (l.location not like '%Hold%'))  -- this is the only filter that I found that gives the same results as the prp screen
+      and (((cs.allow_ship = 1) and (l.location not like '%Hold%'))  
+          or ((cs.allow_ship = 0) and (c.container_status ='Rework')))  -- this is the only filter that I found that gives the same results as the prp screen
 --      and ((cs.allow_ship = 1) and (l.shippable = 1))  -- does not pass like prp
 --      and ((cs.allow_ship = 1) and (lg.location_group <> 'Holding Area'))  -- does not pass
 --      and cs.defective <> 1  -- does not pass like prp
@@ -353,8 +377,15 @@ insert into #part_container (
     and s1.pcn=po.plexus_customer_no      
 
 -- Is this data identical to that found in the Plex PRP? Yes
-
--- select * from #part_container c where c.serial_no in ('AB838755') 
+-- select * from #part_container c where c.serial_no in ('AB856699') 
+/*
+select c.active,cs.allow_ship,c.container_status,c.* 
+from part_v_container c 
+left outer join part_v_container_status_e AS cs -- 1 to 1
+on c.container_status = cs.container_status
+and c.plexus_customer_no=cs.plexus_customer_no
+where c.serial_no in ('AB856699') 
+*/
 /*
 This is the set of containers that we assume that we can ship and has the same values as
 the PRP screen; although the PRP screen does not distinguish between ready and loaded containers.
@@ -465,6 +496,14 @@ does some mobex part keys map to multiple customer_part_keys?
 Even if they do the purpose of this SPROC is determine tooling totals 
 which are based on tool lists that are based on Mobex part numbers
 so do not group releases by customer part key.
+-- Trying to duplicate the PRP screen in this SPROC as far as Inv WIP and Inv FG go
+-- For customer release we are showing sales release marked as active
+and rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
+-- does not include Canceled, Hold,Closed
+The PRP screen has a Scheduled column which brings up a job screen
+I don't know if I should add scheduled jobs which have no active sales releases
+in this SPROC?  Currently I am not including scheduled job quanties but only
+active sales release due quantities.
 --//////////////////////////////////////////////////////////////////////////
 */
 create table #sales_release_part
@@ -518,7 +557,7 @@ where pl.part_key in  -- Limit to sales_release being filled by workcenters in a
 )
 and rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
 -- does not include Canceled, Hold,Closed
-and due_date < @Due_Date --193
+and due_date < CONVERT(datetime, @By_Due_Date) --193
 and sr.pcn = @PCN
 
 -- 2994,712,680,1632
@@ -547,46 +586,53 @@ on r.pcn=p.plexus_customer_no
 and r.part_key=p.part_key
 where p.part_no like '2015898' order by part_no, due_date asc
 */
-
 select rp.pcn,rp.part_key,sum(rp.quantity) qty_due, sum(rp.quantity_shipped) qty_shipped
 into #sales_release_due
 from #sales_release_part rp -- 34
 group by rp.pcn,rp.part_key
-
-create table #customer_release_summary_info
+--//7/11/2021 12:00:00 AM 
+--@By_Due_Date varchar(50) = '20210701',
+create table #Customer_Release_Due_WIP_Ready_Loaded
 (
+ID int,
 pcn int,
+building_key int,
+building_code varchar(50),
 part_key int,
+part_no varchar(100),
+name varchar(100),
 qty_due int,
 qty_shipped int,
 qty_wip int,
 qty_ready int,
 qty_loaded int,
-qty_ready_or_loaded int,
-less_than_due_date datetime,
+qty_ready_or_loaded int
 )
 
-insert into #customer_release_summary_info (pcn,part_key,qty_due,qty_shipped,qty_wip,qty_ready,qty_loaded,qty_ready_or_loaded,less_than_due_date)
+insert into #Customer_Release_Due_WIP_Ready_Loaded (ID,pcn,building_key,building_code,part_key,part_no,name,qty_due,qty_shipped,qty_wip,qty_ready,qty_loaded,qty_ready_or_loaded)
 -- select rd.* from #sales_release_due rd
-select wr.pcn,wr.part_key,
+select 
+cast(row_number() over(order by wr.pcn,p.part_no) as int) ID,
+wr.pcn,
+@Building_Key building_key,
+b.building_code,
+wr.part_key,
+p.part_no,
+p.name,
 isnull(rd.qty_due,0) qty_due,
 isnull(rd.qty_shipped,0) qty_shipped,
-wr.qty_wip,wr.qty_ready,wr.qty_loaded,wr.qty_ready+wr.qty_loaded qty_ready_or_loaded,@Due_Date less_than_due_date 
+wr.qty_wip,wr.qty_ready,wr.qty_loaded,wr.qty_ready+wr.qty_loaded qty_ready_or_loaded
 from  #part_wip_ready_loaded wr 
 left outer join #sales_release_due rd
 on wr.pcn=rd.pcn
 and wr.part_key=rd.part_key
-
-
-select si.pcn,
--- p.part_no,
-si.part_key,si.qty_due,si.qty_shipped,
-si.qty_wip,si.qty_ready,si.qty_loaded,si.qty_ready_or_loaded,si.less_than_due_date 
-from #customer_release_summary_info si
 inner join part_v_part_e p 
-on si.pcn=p.plexus_customer_no
-and si.part_key=p.part_key
-order by p.part_no  --12
+on wr.pcn=p.plexus_customer_no
+and wr.part_key=p.part_key
+inner join common_v_building_e b
+on p.plexus_customer_no = b.plexus_customer_no
+and p.building_key=b.building_key
 
-
-
+-- select * from common_v_building
+select * from #Customer_Release_Due_WIP_Ready_Loaded si
+order by si.part_no
