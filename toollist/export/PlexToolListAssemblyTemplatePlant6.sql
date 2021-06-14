@@ -42,8 +42,8 @@ tl.partNumber,tl.OperationDescription,
 tl.plant 
 -- select *
 from bvToolListsInPlants tl
-where plant = 6
-and partnumber like '10103357%'
+where partnumber like '2001268%' and processid = 54480
+-- where plant = 6 and partnumber like '10103357%'
 order by tl.customer,tl.partfamily,tl.partNumber 
 -- R559432,R218919
 select Originalprocessid,* from [ToolList Master] tm where processid in (54529,

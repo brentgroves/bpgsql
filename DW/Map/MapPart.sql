@@ -33,22 +33,58 @@ values
  * All of the Plex.Part.Tool_Assembly_Part records Tool_BOMs will have restrictions 
  * under the MSC job with this description.
  */
-CREATE TABLE myDW.[Map].Tool_Part_Op (
+-- drop table Map.Tool_Part_Op
+CREATE TABLE Map.Tool_Part_Op (
 	PCN int NOT NULL,
 	original_process_id int NOT NULL,
 	process_id int NOT NULL,
-	part_key int NOT NULL,
-	operation_key int NOT NULL,
-	MSC_descr nvarchar(50)
+	part_operation_key int NOT NULL,  -- This is what should be in the MSC vending machine
+	accounting_job_key int NOT NULL,
+	accounting_job_no varchar(25) not null,
+	partfamily varchar(50) not null
 );
-select * from [Map].Part
+--select * from [Map].Part
 
-select * from AlbSPS.Jobs j 
+select * from Map.Tool_Part_Op po
+where po.process_id= 54479
 
 -- TRUNCATE table  myDW.Map.Tool_Part_Op
-INSERT INTO myDW.[Map].Tool_Part_Op
-(PCN, original_process_id,part_key, accounting_job_key, part_key)
+INSERT INTO Map.Tool_Part_Op
+(PCN, original_process_id,process_id,part_operation_key,accounting_job_key,accounting_job_no,partfamily)
 VALUES
+(300758,0,0,7883645,105686,'TLG00000000048','') --2001268, Final
+
+(300758,0,0,7931266,0,'','') -- 2001270, Final
+(300758,0,0,7876436,0,'','') -- 2004917, Final
+(300758,0,0,7876426,0,'','') -- 2004917, Machine A - WIP
+(300758,0,0,7874348,0,'','') -- 2015898, Final
+(300758,0,0,7874343,0,'','') -- 2015898, Machine A - WIP
+(300758,0,0,7961936,0,'','') -- 10103358CD, Final
+(300758,0,0,7961932,0,'','') -- 10103358CD, Machine A - WIP
+(300758,0,0,7961929,0,'','') -- 10103357CD, Final
+(300758,0,0,7961925,0,'','') -- 10103357CD, Machine A - WIP
+(300758,0,0,7876294,105730,'TLG00000000092','') -- 10103358, Final
+(300758,0,0,7876279,105730,'TLG00000000092','') -- 10103358, Machine A - WIP
+(300758,0,0,7876272,105729,'TLG00000000091','') --10103357, Final
+(300758,0,0,7876263,105729,'TLG00000000091','') --10103357, Machine A - WIP
+(300758,0,0,7961801,0,'','')-- 10103353CX,Final
+(300758,0,0,7961797,0,'','') -- 10103353CX,Machine A - WIP
+(300758,0,0,7961915,0,'','') --10103355CX,Final
+(300758,0,0,7961911,0,'','') --10103355CX,Machine A - WIP
+(300758,54480,54480,7874377,105727,'TLG00000000089','10103353 DANA 6K RH VERT')  -- no description on the process routing screen 
+(300758,54484,61747,7874371,105727,'TLG00000000089','10103353H P558 6K RH') -- OP 10/20 Horizontal Mill
+(300758, 54479,54479,7874408,105728,'TLG00000000090','10103355 DANA 6K LH VERT'),  -- OP 30 Vertical Mill
+(300758, 54485,61748,7874404,105728,'TLG00000000090','10103355H DANA P558 6K LH')  -- OP 10/20 Horizontal Mill	
+
+
+
+
+select po.*,m.part_no, m.operation_code from [Map].Tool_Part_Op po 
+inner join Plex.toolingModuleMetric m 
+on po.part_operation_key = m.part_operation_key
+where process_id = 54480
+
+
 --Tool List, DANA 10013354 P558 6K RH KNUCKLE
 -- Plex	10103353
 (300758,23726,62576,2820292,51168,'DANA-10103344H P558 7K RH KNUCKLE')  -- uploaded
