@@ -1,6 +1,9 @@
 select * from ssis.ScriptComplete
 -- update ssis.ScriptComplete set done = 0
 
+-- truncate table Plex.part_tool_BOM
+select * from Plex.part_tool_BOM where part_no = '10103355'
+
 -- truncate table AlbSPS.ItemSummary
 select * from AlbSPS.ItemSummary  -- 158
 -- truncate table AlbSPS.Jobs
@@ -8,7 +11,7 @@ select * from AlbSPS.Jobs j -- 37
 
 -- truncate table AlbSPS.TransactionLog
 select * from AlbSPS.TransactionLog tl -- 1617
-select count(*) from AlbSPS.TransactionLog tl -- 1623
+select count(*) from AlbSPS.TransactionLog tl -- 1733,1623,
 
 select * from AlbSPS.Import i 
 /*

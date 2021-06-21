@@ -23,5 +23,7 @@ values
 (3,'customer_release_due_WIP_ready_loaded',0),
 (4,'part_op_with_tool_list',0),
 (5,'part_tool_assembly',0),
-(6,'AlbMSCItemSummary',0)
+(6,'AlbMSCItemSummary',0),
+(7,'part_tool_BOM',0),
+(8,'Albion MSC Restrictions2',0)
 */

@@ -1,34 +1,3 @@
---create SCHEMA Map
-
-CREATE TABLE myDW.[Map].Part (
-	ProcessID int NULL,
-	TL_Part_No nvarchar(50) NULL,
-	Plex_Part_No varchar(8) NOT NULL,
-	Revision varchar(1) NOT NULL,
-	Operation_Code varchar(16) NOT NULL
-);
-*/
-insert into TL_Plex_PN_Op_Map_Plant6 
-values
--- (62576,'10103344','10103344','A','Machine A - WIP')  -- 62576|DANA    |10103344H P558 7K RH KNUCKLE|10103344H |1ST OP HORIZONTAL MILL|
-
-/*
- * This table can be used to validate whether or not the all the
- * parts in the PRP have a account_job to that can be assigned
- * to an item_usage MRO withdrawal
- */
-CREATE TABLE myDW.[Map].Part (
-
-	PCN int NOT NULL,
-	part_key int NOT NULL,
-	accounting_job_key int NOT NULL
-}
-
-insert into myDW.[Map].Part
-values
-(300758, 23564, 0)  -- DANA-10103344H P558 7K RH KNUCKLE
-
--- drop TABLE myDW.[Map].PartOp 
 /*
  * All of the Plex.Part.Tool_Assembly_Part records Tool_BOMs will have restrictions 
  * under the MSC job with this description.
@@ -74,7 +43,7 @@ VALUES
 (300758,54480,54480,7874377,105727,'TLG00000000089','10103353 DANA 6K RH VERT')  -- no description on the process routing screen 
 (300758,54484,61747,7874371,105727,'TLG00000000089','10103353H P558 6K RH') -- OP 10/20 Horizontal Mill
 (300758, 54479,54479,7874408,105728,'TLG00000000090','10103355 DANA 6K LH VERT'),  -- OP 30 Vertical Mill
-(300758, 54485,61748,7874404,105728,'TLG00000000090','10103355H DANA P558 6K LH')  -- OP 10/20 Horizontal Mill	
+(300758, 54485,61748,7874404,105728,'TLG00000000090','10103355H DANA P558 6K LH')  -- OP 10/20 Horizontal Mill,Machine A - WIP operation	
 
 
 

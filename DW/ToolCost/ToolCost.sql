@@ -9,23 +9,22 @@ CREATE TABLE myDW.[Map].Part (
 
 -- Detail Query
 select j.JOBNUMBER, j.descr, tl.* 
-from MSC.Job j
-inner join [Map].Part mp 
-on j.JOBNUMBER = mp.original_process_id 
-inner join MSC.TransactionLog tl 
+from AlbSPS.Jobs j
+inner join AlbSPS.TransactionLog tl 
 on j.jobnumber=tl.JOBNUMBER 
 where j.JOBNUMBER <> 'MARKER'
+and j.JOBNUMBER='54485'
+and tl.UNITCOST = 0
 order by j.JOBNUMBER 
 
 -- Group by job
 select j.PCN,j.JOBNUMBER, j.descr,count(*) withdrawals,sum(tl.qty) total_quantity 
-from MSC.Job j
-inner join [Map].Part mp 
-on j.JOBNUMBER = mp.original_process_id 
-inner join MSC.TransactionLog tl 
+from AlbSPS.Jobs j
+inner join AlbSPS.TransactionLog tl 
 on j.jobnumber=tl.JOBNUMBER 
 group by j.PCN,j.JOBNUMBER, j.descr
 having j.JOBNUMBER <> 'MARKER'
+and j.JOBNUMBER='54485'
 order by j.JOBNUMBER 
 
 
