@@ -25,5 +25,9 @@ values
 (5,'part_tool_assembly',0),
 (6,'AlbMSCItemSummary',0),
 (7,'part_tool_BOM',0),
-(8,'Albion MSC Restrictions2',0)
+(8,'Albion MSC Restrictions2',0),
+(9,'purchasing_item_summary',0),
+(10,'purchasing_item_usage',0),
+(11,'purchasing_item_inventory',0)
+
 */

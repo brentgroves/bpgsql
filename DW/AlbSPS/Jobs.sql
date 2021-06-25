@@ -1,3 +1,10 @@
+/*
+ select *
+ into AlbSPS.JobsNO
+ from AlbSPS.Jobs 
+ where JOBNUMBER not like '%[A-Z]%'
+*/ 
+
 -- delete from AlbSPS.Jobs where DESCR like 'DANA%'
 --truncate table AlbSPS.Jobs  
 select * from AlbSPS.Jobs j 

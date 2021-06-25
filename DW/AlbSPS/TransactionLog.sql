@@ -1,7 +1,45 @@
+-- 
+create PROCEDURE AlbSPS.GetTransactions  
+@PCN int = 300758,
+@StartDate datetime = '20210426',
+@EndDate datetime = '20210527'
+AS
+BEGIN
+	SET NOCOUNT ON
+		select tl.pcn,tl.JOBNUMBER,tl.UNITCOST,tl.qty,(tl.UNITCOST*tl.qty) totalcost, tl.transtartdatetime startdate, tl.TRANENDDATETIMe enddate
+		from AlbSPS.TransactionLog tl  
+		inner join AlbSPS.Jobs j 
+		on tl.PCN = j.PCN 
+		and tl.JOBNUMBER = j.JOBNUMBER 
+		--where tl.transtartdatetime between @StartDate and @EndDate;
+END
+
+declare @StartDate datetime
+declare @EndDate datetime
+set @StartDate = '20210426'
+set @EndDate = '20210527'
+select @StartDate,@EndDate
+EXEC AlbSPS.GetTransactions 300758,@StartDate, @EndDate
+		
+select i.location, '"' + i.item_no + '"' item_no, quantity 
+	from  Plex.purchasing_item_inventory i 
+	where 
+	i.pcn = @PCN
+	and (i.location like @RowFilter)  
+	order by location 
+
+end;
 
 
 select tl.*
 from AlbSPS.TransactionLog tl  
+/*
+ select *
+ into AlbSPS.TransactionLogNO
+ from AlbSPS.TransactionLog tl 
+ where tl.JOBNUMBER not like '%[A-Z]%'
+*/
+ 
 
 select tc.pcn,tc.JOBNUMBER,j.DESCR,tc.totalcost 
 from
