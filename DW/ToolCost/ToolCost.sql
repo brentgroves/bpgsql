@@ -1,3 +1,4 @@
+
 /*
 CREATE TABLE myDW.[Map].Part (
 	PCN int NOT NULL,

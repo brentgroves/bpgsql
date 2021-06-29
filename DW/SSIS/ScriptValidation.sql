@@ -81,7 +81,7 @@ end in_MSC_VM
 -- select * from Plex.ToolingModuleMetric0624A
 --into Plex.ToolingModuleMetric0624A
 -- select count(*)
-from Plex.Customer_Release_Due_WIP_Ready_Loaded cr  -- 12
+select * from Plex.Customer_Release_Due_WIP_Ready_Loaded cr  -- 12
 inner join Plex.part_op_with_tool_list tl
 on cr.pcn = tl.pcn 
 and cr.part_key = tl.part_key -- 22
