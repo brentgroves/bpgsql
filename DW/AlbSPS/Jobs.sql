@@ -4,10 +4,10 @@
  from AlbSPS.Jobs 
  where JOBNUMBER not like '%[A-Z]%'
 */ 
-
+select * from myDW.AlbSPS.Jobs
 -- delete from AlbSPS.Jobs where DESCR like 'DANA%'
 --truncate table AlbSPS.Jobs  
-select * from AlbSPS.Jobs j 
+select '"' + jobnumber + '"' JOBNUMBER ,DESCR from AlbSPS.Jobs j 
 
 -- myDW.AlbSPS.Jobs definition
 

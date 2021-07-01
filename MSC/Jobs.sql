@@ -1,3 +1,10 @@
+select * from jobs j
+jobnumber=partkey nvarchar(32)
+descr = nvarchar(50) part_no plus an optional op# or hone,horz,vert,
+alias = part_no nvarchar(50)
+select * from items where descr like '%5%MM%'
+
+/*
 select 
 cast(ROW_NUMBER() OVER(ORDER BY J.JOBNUMBER) as int) ID,
 '300758' PCN,
@@ -10,6 +17,7 @@ from jobs j -- 38
 inner join  Jobs_VendingMachineAssignment vm -- 149
 on j.JOBNUMBER = vm.JOBNUMBER 
 where vm.VMID in (4) -- (vmid 4 / plant 6 / 37 jobs),
+*/
 /*
 CREATE TABLE myDW.AlbSPS.Jobs (
 	ID int not null,

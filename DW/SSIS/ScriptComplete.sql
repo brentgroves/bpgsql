@@ -15,6 +15,7 @@ CREATE TABLE myDW.SSIS.ScriptComplete (
 	PRIMARY KEY (ID)
 );
 */
+select * from ssis.ScriptComplete
 /*
 INSERT into ssis.ScriptComplete (ID,Description,Done)
 values
@@ -28,6 +29,7 @@ values
 (8,'Albion MSC Restrictions2',0),
 (9,'purchasing_item_summary',0),
 (10,'purchasing_item_usage',0),
-(11,'purchasing_item_inventory',0)
+(11,'purchasing_item_inventory',0),
+(12,'purchasing_item_inv_cube',0)
 
 */
