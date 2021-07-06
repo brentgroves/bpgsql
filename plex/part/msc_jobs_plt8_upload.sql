@@ -7,7 +7,9 @@ Whevever you want to use @Due_Date you must convert it to datetime.
 26	5646	Mobex Global Plant 9
 */
 --SELECT CONVERT(datetime, @By_Due_Date)
-
+/*
+ This list was reviewed by Jason/Toolsetter Plant 8 on 7/3/2021 
+*/
 create table #part_building
 (
 part_key int not null

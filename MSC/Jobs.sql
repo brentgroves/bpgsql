@@ -1,9 +1,16 @@
-select * from jobs j
+select * from jobs j where JOBNUMBER IN ('2684942',  '2684943' )
+select * from Jobs_VendingMachineAssignment where JOBNUMBER IN ('2684942', '2684943')  
+vmid = 5 
+SELECT * FROM Restrictions2 r WHERE r_JOB IN ('2684942', '2684943')
+SELECT count(*) FROM Restrictions2 r WHERE r_JOB IN ('2684942', '2684943')  -- 26
 jobnumber=partkey nvarchar(32)
 descr = nvarchar(50) part_no plus an optional op# or hone,horz,vert,
 alias = part_no nvarchar(50)
 select * from items where descr like '%5%MM%'
-
+select * from JobGroups jg 
+select * from ItemGroups ig 
+select * from items where ItemGroup in ('12345','223456')
+--tool_assy_key,T01-1ST OP HORIZONTAL MILL
 /*
 select 
 cast(ROW_NUMBER() OVER(ORDER BY J.JOBNUMBER) as int) ID,

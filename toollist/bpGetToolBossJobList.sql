@@ -1,3 +1,19 @@
+exec bpGetToolBossJobList 8
+
+
+select * from bfGetToolBossJobList(8)  -- 112
+where alias like '%H2GC-5K651-AB%'--2684942/H2GC-5K651-AB
+where alias like '%51393-TJB-A040-M1%'
+-- 2960018	51393TJB A040M1	
+select * from bfGetToolBossJobList(8)
+where alias like '%51393TJB%'
+--where alias like '%26088054%'
+--49396/51393TJB A040M1 / RDX Right Hand
+-- 14218/2803944/NEXTEER - 26088054 ALUMINUM ASSEMBLY - ASSEMBLY/26088054 -- JUST 3 GLOBAL ITEMS ON TOOL LIST
+--2684942/H2GC-5K651-AB  
+-- 2684943/H2GC-5K652-AB
+
+
 create PROCEDURE [dbo].[bpGetToolBossJobList] 
 	-- Add the parameters for the stored procedure here
 	@plant int
@@ -74,8 +90,22 @@ where jobNumber in (43114,9323)
 where plant = 112
 and jobNumber in (49995,49716)
 
-select * from bfGetToolBossJobList(112)
+select * from [toollist partnumbers] where PartNumbers like '%51393%'
 
+
+select * from bfGetToolBossJobList(8)  -- 112
+--2684942/H2GC-5K651-AB
+where alias like '%51393-TJB-A040-M1%'
+-- 2960018	51393TJB A040M1	
+select * from bfGetToolBossJobList(8)
+where alias like '%51393TJB%'
+--where alias like '%26088054%'
+--49396/51393TJB A040M1 / RDX Right Hand
+-- 14218/2803944/NEXTEER - 26088054 ALUMINUM ASSEMBLY - ASSEMBLY/26088054 -- JUST 3 GLOBAL ITEMS ON TOOL LIST
+--2684942/H2GC-5K651-AB  
+-- 2684943/H2GC-5K652-AB
+
+select * from [ToolList Master] where OriginalProcessID = 40750
 select * from bvToolBossJobList
 
 where plant = @plant;

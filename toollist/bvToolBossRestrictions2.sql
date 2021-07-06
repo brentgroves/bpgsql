@@ -1,3 +1,28 @@
+
+/*
+ * Find the process id of the parts
+ * 
+ */
+select * from [ToolList Master] 
+where partFamily like '%501-1234-06%'
+order by partfamily
+
+-- where partFamily like '%0994%'
+where processid = 63659
+-- ﻿
+COPELAND - 501-1234-06 K-BODY TEST 50TAPER - 63659
+
+SELECT '2684942' Job,r.item,description1,itemclass--,t.* 
+FROM bvToolBossRestrictions2 r
+inner join toolitems t 
+on r.item = t.itemnumber 
+--where Job  = 14218 --/2803944/NEXTEER - 26088054 ALUMINUM ASSEMBLY - ASSEMBLY/26088054 -- NO RESTRICTIONS
+where job = 40750 --H2GC-5K651-AB RH CD4.2 RLCA  -- pn 2684942
+--WHERE job =  40800  -- H2GC 5K652 AB	CD4.2 LH -- pn 2684943
+--and r.item not in ('0002005','12974','15165','2008')
+--and t.description1 like '%C0%'
+
+
 select * from dbo.bvToolBossRestrictions2 
 where processid = 63647 -- 76
 
@@ -111,6 +136,16 @@ order by partfamily
 where processid = 63659
 -- ﻿
 COPELAND - 501-1234-06 K-BODY TEST 50TAPER - 63659
+
+SELECT '2684942' Job,r.item,description1,itemclass--,t.* 
+FROM bvToolBossRestrictions2 r
+inner join toolitems t 
+on r.item = t.itemnumber 
+--where Job  = 14218 --/2803944/NEXTEER - 26088054 ALUMINUM ASSEMBLY - ASSEMBLY/26088054 -- NO RESTRICTIONS
+--where job = 40750 --H2GC-5K651-AB RH CD4.2 RLCA  -- pn 2684942
+--WHERE job =  40800  -- H2GC 5K652 AB	CD4.2 LH -- pn 2684943
+--and r.item not in ('0002005','12974','15165','2008')
+--and t.description1 like '%C0%'
 
 -- drop view bvToolBossRestrictions2
 -- toollists items that have a category that is to be stocked in the toolbosses
