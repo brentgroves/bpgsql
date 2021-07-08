@@ -1,7 +1,28 @@
-select * from jobs j where JOBNUMBER IN ('2684942',  '2684943' )
-select * from Jobs_VendingMachineAssignment where JOBNUMBER IN ('2684942', '2684943')  
-vmid = 5 
-SELECT * FROM Restrictions2 r WHERE r_JOB IN ('2684942', '2684943')
+select j.* 
+from jobs j 
+inner join Jobs_VendingMachineAssignment a 
+on j.JOBNUMBER = a.JOBNUMBER 
+
+and a.VMID = 5
+
+select j.JOBNUMBER,j.DESCR,j.ALIAS,j.JOBENABLE,a.VMID,r.R_ITEM 
+from jobs j 
+inner join Jobs_VendingMachineAssignment a 
+on j.JOBNUMBER = a.JOBNUMBER 
+INNER join Restrictions2 r 
+on j.JOBNUMBER = r.R_JOB 
+and a.VMID = 5
+
+
+where JOBNUMBER IN ('2684942',  '2684943' )
+select * from Jobs_VendingMachineAssignment 
+--where JOBNUMBER IN ('2684942', '2684943')  
+where vmid = 5 
+SELECT * 
+FROM Restrictions2 r 
+INNER
+WHERE r_JOB IN ('2684942', '2684943','2803944')
+
 SELECT count(*) FROM Restrictions2 r WHERE r_JOB IN ('2684942', '2684943')  -- 26
 jobnumber=partkey nvarchar(32)
 descr = nvarchar(50) part_no plus an optional op# or hone,horz,vert,

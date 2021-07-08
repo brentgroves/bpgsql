@@ -13,7 +13,11 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 );
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
-(61622,'H2GC-5K651-AB','H2GC 5K651 AB','','Machine A - WIP')
+(63810,'51393-TJB-A040-M1','51393TJB A040M1','40-M1-','Final') -- 63810|51393-TJB-A040-M1|
+-- (14218,'26088054','26088054','07B','Final') -- 14218|    14218 NEXTEER |26088054 ALUMINUM ASSEMBLY  -- No tool boss items
+-- (61623,'H2GC-5K652-AB','H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06
+-- (61622,'H2GC-5K651-AB','H2GC 5K651 AB','','Machine A - WIP') -- done 07-06
+
 -- The following tool list has already been added to plex.
 -- (61748,'10103355','10103355','A','Machine A - WIP')  -- 10103355H DANA P558 6K LH Horizontal  Done
 -- (54479,'10103355','10103355','A','Final')  -- 10103355H DANA P558 6K LH - Vertical - Done, 02/10/21
@@ -21,7 +25,7 @@ values
 -- (62576,'10103344','10103344','A','Machine A - WIP')  -- 62576|DANA    |10103344H P558 7K RH KNUCKLE|10103344H |1ST OP HORIZONTAL MILL|
 -- (61747,'10103353','10103353','A','Machine A - WIP')  -- 61747|DANA    |10103353H P558 6K RH    |10103353  |MILL COMPLETE  
 -- (54480,'10103353','10103353','A','Final')  -- 54480|DANA    |10103353 DANA 6K RH VERT|10103353  |MILL COMPLETE   
--- (54480,'10103351','10103351','A','Final')  -- 28080|    54533|DANA    |10103351 P558 7K LH KNUCKLE |10103351  |2ND OP VERTICAL MILL  
+-- (54480,'10103351','10103351','A','Final')  -- 28080|    5453U3|DANA    |10103351 P558 7K LH KNUCKLE |10103351  |2ND OP VERTICAL MILL  
 -- which tool list, i asked Jason, and he wants the latest imported, which would be 61763
 -- (54529,'10103351H','10103344','A','Machine A - WIP')  -- 62576|DANA    |10103344H P558 7K RH KNUCKLE|10103344H |1ST OP HORIZONTAL MILL|
 -- (61763,'10103351H','10103344','A','Machine A - WIP')  -- 62576|DANA    |10103344H P558 7K RH KNUCKLE|10103344H |1ST OP HORIZONTAL MILL|
@@ -31,7 +35,7 @@ values
 
 select * from TL_Plex_PN_Op_Map_Plant8
 
-
+/* Section to find processid and part number
 select 
 tl.originalProcessid,
 tl.processid,
@@ -44,8 +48,8 @@ tl.plant
 -- select *
 from bvToolListsInPlants tl
 where plant = 8
-and tl.Originalprocessid = 40750
-and partnumber like '2007669%'
+--and tl.Originalprocessid = 40750
+and partnumber like '%26088054%'
 order by tl.customer,tl.partfamily,tl.partNumber 
 -- R559432,R218919
 select Originalprocessid,* from [ToolList Master] tm where processid in (54529,
@@ -61,7 +65,7 @@ select * from bvToolListsAssignedPN
 select * 
 -- into PlexToolListAssemblyTemplatePlant6_6K_Knuckles_Wip
 from PlexToolListAssemblyTemplatePlant6
-
+*/
 -- drop table PlexToolListAssemblyTemplatePlant8
 -- truncate table PlexToolListAssemblyTemplatePlant8
 create table PlexToolListAssemblyTemplatePlant8
@@ -149,10 +153,11 @@ insert into PlexToolListAssemblyTemplatePlant8 (ProcessID,ToolID,ToolNumber,Asse
 	-- where tl.Part_No = '28245973' 
 
 	select count(*) from PlexToolListAssemblyTemplatePlant8 -- 1
+	select * from PlexToolListAssemblyTemplatePlant8 -- 1
 	/*
  * For each ToolList create a TF Assembly.
  */
-insert into PlexToolListAssemblyTemplatePlant6 
+insert into PlexToolListAssemblyTemplatePlant8 
 (ProcessID,ToolID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 select 
 /*
@@ -178,19 +183,19 @@ m.Operation_Code Operation,
 '' Location
 -- m.Plex_Part_No Part_No,m.Revision Part_Revision,m.Operation_Code Operation,tl.OperationDescription 
 from bvToolListsInPlants tl
-inner join TL_Plex_PN_Op_Map_Plant6 m  
+inner join TL_Plex_PN_Op_Map_Plant8 m  
 on tl.processid = m.processid  -- 27
 -- ONLY FOR TOOLLISTS THAT ARE IN MULTIPLE PLANTS
 -- where tl.Plant = 6
 
-select count(*) from PlexToolListAssemblyTemplatePlant6 -- 2
-select * from PlexToolListAssemblyTemplatePlant6 -- 2
+select count(*) from PlexToolListAssemblyTemplatePlant8 -- 2
+select * from PlexToolListAssemblyTemplatePlant8 -- 2
 
 
 /*
  * For each ToolList create a TM Miscellaneous Assembly.
  */
-insert into PlexToolListAssemblyTemplatePlant6 (ProcessID,ToolID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
+insert into PlexToolListAssemblyTemplatePlant8 (ProcessID,ToolID,ToolNumber,Assembly_No,Tool_Assembly_Type,Description,Part_No,Part_Revision,Operation,Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location)
 -- delete from PlexToolListAssemblyTemplateAvilla where ToolNumber = 222222	
 select 
 tl.processid,
@@ -209,28 +214,28 @@ m.Operation_Code Operation,
 '' Location
 -- m.Plex_Part_No Part_No,m.Revision Part_Revision,m.Operation_Code Operation,tl.OperationDescription 
 from bvToolListsInPlants tl
-inner join TL_Plex_PN_Op_Map_Plant6 m 
+inner join TL_Plex_PN_Op_Map_Plant8 m 
 on tl.processid = m.processid  -- 27
 -- ONLY FOR TOOLLISTS THAT ARE IN MULTIPLE PLANTS
-where tl.Plant = 6
+where tl.Plant = 8
 
-select count(*) from PlexToolListAssemblyTemplatePlant6-- 3
-select * from PlexToolListAssemblyTemplatePlant6-- 3
+select count(*) from PlexToolListAssemblyTemplatePlant8-- 3
+select * from PlexToolListAssemblyTemplatePlant8-- 3
 where Part_No = '28245973'
 
 
-select * from TL_Plex_PN_Op_Map_Plant6
+select * from TL_Plex_PN_Op_Map_Plant8
 
 /*
  * Plex ToolAssembly Template
  */
-select * from PlexToolListAssemblyTemplatePlant6
+select * from PlexToolListAssemblyTemplatePlant8
 -- where Part_No != '28245973' 
 order by Part_No,Operation,Assembly_No 
 
-select Assembly_No,Tool_Assembly_Type,substring(Description,1,50) Description,Part_No,Part_Revision,Operation,
+select Assembly_No,Tool_Assembly_Type,substring(replace(Description,'Ø',''),1,50) Description,Part_No,Part_Revision,Operation,
 Tool_Assembly_Status,Include_In_Analysis,Analysis_Note,Note,Location
-from PlexToolListAssemblyTemplatePlant6
+from PlexToolListAssemblyTemplatePlant8
 -- where Part_No != '28245973' 
 order by Part_No,Operation,Assembly_No 
 
