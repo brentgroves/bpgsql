@@ -77,5 +77,109 @@ insert into dbo.PlexToolBOMPlant8 (Assembly_No,Part_No,Part_Revision,Operation_C
 	select * from PlexToolBOMPlant8 
 	order by Assembly_No,Part_No,Tool_No 
 
+-- dbo.bvToolListItemsMiscOnlyLv1 source
 /*
+ * Second insert Misc ToolList Items
+ */
+-- select count(*) from dbo.bvToolListItemsMiscOnlyLv1 btlimol -- 244
+--	select * from dbo.bvToolListItemsMiscOnlyLv1 btlimol where processid = 63810 --63810
+-- select count(*) from btDistinctToolLists tb  -- 521
+-- select * from btDistinctToolLists tb  -- 521  
+-- where processid = 63810
+--	select * from dbo.PlexToolBOMPlant8 
+insert into dbo.PlexToolBOMPlant8 (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
 	
+-- select count(*) from (
+	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
+	from 
+	(
+		select a.Assembly_No,a.Part_No,a.Part_Revision,a.Operation Operation_Code,
+		-- select * from TL_Plex_PN_Op_Map
+		-- select * from TL_Plex_PN_Map
+		-- select top 10 * from bvToolListsInPlants tl
+		lv1.itemNumber Tool_No, lv1.Quantity Qty,
+		-- select Matched_Set_Key from part_v_tool_BOM where Matched_Set_Key is not null  -- 0
+		'' Matched_Set,
+		-- select Station_Key from part_v_tool_BOM where Station_Key is not null  -- 0
+		'' Station,
+		-- select Optional from part_v_tool_BOM where Optional <> 0  -- 0
+		'' Optional,
+		-- select Workcenter_Key from part_v_tool_BOM where Workcenter_Key is not null  -- 0
+		'' Workcenter,
+		-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
+		0 Sort_Order
+		-- select count(*) cnt
+		--select *
+		from PlexToolListAssemblyTemplatePlant8 a  -- 8 
+		-- select * from PlexToolListAssembly a	
+		inner join bvToolListItemsMiscOnlyLv1 lv1 -- No Misc, or Fixture items; they are not associated with a tool
+		on a.processid=lv1.processid   -- 1 to many
+		and a.ToolNumber=lv1.ToolNumber  -- --76
+		-- where a.processid <> 61258  -- 1090 LC5C 5K651 CE 'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
+		-- AFTER I UPDATE btDistinctToolList this count jumped to 1133
+		-- select * from [Toollist Master] tm where tm.processid = 61258 -- LC5C-5K651-CC CD6 CONTROL ARM
+	)s1 
+	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
+	-- THERE ARE DUPS BECAUSE MULTIPLE CNC OPERATIONS MAP TO A SINGLE PLEX OPERATION AND HAVE THE SAME TOOLNUMBER.
+	-- THE ASSEMBLY_NO INCLUDES THE CNC OPERATION; SO THE ASSEMBLY_NO WILL BE DIFFERENT, BUT THE PART,REV,PLEX OPERATION WILL BE
+	-- THE SAME.
+-- )s2 
+-- having Part_No = '26090196'
+-- where a.Operation <> 'Machine Complete'
+select * from dbo.PlexToolBOMPlant8 
+
+
+/*
+ * Third insert Fixture ToolList Items
+ */
+-- select count(*) from dbo.bvToolListItemsFixtureOnlyLv1 btlimol -- 750
+--	select * from dbo.bvToolListItemsFixtureOnlyLv1 btlimol where processid = 63811 63810 --61622 --14218 --63810
+-- select count(*) from btDistinctToolLists tb  -- 521
+-- select * from btDistinctToolLists tb  -- 521  
+-- where processid = 63810
+--	select * from dbo.PlexToolBOMPlant8 
+
+-- having Part_No = '26090196'
+-- where a.Operation <> 'Machine Complete'
+select * from dbo.PlexToolBOMPlant8 
+--	select * from dbo.PlexToolBOMPlant8 
+insert into dbo.PlexToolBOMPlant8 (Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order)
+	
+-- select count(*) from (
+	select Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
+	from 
+	(
+		select a.Assembly_No,a.Part_No,a.Part_Revision,a.Operation Operation_Code,
+		-- select * from TL_Plex_PN_Op_Map
+		-- select * from TL_Plex_PN_Map
+		-- select top 10 * from bvToolListsInPlants tl
+		lv1.itemNumber Tool_No, lv1.Quantity Qty,
+		-- select Matched_Set_Key from part_v_tool_BOM where Matched_Set_Key is not null  -- 0
+		'' Matched_Set,
+		-- select Station_Key from part_v_tool_BOM where Station_Key is not null  -- 0
+		'' Station,
+		-- select Optional from part_v_tool_BOM where Optional <> 0  -- 0
+		'' Optional,
+		-- select Workcenter_Key from part_v_tool_BOM where Workcenter_Key is not null  -- 0
+		'' Workcenter,
+		-- select Sort_Order from part_v_tool_BOM where Sort_Order <> 0  -- 0
+		0 Sort_Order
+		-- select count(*) cnt
+		--select *
+		from PlexToolListAssemblyTemplatePlant8 a  -- 8 
+		-- select * from PlexToolListAssembly a	
+		inner join bvToolListItemsFixtureOnlyLv1 lv1 -- No Misc, or Fixture items; they are not associated with a tool
+		on a.processid=lv1.processid   -- 1 to many
+		and a.ToolNumber=lv1.ToolNumber  -- --76
+		-- where a.processid <> 61258  -- 1090 LC5C 5K651 CE 'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
+		-- AFTER I UPDATE btDistinctToolList this count jumped to 1133
+		-- select * from [Toollist Master] tm where tm.processid = 61258 -- LC5C-5K651-CC CD6 CONTROL ARM
+	)s1 
+	group by Assembly_No,Part_No,Part_Revision,Operation_Code,Tool_No,Qty,Matched_Set,Station,Optional,Workcenter,Sort_Order
+	-- THERE ARE DUPS BECAUSE MULTIPLE CNC OPERATIONS MAP TO A SINGLE PLEX OPERATION AND HAVE THE SAME TOOLNUMBER.
+	-- THE ASSEMBLY_NO INCLUDES THE CNC OPERATION; SO THE ASSEMBLY_NO WILL BE DIFFERENT, BUT THE PART,REV,PLEX OPERATION WILL BE
+	-- THE SAME.
+-- )s2 
+-- having Part_No = '26090196'
+-- where a.Operation <> 'Machine Complete'
+select * from dbo.PlexToolBOMPlant8 

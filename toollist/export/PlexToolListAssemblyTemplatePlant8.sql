@@ -1,22 +1,37 @@
 /*
+ * Find part info to use to update TL_Plex_PN_Op_Map_Plant8
+ */
+select * from [ToolList PartNumbers] m where PartNumbers like '%R568616%'
+select *
+from bvToolListsInPlants tl
+where plant = 8
+--and tl.Originalprocessid = 40750
+and partnumber like '%R568616%'
+-- run in Plex SDE
+select * from part_v_part where part_no = '51394TJB A040M1'
+/*
  * Create Tool List Plex Mapping
  */
 select * from TL_Plex_PN_Op_Map_Plant8 
 -- drop table TL_Plex_PN_Op_Map_Plant8 
 -- truncate table TL_Plex_PN_Op_Map_Plant8 
 CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
+	OriginalProcessID int NULL,
 	ProcessID int NULL,
 	TL_Part_No nvarchar(50) NULL,
+	Plex_Part_key int null,
 	Plex_Part_No varchar(100) NOT NULL,
 	Revision varchar(8) NOT NULL,
 	Operation_Code varchar(30) NOT NULL
 );
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
-(63810,'51393-TJB-A040-M1','51393TJB A040M1','40-M1-','Final') -- 63810|51393-TJB-A040-M1|
+(61875,62372,'R568616',2812907,'R568616','J','Machine A - WIP') -- 2812907	Support Front Control - R568616	R568616	Support Front Control
+-- (49265,F,'51394-TJB-A040-M1',2960020,'51394TJB A040M1','40-M1-','Final')  --2960020	51394TJB A040M1	RDX Left Hand
+-- (63810,'51393-TJB-A040-M1','51393TJB A040M1-','40-M1-','Final') -- 63810|51393-TJB-A040-M1|RDX Right Hand
 -- (14218,'26088054','26088054','07B','Final') -- 14218|    14218 NEXTEER |26088054 ALUMINUM ASSEMBLY  -- No tool boss items
--- (61623,'H2GC-5K652-AB','H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06
--- (61622,'H2GC-5K651-AB','H2GC 5K651 AB','','Machine A - WIP') -- done 07-06
+-- 61623,'H2GC-5K652-AB','H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06
+--(61622,'H2GC-5K651-AB','H2GC 5K651 AB','','Machine A - WIP') -- done 07-06
 
 -- The following tool list has already been added to plex.
 -- (61748,'10103355','10103355','A','Machine A - WIP')  -- 10103355H DANA P558 6K LH Horizontal  Done
@@ -31,7 +46,7 @@ values
 -- (61763,'10103351H','10103344','A','Machine A - WIP')  -- 62576|DANA    |10103344H P558 7K RH KNUCKLE|10103344H |1ST OP HORIZONTAL MILL|
 -- (50531,'2007669','2007669','C','Machine A - WIP')  -- 734|    50531|USM     |2007669 7K KING PIN YOKE|2007669   |1ST OP MILL
 --(50532,'2007669','2007669','C','Machine Complete')  -- 188|    50532|USM     |2007669 7K KING PIN YOKE|2007669   |2ND OP MILL         
-
+select 
 
 select * from TL_Plex_PN_Op_Map_Plant8
 
@@ -62,9 +77,7 @@ select top 10 * from btDistinctToolLists
 
 select * from bvToolListsAssignedPN
 
-select * 
--- into PlexToolListAssemblyTemplatePlant6_6K_Knuckles_Wip
-from PlexToolListAssemblyTemplatePlant6
+select * from PlexToolListAssemblyTemplatePlant8
 */
 -- drop table PlexToolListAssemblyTemplatePlant8
 -- truncate table PlexToolListAssemblyTemplatePlant8
@@ -170,7 +183,8 @@ m.Plex_Part_No,
 tl.processid,
 111111 ToolID,
 111111 ToolNumber,
-'TF-' + tl.OperationDescription Assembly_No,
+'TF-' + m.Operation_Code Assembly_No,
+--'TF-' + tl.OperationDescription Assembly_No,
 'Machining' Tool_Assembly_Type,
 'Fixture' Description,
 m.Plex_Part_No Part_No,
@@ -201,7 +215,8 @@ select
 tl.processid,
 222222 ToolID,
 222222 ToolNumber,
-'TM-' + tl.OperationDescription Assembly_No,
+--'TM-' + tl.OperationDescription Assembly_No,
+'TM-' + m.Operation_Code Assembly_No,
 'Machining' Tool_Assembly_Type,
 'Miscellaneous' Description,
 m.Plex_Part_No Part_No,

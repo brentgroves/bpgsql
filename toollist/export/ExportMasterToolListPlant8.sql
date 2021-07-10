@@ -22,9 +22,26 @@ select '(''' + itemnumber + '''),'
 			itemNumber,lv1.itemClass,UDFGLOBALTOOL,toolbossStock  
 			from
 			(
-				select '(''' + itemNumber + '''),' from bvToolListItemsInPlants
-				where processid =  14218  
-				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 41
+			/* Used for generating tool list item list */
+				select '(''' + itemNumber + '''),' 
+				from bvToolListItemsInPlants
+				where processid =  62372 
+				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
+			/* Used for generating tool boss item list */
+				select '(''' + itemNumber + '''),' -- 14
+				from bvToolListItemsInPlants i
+				inner join
+				[ToolList Toolboss Stock Items] tbs
+				on i.itemClass=tbs.ItemClass
+				where processid =  62372 
+				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
+			/* Used for generating toolbossstock item list */
+				select '(''' + itemNumber + '''),' -- 14
+				from bvToolListItemsInPlants i
+				where processid =  62372 
+				and toolbossstock=1
+
+				/* This is the actual sql for the original query. */
 				-- select itemNumber from bvToolListItemsInPlants
 				--where toolbossstock=0 and UDFGLOBALTOOL <> 'YES'
 				-- 40750|    61622--H2GC-5K651-AB RH CD4.2 RLCA

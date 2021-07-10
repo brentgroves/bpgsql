@@ -5,7 +5,10 @@ on j.JOBNUMBER = a.JOBNUMBER
 
 and a.VMID = 5
 
-select j.JOBNUMBER,j.DESCR,j.ALIAS,j.JOBENABLE,a.VMID,r.R_ITEM 
+select 
+--  ROW_NUMBER() OVER(PARTITION BY recovery_model_desc ORDER BY name ASC) 
+ROW_NUMBER () over (partition by j.JOBNUMBER order by r.R_ITEM) row#,
+j.JOBNUMBER,j.DESCR,j.ALIAS,j.JOBENABLE,a.VMID,r.R_ITEM 
 from jobs j 
 inner join Jobs_VendingMachineAssignment a 
 on j.JOBNUMBER = a.JOBNUMBER 
