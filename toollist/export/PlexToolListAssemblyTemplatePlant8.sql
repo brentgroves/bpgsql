@@ -1,14 +1,29 @@
 /*
  * Find part info to use to update TL_Plex_PN_Op_Map_Plant8
  */
-select * from [ToolList PartNumbers] m where PartNumbers like '%R568616%'
-select *
+select * from [ToolList PartNumbers] m where PartNumbers like '%52216%'  --52215T6N 
+where processid = 63747 where PartNumbers like '%0518%'
+select * from [ToolList Plant] m where processid = 54071 -- 50868  
 from bvToolListsInPlants tl
+where partnumber like '%0924%'
 where plant = 8
 --and tl.Originalprocessid = 40750
-and partnumber like '%R568616%'
+and partnumber like '%0924%'
+
+select * from [ToolList Master] m where PartFamily like '%52210%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%51211%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%52211%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%52216%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%51216%' and released = 1
+
+
+select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
+-- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
+select OriginalProcessID origpid,* 
+from [ToolList Master] m where m.ProcessID = 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+
 -- run in Plex SDE
-select * from part_v_part where part_no = '51394TJB A040M1'
+select * from part_v_part where part_no like '%0924%'
 /*
  * Create Tool List Plex Mapping
  */
@@ -20,18 +35,50 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 	ProcessID int NULL,
 	TL_Part_No nvarchar(50) NULL,
 	Plex_Part_key int null,
+	Plex_Part_Operation_key int not null,
 	Plex_Part_No varchar(100) NOT NULL,
 	Revision varchar(8) NOT NULL,
 	Operation_Code varchar(30) NOT NULL
 );
+select * from TL_Plex_PN_Op_Map_Plant8 
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
-(61875,62372,'R568616',2812907,'R568616','J','Machine A - WIP') -- 2812907	Support Front Control - R568616	R568616	Support Front Control
--- (49265,F,'51394-TJB-A040-M1',2960020,'51394TJB A040M1','40-M1-','Final')  --2960020	51394TJB A040M1	RDX Left Hand
+(40173,40173,'52216-T6N-A030-M1',2802825,7884560,'52215T6N A020','20-','Final') -- 40173|52216-T6N-A030-M1 LH REAR KNUCKLE| 20|MAZAK VARIAXIS // Plex 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	130      
+-- 40174|51216-T6N-A010-M1 LH FRONT KNUCKLE 20|MAZAK VARIAXIS operation 20
+--(40127,41207)  -- 2802825	7888473	52215T6N A020	52215T6N A020	20-	LH NSX Rear Knuckle	7888473	100  -- for operation 10 vertical haas tool list
+(41207,52216,'52216-T6N-A030-M1',2802825,) -- 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	for operation 20 tool list,
+(23246,54071,'R344400',2795342,7872989,'R344400','C','Final') -- 2795342	7872989	Axle Housing - R344400	R344400	C	120
+(48625,48625,'R556656',2795339,7872976,'R556656','B','Final') -- 2795339	7872976	Support 6R - R556656	R556656	B	120
+(49503,54522,'HXE66422 PAINT',2795364,7873079,'HXE66422','G','Final' )  -- 2795364	7873079	Drive Support - HXE66422	HXE66422 G	110
+(50868,50868,'68400221AA',2811382,7927601,'68400221AA','08','Final') -- 2811382	7927601	Winch Bracket - 68400221AA	68400221AA	120
+(54351,54351,'10037207',2796140,7873103,'10037207','C','Final')  -- 2796140	7873103	Navistar Vista Knuckle LH - 10037207	10037207	130
+(50265,54339,'10037203',2796137,7873096,'10037203','C','Final')  -- 2796137	7873096	Navistar Vista Knuckle RH - 10037203	10037203	130
+-- (14218,'26088054','26088054','07B','Final') -- 14218|    14218 NEXTEER |26088054 ALUMINUM ASSEMBLY  -- No tool boss items
+(61876,63710,'R568616',2812907,7950328,'R568616','J','Final') -- 2812907	Support Front Control - OP 20 Horizontal R568616	R568616	Support Front Control
+-- 'Operation 100 is not a Production Process operation so this tool list won't be visible from the workcenter's tooling button' 
+--(61875,62372,'R568616',2812907,7950317,'R568616','J','Machine A - WIP')  -- 2812907	Support Front Control - OP 10 Vertical R568616	R568616	Support Front Control
+(40800,61623,'H2GC-5K652-AB',2684943,7466413,'H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06
+(40750,61622,'H2GC-5K651-AB',2684942,7466404,'H2GC 5K651 AB','','Machine A - WIP') -- done 07-06
+(49265,63811,'51394-TJB-A040-M1',2960020,8568187,'51394TJB A040M1','40-M1-','Final')  --2960020	51394TJB A040M1	RDX Left Hand
+(49396,63810,'51393-TJB-A040-M1',2960018,8568181,'51393TJB A040M1-','40-M1-','Final') -- 63810|51393-TJB-A040-M1|RDX Right Hand
+
+
+(741,63747,'001-0518-74',3024948,'001-0924-03','01','Machine A - WIP') -- 3024948	3D Honed - 001-0924-03 Horz	001-0924-03	3D Honed
+/* These tool lists should contain the same tooling */
+63740|001-0518-12
+63741|001-0518-13
+63742|001-0518-14
+63743|001-0518-15
+63744|001-0518-71
+63745|001-0518-72
+63746|001-0518-73
+63747|001-0518-74  -- picked this one to represent all of the 3D Tool lists
+
+-- (61875,62372,'R568616',2812907,'R568616','J','Machine A - WIP') -- 2812907	Support Front Control - R568616	R568616	Support Front Control
+
 -- (63810,'51393-TJB-A040-M1','51393TJB A040M1-','40-M1-','Final') -- 63810|51393-TJB-A040-M1|RDX Right Hand
 -- (14218,'26088054','26088054','07B','Final') -- 14218|    14218 NEXTEER |26088054 ALUMINUM ASSEMBLY  -- No tool boss items
 -- 61623,'H2GC-5K652-AB','H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06
---(61622,'H2GC-5K651-AB','H2GC 5K651 AB','','Machine A - WIP') -- done 07-06
 
 -- The following tool list has already been added to plex.
 -- (61748,'10103355','10103355','A','Machine A - WIP')  -- 10103355H DANA P558 6K LH Horizontal  Done
@@ -159,7 +206,7 @@ insert into PlexToolListAssemblyTemplatePlant8 (ProcessID,ToolID,ToolNumber,Asse
 		on tl.processid = tc.processid 
 		and tt.toolNumber = tc.ToolNumber
 		-- ONLY FOR TOOLLISTS THAT ARE IN MULTIPLE PLANTS
-		where tl.Plant = 8
+		where tl.Plant =8
 	)tl  
 	order by Assembly_No
 	-- 15 rows 1 through 21 / 90 items
@@ -200,7 +247,7 @@ from bvToolListsInPlants tl
 inner join TL_Plex_PN_Op_Map_Plant8 m  
 on tl.processid = m.processid  -- 27
 -- ONLY FOR TOOLLISTS THAT ARE IN MULTIPLE PLANTS
--- where tl.Plant = 6
+where tl.Plant = 8
 
 select count(*) from PlexToolListAssemblyTemplatePlant8 -- 2
 select * from PlexToolListAssemblyTemplatePlant8 -- 2

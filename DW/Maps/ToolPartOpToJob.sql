@@ -21,6 +21,7 @@ CREATE TABLE Maps.Tool_Part_Op (
 select * from Maps.Tool_Part_Op po
 where po.process_id= 54479
 
+
 -- TRUNCATE table  myDW.Map.Tool_Part_Op
 INSERT INTO Maps.Tool_Part_Op
 (PCN, original_process_id,process_id,part_operation_key,accounting_job_key,accounting_job_no,partfamily,part_key,part_no,operation_code)
@@ -47,6 +48,56 @@ VALUES
 (300758,54484,61747,7874371,105727,'TLG00000000089','10103353H P558 6K RH',2794731,'10103353','Machine A - WIP'), -- OP 10/20 Horizontal Mill
 (300758, 54479,54479,7874408,105728,'TLG00000000090','10103355 DANA 6K LH VERT',2794706,'10103355','Final'),  -- OP 30 Vertical Mill
 (300758, 54485,61748,7874404,105728,'TLG00000000090','10103355H DANA P558 6K LH',2794706,'10103355','Machine A - WIP')  -- OP 10/20 Horizontal Mill,Machine A - WIP operation	
+
+SELECT * FROM AlbSPS.jobs
+
+select j.DESCR,tl.* 
+from AlbSPS.TransactionLog tl 
+inner join AlbSPS.Jobs j 
+on tl.JOBNUMBER = j.JOBNUMBER 
+
+select distinct j.DESCR,j 
+from AlbSPS.TransactionLog tl 
+inner join AlbSPS.Jobs j 
+on tl.JOBNUMBER = j.JOBNUMBER 
+
+10103351 - not in plex
+10103353 - OK
+10103355 - OK
+10103355CX - not in VM
+2004915 - not in plex
+2004916 - not in plex
+2009490 - not in plex
+2009828 - not in plex
+2015683 - not in plex
+48439 - OK
+51040 - not in plex
+51355 - not in plex
+53382 - not in plex
+10013354 - not in plex
+10037973 - not in plex
+10037973 - not in plex
+10103344 - not in ple 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+select * from AlbSPS.TransactionLogNO tl 
+
+select * from AlbSPS.JobsNO jn -- 35
+select * from AlbSPS.Jobs  -- 46
 
 /*
 Add 3 sets to DW

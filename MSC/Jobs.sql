@@ -5,6 +5,12 @@ on j.JOBNUMBER = a.JOBNUMBER
 
 and a.VMID = 5
 
+select j.* 
+from jobs j 
+inner join Jobs_VendingMachineAssignment a 
+on j.JOBNUMBER = a.JOBNUMBER 
+where a.VMID = 4
+
 select 
 --  ROW_NUMBER() OVER(PARTITION BY recovery_model_desc ORDER BY name ASC) 
 ROW_NUMBER () over (partition by j.JOBNUMBER order by r.R_ITEM) row#,
@@ -14,7 +20,7 @@ inner join Jobs_VendingMachineAssignment a
 on j.JOBNUMBER = a.JOBNUMBER 
 INNER join Restrictions2 r 
 on j.JOBNUMBER = r.R_JOB 
-and a.VMID = 5
+and a.VMID = 4
 
 
 where JOBNUMBER IN ('2684942',  '2684943' )
