@@ -1,9 +1,10 @@
 /*
  * Find part info to use to update TL_Plex_PN_Op_Map_Plant8
  */
-select * from [ToolList PartNumbers] m where PartNumbers like '%52216%'  --52215T6N 
-where processid = 63747 where PartNumbers like '%0518%'
-select * from [ToolList Plant] m where processid = 54071 -- 50868  
+select * from [ToolList PartNumbers] m 
+--where PartNumbers like '%5221%'  --52215T6N 
+where processid = 41207 
+select * from [ToolList Plant] m where processid = 41207 54071 -- 50868  
 from bvToolListsInPlants tl
 where partnumber like '%0924%'
 where plant = 8
@@ -20,7 +21,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 -- run in Plex SDE
 select * from part_v_part where part_no like '%0924%'
@@ -40,9 +41,10 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 	Revision varchar(8) NOT NULL,
 	Operation_Code varchar(30) NOT NULL
 );
-select * from TL_Plex_PN_Op_Map_Plant8 
+N
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
+(40127,41207,'52216-T6N-A030-M1',2802825,7888473,'52215T6N A020','20-','Machine A - WIP') -- 40127|    41207|52216-T6N-A030-M1 LH REAR KNUCKLE|             10|VERTICAL - HAAS 
 (40173,40173,'52216-T6N-A030-M1',2802825,7884560,'52215T6N A020','20-','Final') -- 40173|52216-T6N-A030-M1 LH REAR KNUCKLE| 20|MAZAK VARIAXIS // Plex 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	130      
 -- 40174|51216-T6N-A010-M1 LH FRONT KNUCKLE 20|MAZAK VARIAXIS operation 20
 --(40127,41207)  -- 2802825	7888473	52215T6N A020	52215T6N A020	20-	LH NSX Rear Knuckle	7888473	100  -- for operation 10 vertical haas tool list

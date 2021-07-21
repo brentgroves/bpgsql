@@ -6,7 +6,7 @@ where r_job in ('7884560','12876')
 order by R_JOB 
 --where r_item = '13753'
 -- where r_job = '28078'
-
+select * from UserGroups ug 
 
 select 
 cast(ROW_NUMBER() over(order by R_JOB,R_ITEM) as int) id,
