@@ -3,14 +3,14 @@
  */
 select * from [ToolList PartNumbers] m 
 --where PartNumbers like '%5221%'  --52215T6N 
-where processid = 41207 
-select * from [ToolList Plant] m where processid = 41207 54071 -- 50868  
+where processid = 40129 --41202 
+select * from [ToolList Plant] m where processid = 41202 41207 54071 -- 50868  
 from bvToolListsInPlants tl
 where partnumber like '%0924%'
 where plant = 8
 --and tl.Originalprocessid = 40750
 and partnumber like '%0924%'
-
+-- 51210T6N
 select * from [ToolList Master] m where PartFamily like '%52210%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%51211%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%52211%' and released = 1
@@ -21,7 +21,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 -- run in Plex SDE
 select * from part_v_part where part_no like '%0924%'
@@ -41,11 +41,13 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 	Revision varchar(8) NOT NULL,
 	Operation_Code varchar(30) NOT NULL
 );
-N
+
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
-(40127,41207,'52216-T6N-A030-M1',2802825,7888473,'52215T6N A020','20-','Machine A - WIP') -- 40127|    41207|52216-T6N-A030-M1 LH REAR KNUCKLE|             10|VERTICAL - HAAS 
-(40173,40173,'52216-T6N-A030-M1',2802825,7884560,'52215T6N A020','20-','Final') -- 40173|52216-T6N-A030-M1 LH REAR KNUCKLE| 20|MAZAK VARIAXIS // Plex 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	130      
+-- (39685,41202,'51211-T6N-A010-M1',2802824,7886723,'51210T6N A000','00-','Machine A - WIP') 	-- 51210T6N A000	RH NSX Front Knuckle, OP 10 Vertical Mill HAAS
+(39686,40129,'51211-T6N-A010-M1',2802824,7884545,'51210T6N A000','00-','Final') 	-- 51210T6N A000	RH NSX Front Knuckle, OP 20 Horizontal Mill - Mazak variaxis
+--(40127,41207,'52216-T6N-A030-M1',2802825,7888473,'52215T6N A020','20-','Machine A - WIP') -- 40127|    41207|52216-T6N-A030-M1 LH REAR KNUCKLE|             10|VERTICAL - HAAS 
+--(40173,40173,'52216-T6N-A030-M1',2802825,7884560,'52215T6N A020','20-','Final') -- 40173|52216-T6N-A030-M1 LH REAR KNUCKLE| 20|MAZAK VARIAXIS // Plex 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	130      
 -- 40174|51216-T6N-A010-M1 LH FRONT KNUCKLE 20|MAZAK VARIAXIS operation 20
 --(40127,41207)  -- 2802825	7888473	52215T6N A020	52215T6N A020	20-	LH NSX Rear Knuckle	7888473	100  -- for operation 10 vertical haas tool list
 (41207,52216,'52216-T6N-A030-M1',2802825,) -- 2802825	7884560	LH NSX Rear Knuckle - 52215T6N A020	52215T6N A020	20-	for operation 20 tool list,
@@ -208,7 +210,7 @@ insert into PlexToolListAssemblyTemplatePlant8 (ProcessID,ToolID,ToolNumber,Asse
 		on tl.processid = tc.processid 
 		and tt.toolNumber = tc.ToolNumber
 		-- ONLY FOR TOOLLISTS THAT ARE IN MULTIPLE PLANTS
-		where tl.Plant =8
+		--where tl.Plant =8
 	)tl  
 	order by Assembly_No
 	-- 15 rows 1 through 21 / 90 items
@@ -286,7 +288,6 @@ where tl.Plant = 8
 select count(*) from PlexToolListAssemblyTemplatePlant8-- 3
 select * from PlexToolListAssemblyTemplatePlant8-- 3
 where Part_No = '28245973'
-
 
 select * from TL_Plex_PN_Op_Map_Plant8
 

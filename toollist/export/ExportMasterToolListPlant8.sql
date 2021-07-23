@@ -8,7 +8,7 @@ where plant = 8
 --and tl.Originalprocessid = 40750
 and partnumber like '%51393TJB%'
 
-
+select * from [ToolList Toolboss Stock Items] tbs
 --create view [dbo].[bvToolBossItemsInPlants] 
 --as
 -- toollists items that have a category that is to be stocked in the toolbosses
@@ -25,7 +25,7 @@ select '(''' + itemnumber + '''),'
 			/* Used for generating tool list item list */
 				select '(''' + itemNumber + '''),' 
 				from bvToolListItemsInPlants
-				where processid =  40173
+				where processid =  40129
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
 			/* Used for generating tool boss item list */
 				select '(''' + itemNumber + '''),' -- 14
@@ -33,12 +33,12 @@ select '(''' + itemnumber + '''),'
 				inner join
 				[ToolList Toolboss Stock Items] tbs
 				on i.itemClass=tbs.ItemClass
-				where processid =  40173 -- 33 --62372 -- 26
+				where processid =  40129 -- 33 --62372 -- 26
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
 			/* Used for generating toolbossstock item list */
 				select '(''' + itemNumber + '''),' -- 14
 				from bvToolListItemsInPlants i
-				where processid =  40173 
+				where processid =  40129 
 				and toolbossstock=1
 
 				/* This is the actual sql for the original query. */
