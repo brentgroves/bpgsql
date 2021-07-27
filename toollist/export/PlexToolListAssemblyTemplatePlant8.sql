@@ -4,7 +4,7 @@
 select * from [ToolList PartNumbers] m 
 --where PartNumbers like '%5221%'  --52215T6N 
 where processid = 40129 --41202 
-select * from [ToolList Plant] m where processid = 41202 41207 54071 -- 50868  
+select * from [ToolList Plant] m where processid = 62372 41202 41207 54071 -- 50868  
 from bvToolListsInPlants tl
 where partnumber like '%0924%'
 where plant = 8
@@ -21,7 +21,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 -- run in Plex SDE
 select * from part_v_part where part_no like '%0924%'
@@ -41,9 +41,13 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 	Revision varchar(8) NOT NULL,
 	Operation_Code varchar(30) NOT NULL
 );
-
+select * from TL_Plex_PN_Op_Map_Plant8 
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
+(61875,62372,'R568616',2812907,7950317,'R568616','J','Machine A - WIP')  -- 2812907	Support Front Control - OP 10 Vertical R568616	R568616	Support Front Control
+
+(61876,63710,'R568616',2812907,7950328,'R568616','J','Final') -- 2812907	Support Front Control - OP 20 Horizontal R568616	R568616	Support Front Control
+
 -- (39685,41202,'51211-T6N-A010-M1',2802824,7886723,'51210T6N A000','00-','Machine A - WIP') 	-- 51210T6N A000	RH NSX Front Knuckle, OP 10 Vertical Mill HAAS
 (39686,40129,'51211-T6N-A010-M1',2802824,7884545,'51210T6N A000','00-','Final') 	-- 51210T6N A000	RH NSX Front Knuckle, OP 20 Horizontal Mill - Mazak variaxis
 --(40127,41207,'52216-T6N-A030-M1',2802825,7888473,'52215T6N A020','20-','Machine A - WIP') -- 40127|    41207|52216-T6N-A030-M1 LH REAR KNUCKLE|             10|VERTICAL - HAAS 
@@ -58,7 +62,6 @@ values
 (54351,54351,'10037207',2796140,7873103,'10037207','C','Final')  -- 2796140	7873103	Navistar Vista Knuckle LH - 10037207	10037207	130
 (50265,54339,'10037203',2796137,7873096,'10037203','C','Final')  -- 2796137	7873096	Navistar Vista Knuckle RH - 10037203	10037203	130
 -- (14218,'26088054','26088054','07B','Final') -- 14218|    14218 NEXTEER |26088054 ALUMINUM ASSEMBLY  -- No tool boss items
-(61876,63710,'R568616',2812907,7950328,'R568616','J','Final') -- 2812907	Support Front Control - OP 20 Horizontal R568616	R568616	Support Front Control
 -- 'Operation 100 is not a Production Process operation so this tool list won't be visible from the workcenter's tooling button' 
 --(61875,62372,'R568616',2812907,7950317,'R568616','J','Machine A - WIP')  -- 2812907	Support Front Control - OP 10 Vertical R568616	R568616	Support Front Control
 (40800,61623,'H2GC-5K652-AB',2684943,7466413,'H2GC 5K652 AB','','Machine A - WIP')  -- done 07-06

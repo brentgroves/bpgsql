@@ -25,20 +25,21 @@ select '(''' + itemnumber + '''),'
 			/* Used for generating tool list item list */
 				select '(''' + itemNumber + '''),' 
 				from bvToolListItemsInPlants
-				where processid =  40129
+				where processid =  62372
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
+				--and itemNumber like '%17292%'
 			/* Used for generating tool boss item list */
 				select '(''' + itemNumber + '''),' -- 14
 				from bvToolListItemsInPlants i
 				inner join
 				[ToolList Toolboss Stock Items] tbs
 				on i.itemClass=tbs.ItemClass
-				where processid =  40129 -- 33 --62372 -- 26
+				where processid =  62372 -- 33 --62372 -- 26
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
 			/* Used for generating toolbossstock item list */
 				select '(''' + itemNumber + '''),' -- 14
 				from bvToolListItemsInPlants i
-				where processid =  40129 
+				where processid =  62372 
 				and toolbossstock=1
 
 				/* This is the actual sql for the original query. */

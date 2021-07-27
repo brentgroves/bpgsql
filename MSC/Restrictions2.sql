@@ -2,7 +2,7 @@ select count(*) cnt from Restrictions2 r -- 798
 select  * 
 from Restrictions2 r 
 --WHERE r_job = '12876'
-where r_job in ('7884560','12876') 
+where r_job in ('7884545') 
 order by R_JOB 
 --where r_item = '13753'
 -- where r_job = '28078'
