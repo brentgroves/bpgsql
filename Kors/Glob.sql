@@ -40,7 +40,7 @@ EXEC @ReturnCode = InsertContainerPiece
 	@Reject_Code ='Reject_Code', 
 	@Container_No ='Container_No',
 	@Plex_Instance_No ='Plex_Instance_No',
-	@Quantity = 4,
+	@Quantity = 4,W
 	@Record_Date = '2020-01-16 12:32:00'
    	
 	-- truncate table Kors.dbo.Part_v_Container_Piece
@@ -49,7 +49,7 @@ where Piece_Serial_No = 'TST LH 324 20 4 056'
 
 TST LH 324
 TST LH 324 20 4 087,TST LH 324 20 4 088,TST LH 324 20 4 089,TST LH 324 20 4 090,TST LH 324 20 4 091,TST LH 324 20 4 092,TST LH 324 20 4 093,TST LH 324 20 4 094,TST LH 324 20 4 095,TST LH 324 20 4 096
-
+Part_v_Container_Piece
 -- drop procedure InsertContainerPiece;
 CREATE PROCEDURE InsertContainerPiece
 	@Workcenter_Code varchar(50),
@@ -88,7 +88,7 @@ BEGIN
 
 
 End;
-
+select * from Part_v_Container_Piece
 EXEC GetContainerPiece 
 --   	@Piece_Serial_No = '1,2,3,4',
 	@Piece_Serial_No = 'TST LH 324 20 4 056',
