@@ -7,6 +7,8 @@ order by R_JOB
 --where r_item = '13753'
 -- where r_job = '28078'
 select * from UserGroups ug 
+select * from Users u where 
+descr like '%Domingo%'
 
 select 
 cast(ROW_NUMBER() over(order by R_JOB,R_ITEM) as int) id,
