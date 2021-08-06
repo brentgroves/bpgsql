@@ -17,74 +17,56 @@
 	*/
 create table #result
 (
-  id int,
+  notification_key int,
   pcn int,
   notify_level tinyint,
+  shift varchar(15),
+  shift_std tinyint,
+  dept_name varchar(50),
+  position varchar(50),
   last_name varchar(50),
   first_name varchar(50),
-  dept_name varchar(50),
-  shift varchar(15),
-  position varchar(50),
+  SMS varchar(25),
+  email_check tinyint,  -- if email_check = 1 then if we are in the email window we will send an email rather than an SMS message.
   email varchar(100),
-  phone varchar(25),
-  home_phone varchar(25),
-  mobile varchar(25),
-  off_hours tinyint,  -- if off_hours = 1 then use the start and end time instead of the standard shift time to determine when to notify them.
-  start_time datetime,
-  end_time datetime,
-  notify_type tinyint, -- 1=phone, 2=text, 3=email,
-  shift_std tinyint
+  customer_employee_no varchar(50)  -- plex reference
 )
 
-insert into #result(id,pcn,notify_level,last_name,first_name,dept_name,shift,position,email,phone,home_phone,mobile,off_hours,start_time,end_time,notify_type,shift_std)
+insert into #result(notification_key,pcn,notify_level,shift,shift_std,dept_name,position,last_name,first_name,SMS,email_check,email,customer_employee_no)
 select 
-row_number() over( order by pcn,notify_level,shift, position,name,last_name,first_name) id,
+row_number() over( order by pcn,notify_level,shift,name,position,last_name,first_name) notification_key,
 r.pcn,
 r.notify_level,
+r.shift,
+r.shift_std,
+r.name dept_name,
+r.position,
 r.last_name,
 r.first_name,
-r.name dept_name,
-r.shift,
-r.position,
+r.SMS,
+r.email_check,
 r.email,
-r.phone,
-r.home_phone,
-r.mobile,
-r.off_hours,
-r.start_time,
-r.end_time,
-r.notify_type, -- 1=phone, 2=text, 3=email
-r.shift_std
+r.customer_employee_no
 from 
 (
 select 
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 1 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-0 off_hours,
-cast('1900-01-01T00:00:00' as datetime) start_time,
-cast('1900-01-01T00:00:00' as datetime) end_time,
-1 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+0 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -101,10 +83,14 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
+--where pu.plexus_user_no = 11728751 -- brent
 where pu.plexus_customer_no = @PCN
 and p.position = 'Team Leader'
 and d.name in ('Cast','Tool & Mold')
---and s.shift in ('First','Second','Third')  
+and e.employee_status = 'Active' 
 
 union
 
@@ -112,30 +98,20 @@ select
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 2 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-0 off_hours,
-cast('1900-01-01T00:00:00' as datetime) start_time,
-cast('1900-01-01T00:00:00' as datetime) end_time,
-1 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+0 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -152,41 +128,35 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where pu.plexus_customer_no = @PCN
 and p.position in ('Production Supervisor','Senior Process Engineer')
+and e.employee_status = 'Active' 
+--)r
 -- and s.shift in ('First','Second','Third')
 -- order by s.shift
 
 union
 
-select 
+select
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 2 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T06:00:01' as datetime) start_time,
-cast('1900-01-01T19:00:00' as datetime) end_time,
-2 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+1 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -203,91 +173,34 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where pu.plexus_customer_no = @PCN
 and p.position in ('Operations Manager','Environmental Health and Safety Manager','Tooling Engineer Manager','Tool Room Manager','Melt Manager','Maintenance Manager')
+and e.employee_status = 'Active' 
 --and s.shift in ('1st')
 --order by s.shift
 
-union
-
-select 
-pu.plexus_customer_no pcn, 
---gm.plexus_customer_code,
-2 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
-s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T19:00:01' as datetime) start_time,
-cast('1900-01-01T06:00:00' as datetime) end_time,
-3 notify_type, -- 1=phone, 2=text, 3=email
-case 
-when s.shift in ('First','1st') then 1
-when s.shift in ('Second') then 2
-else 3
-end shift_std
---select count(*)
-from Plexus_Control_v_Plexus_User_e pu  -- 7487
-inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
-on pu.plexus_customer_no=gm.plexus_customer_no  -- 7487
-inner join common_v_position_e p -- 6240
-on pu.plexus_customer_no= p.plexus_customer_no
-and pu.position_key=p.position_key
-inner join personnel_v_employee_e as e  -- 5681
-on pu.plexus_customer_no = e.plexus_customer_no
-and pu.plexus_user_no = e.plexus_user_no  -- 1 to 1
-inner join common_v_shift_e as s  -- 5145
-on e.plexus_customer_no = s.plexus_customer_no
-and e.shift_key = s.shift_key  
-inner join common_v_department_e d 
-on pu.plexus_customer_no=d.plexus_customer_no
-and pu.department_no=d.department_no  -- 1281
-where pu.plexus_customer_no = @PCN
-and p.position in ('Operations Manager','Environmental Health and Safety Manager','Tooling Engineer Manager','Tool Room Manager','Melt Manager','Maintenance Manager')
---and s.shift in ('1st')
---order by s.shift
 union
 
 select 
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 3 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-0 off_hours,
-cast('1900-01-01T00:00:00' as datetime) start_time,
-cast('1900-01-01T00:00:00' as datetime) end_time,
-1 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+0 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -304,8 +217,12 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where pu.plexus_customer_no = @PCN
 and p.position in ('Production Supervisor','Senior Process Engineer')
+and e.employee_status = 'Active' 
+
 -- and s.shift in ('First','Second','Third')
 -- order by s.shift
 
@@ -315,30 +232,20 @@ select
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 3 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T06:00:01' as datetime) start_time,
-cast('1900-01-01T19:00:00' as datetime) end_time,
-2 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+1 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -355,59 +262,11 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where pu.plexus_customer_no = @PCN
 and p.position in ('Operations Manager','Environmental Health and Safety Manager','Tooling Engineer Manager','Tool Room Manager','Melt Manager','Maintenance Manager')
---and s.shift in ('1st')
---order by s.shift
-
-union
-
-select 
-pu.plexus_customer_no pcn, 
---gm.plexus_customer_code,
-3 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
-s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T19:00:01' as datetime) start_time,
-cast('1900-01-01T06:00:00' as datetime) end_time,
-3 notify_type, -- 1=phone, 2=text, 3=email
-case 
-when s.shift in ('First','1st') then 1
-when s.shift in ('Second') then 2
-else 3
-end shift_std
---select count(*)
-from Plexus_Control_v_Plexus_User_e pu  -- 7487
-inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
-on pu.plexus_customer_no=gm.plexus_customer_no  -- 7487
-inner join common_v_position_e p -- 6240
-on pu.plexus_customer_no= p.plexus_customer_no
-and pu.position_key=p.position_key
-inner join personnel_v_employee_e as e  -- 5681
-on pu.plexus_customer_no = e.plexus_customer_no
-and pu.plexus_user_no = e.plexus_user_no  -- 1 to 1
-inner join common_v_shift_e as s  -- 5145
-on e.plexus_customer_no = s.plexus_customer_no
-and e.shift_key = s.shift_key  
-inner join common_v_department_e d 
-on pu.plexus_customer_no=d.plexus_customer_no
-and pu.department_no=d.department_no  -- 1281
-where pu.plexus_customer_no = @PCN
-and p.position in ('Operations Manager','Environmental Health and Safety Manager','Tooling Engineer Manager','Tool Room Manager','Melt Manager','Maintenance Manager')
+and e.employee_status = 'Active' 
 --and s.shift in ('1st')
 --order by s.shift
 
@@ -417,31 +276,20 @@ select
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 4 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
 s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T06:00:01' as datetime) start_time,
-cast('1900-01-01T19:00:00' as datetime) end_time,
-2 notify_type, -- 1=phone, 2=text, 3=email
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
-
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+1 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -458,96 +306,34 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where pu.plexus_customer_no = @PCN
 and p.position in ('Vice President - Fruitport')  -- PPT SAID PLANT MANAGER
+and e.employee_status = 'Active' 
 --and s.shift in ('1st')
 --order by s.shift
 
-union
-
-select 
-pu.plexus_customer_no pcn, 
---gm.plexus_customer_code,
-4 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
-s.shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T19:00:01' as datetime) start_time,
-cast('1900-01-01T06:00:00' as datetime) end_time,
-3 notify_type, -- 1=phone, 2=text, 3=email
-case 
-when s.shift in ('First','1st') then 1
-when s.shift in ('Second') then 2
-else 3
-end shift_std
-
---select count(*)
-from Plexus_Control_v_Plexus_User_e pu  -- 7487
-inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
-on pu.plexus_customer_no=gm.plexus_customer_no  -- 7487
-inner join common_v_position_e p -- 6240
-on pu.plexus_customer_no= p.plexus_customer_no
-and pu.position_key=p.position_key
-inner join personnel_v_employee_e as e  -- 5681
-on pu.plexus_customer_no = e.plexus_customer_no
-and pu.plexus_user_no = e.plexus_user_no  -- 1 to 1
-inner join common_v_shift_e as s  -- 5145
-on e.plexus_customer_no = s.plexus_customer_no
-and e.shift_key = s.shift_key  
-inner join common_v_department_e d 
-on pu.plexus_customer_no=d.plexus_customer_no
-and pu.department_no=d.department_no  -- 1281
-where pu.plexus_customer_no = @PCN
-and p.position in ('Vice President - Fruitport')  -- PPT SAID PLANT MANAGER
---and s.shift in ('1st')
---order by s.shift
 union
 
 select 
 pu.plexus_customer_no pcn, 
 --gm.plexus_customer_code,
 5 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
-case
-when s.shift is null then '1st'
-else s.shift
-end shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T06:00:01' as datetime) start_time,
-cast('1900-01-01T19:00:00' as datetime) end_time,
-2 notify_type, -- 1=phone, 2=text, 3=email
+s.shift,
 case 
 when s.shift in ('First','1st') then 1
 when s.shift in ('Second') then 2
 else 3
-end shift_std
-
+end shift_std,
+d.name,
+p.position,
+pu.last_name,
+pu.first_name,
+um.SMS,
+1 email_check,
+pu.email,
+e.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
 --select count(*)
 from Plexus_Control_v_Plexus_User_e pu  -- 7487
 inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
@@ -567,84 +353,28 @@ and e.shift_key = s.shift_key
 inner join common_v_department_e d 
 on pu.plexus_customer_no=d.plexus_customer_no
 and pu.department_no=d.department_no  -- 1281
-where p.position in ('EVP COO & General Mgr North America')  
 
-union
-
-select 
-pu.plexus_customer_no pcn, 
---gm.plexus_customer_code,
-5 notify_level,
-pu.last_name,
-pu.first_name,
-d.name,
---pu.department_no,
---d.department_code,
---s.shift_key,
-case
-when s.shift is null then '1st'
-else s.shift
-end shift,
---s.start_time,
---s.stop_time,
-p.position,
---e.employee_status,
-pu.email,
-pu.phone,
-pu.home_phone,
-pu.mobile,
-1 off_hours,
-cast('1900-01-01T19:00:01' as datetime) start_time,
-cast('1900-01-01T06:00:00' as datetime) end_time,
-3 notify_type, -- 1=phone, 2=text, 3=email
-case 
-when s.shift in ('First','1st') then 1
-when s.shift in ('Second') then 2
-else 3
-end shift_std
-
---select count(*)
-from Plexus_Control_v_Plexus_User_e pu  -- 7487
-inner join Plexus_Control_v_Customer_Group_Member gm  -- there is no enterprise version of this view 
-on pu.plexus_customer_no=gm.plexus_customer_no  -- 7487
-inner join common_v_position_e p -- 6240
-on pu.plexus_customer_no= p.plexus_customer_no
-and pu.position_key=p.position_key
-
-inner join personnel_v_employee_e as e  -- 5681
-on pu.plexus_customer_no = e.plexus_customer_no
-and pu.plexus_user_no = e.plexus_user_no  -- 1 to 1
-
-left outer join common_v_shift_e as s  -- 5145  Paul Kenrick does not have a shift record.
-on e.plexus_customer_no = s.plexus_customer_no
-and e.shift_key = s.shift_key  
-
-inner join common_v_department_e d 
-on pu.plexus_customer_no=d.plexus_customer_no
-and pu.department_no=d.department_no  -- 1281
+inner join plexus_control_v_plexus_user_messaging_e um
+on pu.plexus_user_no = um.plexus_user_no
 where p.position in ('EVP COO & General Mgr North America')  
 
 ) r
 
 select 
-r.id,
+r.notification_key,
 r.pcn, 
 r.notify_level,
+r.shift,
+r.shift_std,
+r.dept_name,
+r.position,
 r.last_name,
 r.first_name,
-r.dept_name,
-r.shift,
-r.position,
+r.SMS,
+r.email_check,
 r.email,
-r.phone,
-r.home_phone,
-r.mobile,
-r.off_hours,
-r.start_time,
-r.end_time,
-r.notify_type,
-r.shift_std
-from #result r
+r.Customer_Employee_No -- Every user gets an employee number HR has the next number written down when someone is hired
+from #result r  -- 65
 --where notify_level = 1 and shift_std = 3
 --where notify_level = 2 and off_hours = 0   and shift_std = 3
 --where notify_level = 2 and off_hours = 1   and notify_type = 2

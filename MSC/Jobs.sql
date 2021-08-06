@@ -1,9 +1,4 @@
-select j.* 
-from jobs j 
-inner join Jobs_VendingMachineAssignment a 
-on j.JOBNUMBER = a.JOBNUMBER 
 
-and a.VMID = 5
 
 select j.* 
 from jobs j 

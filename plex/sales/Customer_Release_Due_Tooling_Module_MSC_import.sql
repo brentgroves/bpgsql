@@ -632,11 +632,11 @@ qty_ready_or_loaded int
 insert into #Customer_Release_Due_WIP_Ready_Loaded (ID,pcn,building_key,building_code,part_key,part_no,name,qty_rel,qty_shipped,qty_due,past_due,qty_wip,qty_ready,qty_loaded,qty_ready_or_loaded)
 -- select rd.* from #sales_release_due rd
 select 
-cast(row_number() over(order by pb.pcn,p.part_no) as int) ID,
-pb.pcn,
+cast(row_number() over(order by wr.pcn,p.part_no) as int) ID,
+wr.pcn,
 @Building_Key building_key,
 b.building_code,
-pb.part_key,
+wr.part_key,
 p.part_no,
 p.name,
 isnull(rd.qty_rel,0) qty_rel,

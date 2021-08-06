@@ -10,34 +10,39 @@ left outer join
 
 select 
 b.trm_toolno MSC#,
-b.tool_no item_no,
+'''' + b.tool_no + ''''  item_no,
 s.active,
 b.tool_type_code,
 b.tool_descr,
-'Winch Bracket' part_name,
+i.VMID, 
+'RH NSX Front Knuckle' part_name,
 b.part_no,
 b.assembly_no,
 b.assy_descr
+--select *
 from 
 (
 	select  
 	CASE 
 	when CHARINDEX('R', b.tool_no) != 0 then cast(cast(replace(b.tool_no,'R','') as int) as varchar(50)) + 'R' 
 	else cast(cast(b.tool_no as int) as varchar(50))  
-	end trm_toolno, 
+	end trm_toolno, b.part_operation_key ,
 	b.tool_no,b.part_no,b.operation_no,b.operation_code,
 	b.assembly_no,b.assy_descr,b.tool_type_code, b.tool_descr,b.storage_location 
 	from Plex.part_tool_BOM b
-	where b.part_no = 'R568616'  -- 37
+	where b.part_operation_key = 7884545 --'51210T6N A000'  -- 35
 	and b.storage_location = 'Tool Boss'
 --	AND b.tool_no like '%17137%'
 ) b 
-left outer join AlbSPS.ItemSummary i
+left outer join 
+--select * from AlbSPS.ItemSummary i where vmid = 5
+AlbSPS.ItemSummary i
 on b.trm_toolno = i.ITEMNUMBER 
+--where vmid = 5
 left outer join Plex.purchasing_item_summary s 
-on b.tool_no = s.item_no 
-where b.part_no = '68400221AA'
-and i.ITEMNUMBER is null
+--select * from Plex.purchasing_item_summary s 
+on b.tool_no = s.item_no --48
+where i.ITEMNUMBER is null
 
 select * 
 from AlbSPS.ItemSummary i 
