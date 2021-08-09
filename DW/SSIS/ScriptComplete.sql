@@ -31,6 +31,7 @@ values
 (10,'purchasing_item_usage',0),
 (11,'purchasing_item_inventory',0),
 (12,'purchasing_item_inv_cube',0),
-(13,'kors_notifications',0)
+(13,'kors_recipient',0),
+(14,'kors_notification',0)
 
 */

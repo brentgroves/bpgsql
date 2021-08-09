@@ -1,7 +1,66 @@
---exec Kors.notifications_get 2
+--select @cur_time
+--set @level = 5;
+--set @cur_time = '06:00:01';
+--set @cur_time = '06:00:00'
+--set @cur_time = '00:00:00'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '07:00:00'
+
+--set @level = 4
+--set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '00:00:00'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '07:00:00'
+
+--set @level = 3
+--set @cur_time = '06:59:59'
+--set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '00:00:00'
+--set @cur_time = '23:00:00'
+--set @cur_time = '22:59:59'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '15:00:00'
+--set @cur_time = '14:59:59'
+--set @cur_time = '07:00:00'
+
+--declare @cur_time time;
+--declare @level integer;
+--set @level = 1
+--set @cur_time = '06:59:59'
+--set @cur_time = '00:00:00'
+--set @cur_time = '23:00:00'
+--set @cur_time = '22:59:59'
+--set @cur_time = '15:00:00'
+--set @cur_time = '14:59:59'
+--set @cur_time = '07:00:00'
+--select @cur_time
+
+declare @cur_time time;
+declare @level integer;
+
+set @level = 2
+--set @cur_time = '06:59:59'
+--set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '00:00:00'
+set @cur_time = '23:00:00'
+--set @cur_time = '22:59:59'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '15:00:00'
+--set @cur_time = '14:59:59'
+--set @cur_time = '07:00:00'
+
+exec Kors.notifications_get @level,@cur_time
 --drop procedure Kors.notifications_get;
 create procedure Kors.notifications_get
- @level integer
+ @level integer,
+ @dbg_time time = null
 as
 begin
 declare @midnight time;
@@ -10,7 +69,14 @@ set @midnight = '23:59:59';
 --declare @level integer;
 
 declare @cur_time time;
-SELECT @cur_time = GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
+--declare @dbg_time time;
+--set @dbg_time = '23:59:59';
+SELECT
+@cur_time = 
+case 
+when @dbg_time is null then GETDATE() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
+else @dbg_time 
+end 
 --select @cur_time
 --set @level = 5;
 --set @cur_time = '06:00:01';
@@ -138,7 +204,6 @@ select *
 into Kors.notification_test1
 from Kors.notification;
 */
-
 /*
 select n.notify_level,r.shift_std shift,r.position,r.dept_name,
 case 
@@ -169,19 +234,22 @@ AND
 )
 order by n.email_check,r.[position],r.dept_name,r.last_name; 
 */
-
 select 
+
 SUBSTRING
 (  (
 		select
 		',' +
 		case 
-		when n.email_check = 1 and @email_hours = 1 then r.email
+		when @dbg_time is not null and n.email_check = 1 and @email_hours = 1 then r.email
+		when @dbg_time is not null and n.email_check = 1 and @email_hours = 0 then r.last_name +'''' + r.first_name + '''' + 'SMS'
+		when @dbg_time is not null and n.email_check = 0 then r.last_name +'''' + r.first_name + '''' + 'SMS'
+		when n.email_check = 1 and @email_hours = 1 then 'bgroves@mobexglobal.com' --r.email
 		when n.email_check = 1 and @email_hours = 0 then '1112223333@vtext.com' -- n.SMS
 		when n.email_check = 0 then '1112223333@vtext.com' --n.SMS
 		end --notification
-		from Kors.notification n
---		from Kors.notification_test1 n
+--		from Kors.notification n
+		from Kors.notification_test1 n
 		inner join Kors.recipient r 
 		on n.pcn=r.pcn
 		and n.customer_employee_no=r.customer_employee_no
