@@ -7,9 +7,9 @@
  * 
  */
 -- select * from Kors.notification_test1
---exec Kors.make_notification_test1_subset
---drop procedure Kors.make_notification_test1_subset;
-create procedure Kors.make_notification_test1_subset
+--exec Kors.make_notification_test1
+--drop procedure Kors.make_notification_test1;
+create procedure Kors.make_notification_test1
 as
 begin
 IF OBJECT_ID (N'Kors.notification_test1', N'U') IS NOT NULL  
@@ -17,7 +17,7 @@ DROP TABLE Kors.notification_test1;
 
 select n.*
 into Kors.notification_test1
---select *
+--select n.*
 from Kors.notification n
 inner join Kors.notification_subset s 
 on n.pcn=s.pcn 
