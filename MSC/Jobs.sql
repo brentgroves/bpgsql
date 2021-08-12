@@ -4,7 +4,7 @@ select j.*
 from jobs j 
 inner join Jobs_VendingMachineAssignment a 
 on j.JOBNUMBER = a.JOBNUMBER 
-where a.VMID = 4
+where a.VMID = 5
 
 select 
 --  ROW_NUMBER() OVER(PARTITION BY recovery_model_desc ORDER BY name ASC) 

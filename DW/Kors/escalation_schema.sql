@@ -1,4 +1,6 @@
 /*
+ * 
+-- Kevins mobile: 260-438-0796
 --create schema Kors;
 truncate table Kors.recipient
 -- drop table Kors.recipient
@@ -73,10 +75,24 @@ values
 (1,295932,1,'07:00:00','14:59:59'),
 (2,295932,2,'15:00:00','22:59:59'),
 (3,295932,3,'23:00:00','06:59:59')
-
+select * from Kors.shift
 
 */
 --select * from Kors.shift 
+/*
+-- do this from the master database
+-- CREATE LOGIN kors
+-- WITH PASSWORD = 't`8V8Uj\/*ht>;M6';
+*/
+
+/*
+ * Do this from the database with the schema you want to access
+ */
+CREATE USER [kors]
+FROM LOGIN [kors]
+WITH DEFAULT_SCHEMA=Kors;
+ALTER ROLE db_owner ADD MEMBER [kors];
+
 
 
 

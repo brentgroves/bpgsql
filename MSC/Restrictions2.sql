@@ -5,14 +5,19 @@ select  'SOT' group_id, 'SOT_CERTIFIED' group_description, '7873079' job_number,
 --select *  
 from Restrictions2 r 
 --WHERE r_job = '12876'
-where r_job in ('7884545')
-and r_item in ('16845','17137','17292')
+where r_job in ('7873103')
+and r_item in ('16566')
 
-select * from items where ITEMNUMBER like '%7982%'
-
+select * from items where ITEMNUMBER like '%15750%'
+select * from Users u where DESCR like '%Ross%'  -- 3691
+select * from UserGroups ug 
+select * from UserGroupMembership where usernumber = '3691' 
+select * from Restrictions2 r where R_JOB = '999999'
+select * from UserGroups_VendingMachineAssignment ugvma 
 select * from Jobs j where ltrim(rtrim(DESCR)) ='Support Front Control-R568616 Horz' like '%Support Front Control%' -- R568616 Horz'
 
-
+select * from Jobs j WHERE DESCR like '%Cat%'
+select * from Jobs_VendingMachineAssignment where JOBNUMBER = '999999'
 
 select * from jobs j WHERE descr like  '%NSX%'
 select count(*) cnt from Restrictions2 r -- 798
@@ -36,7 +41,7 @@ from Restrictions2 r
 
 select * 
 from Jobs_VendingMachineAssignment v
-where v.VMID = 4
+where v.VMID = 5
 
 select * from UserGroups ug 
 select  * 

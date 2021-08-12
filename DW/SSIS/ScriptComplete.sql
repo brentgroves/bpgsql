@@ -1,6 +1,6 @@
 -- update ssis.ScriptComplete set done=1 where id=1
 -- update ssis.ScriptComplete set done=0
-
+-- create schema ssis;
 select * from ssis.ScriptComplete
 
 
@@ -8,7 +8,7 @@ select * from ssis.ScriptComplete
  
 -- truncate TABLE myDW.SSIS.ScriptComplete;
 /*
-CREATE TABLE myDW.SSIS.ScriptComplete (
+CREATE TABLE mgdw.SSIS.ScriptComplete (
 	ID int NOT NULL,
 	Description varchar(100) NOT NULL,
 	Done bit NOT NULL,

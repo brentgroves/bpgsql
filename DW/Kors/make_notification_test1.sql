@@ -6,7 +6,17 @@
 /*
  * 
  */
+select customer_employee_no,* from Kors.recipient r where r.customer_employee_no = 056028
+select r.*
+from Kors.notification_test1 n 
+--select n.*
+inner join Kors.recipient r  
+on n.pcn=r.pcn 
+and n.customer_employee_no = r.customer_employee_no
+
+-- select * from Kors.notification_subset
 -- select * from Kors.notification_test1
+select * from Kors.notification_subset
 --exec Kors.make_notification_test1
 --drop procedure Kors.make_notification_test1;
 create procedure Kors.make_notification_test1

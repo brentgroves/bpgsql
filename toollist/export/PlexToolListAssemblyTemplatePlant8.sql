@@ -1,7 +1,7 @@
 /*
  * Find part info to use to update TL_Plex_PN_Op_Map_Plant8
  */
-select * from [ToolList PartNumbers] m 
+select * from [ToolList PartNumbers] m where PartNumbers like '%CBO1410373%'
 --where PartNumbers like '%5221%'  --52215T6N 
 where processid = 40129 --41202 
 select * from [ToolList Plant] m where processid = 62372 41202 41207 54071 -- 50868  
@@ -21,7 +21,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 -- run in Plex SDE
 select * from part_v_part where part_no like '%0924%'
@@ -44,6 +44,9 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant8 (
 select * from TL_Plex_PN_Op_Map_Plant8 
 insert into TL_Plex_PN_Op_Map_Plant8 
 values
+(83,62610,'CBO1410373',2795323,7872696,'CBO1410373','D1','Final')
+(49503,54522,'HXE66422 PAINT',2795364,7873079,'HXE66422','G','Final' )  -- 2795364	7873079	Drive Support - HXE66422	HXE66422 G	110
+
 --(61875,62372,'R568616',2812907,7950317,'R568616','J','Machine A - WIP')  -- 2812907	Support Front Control - OP 10 Vertical R568616	R568616	Support Front Control
 
 --(61876,63710,'R568616',2812907,7950328,'R568616','J','Final') -- 2812907	Support Front Control - OP 20 Horizontal R568616	R568616	Support Front Control

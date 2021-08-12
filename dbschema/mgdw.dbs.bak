@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="mgdw" id="Project_b5d" database="BTest" >
+	<schema name="Kors" catalogname="mgdw" >
+		<table name="email_hours" >
+			<column name="email_hours_key" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="email_start" type="time" length="8" decimal="0" jt="92" />
+			<column name="email_end" type="time" length="8" decimal="0" jt="92" />
+			<index name="PK__email_ho__539A5CD444107BF0" unique="PRIMARY_KEY" >
+				<column name="email_hours_key" />
+			</index>
+		</table>
+		<table name="notification" >
+			<column name="notification_key" type="int" length="10" decimal="0" jt="4" />
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="notify_level" type="tinyint" length="3" decimal="0" jt="-6" />
+			<column name="email_check" type="tinyint" length="3" decimal="0" jt="-6" />
+			<column name="customer_employee_no" type="varchar" length="50" decimal="0" jt="12" />
+		</table>
+		<table name="notification_subset" >
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="position" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="dept_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="last_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="first_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="email" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="SMS" type="varchar" length="25" decimal="0" jt="12" />
+			<column name="customer_employee_no" type="varchar" length="50" decimal="0" jt="12" />
+		</table>
+		<table name="notification_test1" >
+			<column name="notification_key" type="int" length="10" decimal="0" jt="4" />
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="notify_level" type="tinyint" length="3" decimal="0" jt="-6" />
+			<column name="email_check" type="tinyint" length="3" decimal="0" jt="-6" />
+			<column name="customer_employee_no" type="varchar" length="50" decimal="0" jt="12" />
+		</table>
+		<table name="recipient" >
+			<column name="recipient_key" type="int" length="10" decimal="0" jt="4" />
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="shift" type="varchar" length="15" decimal="0" jt="12" />
+			<column name="shift_std" type="tinyint" length="3" decimal="0" jt="-6" />
+			<column name="dept_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="position" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="last_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="first_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="SMS" type="varchar" length="25" decimal="0" jt="12" />
+			<column name="email" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="customer_employee_no" type="varchar" length="50" decimal="0" jt="12" />
+		</table>
+		<table name="shift" >
+			<column name="shift_key" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="pcn" type="int" length="10" decimal="0" jt="4" />
+			<column name="shift" type="int" length="10" decimal="0" jt="4" />
+			<column name="shift_start" type="time" length="8" decimal="0" jt="92" />
+			<column name="shift_end" type="time" length="8" decimal="0" jt="92" />
+			<index name="PK__shift__CD8E9732985FA96B" unique="PRIMARY_KEY" >
+				<column name="shift_key" />
+			</index>
+		</table>
+		<procedure name="notifications_get" id="Procedure_254b" isSystem="false" params_known="n" />
+		<function name="notifications_get" id="Function_1eb" isSystem="false" params_known="n" />
+	</schema>
+	<connector name="mgdw-mgadmin" database="BTest" driver_class="com.microsoft.sqlserver.jdbc.SQLServerDriver" driver_jar="mssql-jdbc-9.4.0.jre11.jar" url="jdbc:sqlserver://mgsqlsrv.database.windows.net:1433;database=mgdw;user=mgadmin@mgsqlsrv;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;" host="localhost" port="1433" instance="mgdw" user="mgadmin" passwd="YmArfnA0O3E4LmUyPk5IVw==" />
+	<layout name="Layout with Tools" id="Layout_c49" show_column_type="y" show_relation="columns" >
+		<entity schema="mgdw.Kors" name="email_hours" color="BED3F4" x="304" y="64" />
+		<entity schema="mgdw.Kors" name="notification" color="BED3F4" x="576" y="64" />
+		<entity schema="mgdw.Kors" name="notification_subset" color="C7F4BE" x="976" y="48" />
+		<entity schema="mgdw.Kors" name="notification_test1" color="C7F4BE" x="1344" y="48" />
+		<entity schema="mgdw.Kors" name="recipient" color="BED3F4" x="208" y="272" />
+		<entity schema="mgdw.Kors" name="shift" color="BED3F4" x="48" y="48" />
+		<script name="Sample SQL Editor" id="Editor_ae7" language="SQL" >
+			<string><![CDATA[SELECT email_hours_key, pcn, email_start, email_end
+FROM
+	Kors.email_hours s;]]></string>
+		</script>
+		<browser id="Browse_7b" name="Sample Relational Data Explorer" confirm_updates="y" >
+			<browse_table schema="mgdw.Kors" entity="email_hours" x="20" y="20" width="400" height="300" />
+		</browser>
+		<query id="Query_1760" name="Sample Query Builder" >
+			<query_table schema="mgdw.Kors" name="email_hours" alias="eh" x="48" y="48" >
+				<column name="email_hours_key" />
+				<column name="pcn" />
+				<column name="email_start" />
+				<column name="email_end" />
+			</query_table>
+		</query>
+		<form name="Sample Report" id="Report_1130" template="Page" css="container-fluid" view="frame" >
+			<var name="samplePageNumber" type="4" value="0" mandatory="n" />
+			<var name="sampleRecordsPerPage" type="4" value="100" mandatory="n" />
+			<body name="Body" template="Grid" pos="0,0,0,0,f,f" layout="{{-2,-2,-2,-2,-1},{-2,-2,-2}}" scroll="n" html="n" >
+				<cell type="label" name="sample" template="H3" pos="0,0,1,0,l,c" />
+				<tableview name="sample" template="Table" css="table table-striped table-bordered table-sm table-hover" pos="0,1,4,1,f,f" layout="{{-2,-2,-2,-2},{-2,-2}}" scroll="n" html="n" header_rows="1" >
+					<form_script type="DataSource" language="SQL" >
+						<var name="email_hours_key" type="4" />
+						<var name="pcn" type="4" />
+						<var name="email_start" type="92" />
+						<var name="email_end" type="92" />
+						<script ><![CDATA[SELECT * FROM Kors.email_hours]]></script>
+					</form_script>
+					<cell type="label" name="email_hours_key" pos="0,0,0,0,c,c" />
+					<cell type="label" name="pcn" pos="1,0,1,0,c,c" />
+					<cell type="label" name="email_start" pos="2,0,2,0,c,c" />
+					<cell type="label" name="email_end" pos="3,0,3,0,c,c" />
+					<cell type="label" name="${email_hours_key}" template="Plain" pos="0,1,0,1,l,c" />
+					<cell type="label" name="${pcn}" template="Plain" pos="1,1,1,1,l,c" />
+					<cell type="label" name="${email_start}" template="Plain" pos="2,1,2,1,l,c" />
+					<cell type="label" name="${email_end}" template="Plain" pos="3,1,3,1,l,c" />
+				</tableview>
+				<cell type="href" name="" disabled="${samplePageNumber&lt;1}" pos="0,2,0,2,l,c" glyph="FA-ANGLE_DOUBLE_LEFT" ref_id="Report_1130" >
+					<var name="samplePageNumber" value="0" />
+				</cell>
+				<cell type="href" name="" disabled="${samplePageNumber&lt;1}" pos="1,2,1,2,l,c" glyph="FA-ANGLE_LEFT" ref_id="Report_1130" >
+					<var name="samplePageNumber" value="${Math.max(0,samplePageNumber-1)}" />
+				</cell>
+				<cell type="label" name="Page ${samplePageNumber+1}" pos="2,2,2,2,l,c" />
+				<cell type="href" name="" disabled="${!sampleHasNextPage}" pos="3,2,3,2,l,c" glyph="FA-ANGLE_RIGHT" ref_id="Report_1130" >
+					<var name="samplePageNumber" value="${( samplePageNumber+1 )}" />
+				</cell>
+			</body>
+		</form>
+	</layout>
+	<layout name="Main Layout" id="Layout_2d7" show_relation="columns" >
+		<entity schema="mgdw.Kors" name="email_hours" color="BED3F4" x="256" y="176" />
+		<entity schema="mgdw.Kors" name="notification" color="BED3F4" x="512" y="176" />
+		<entity schema="mgdw.Kors" name="notification_subset" color="C7F4BE" x="832" y="160" />
+		<entity schema="mgdw.Kors" name="notification_test1" color="C7F4BE" x="1120" y="160" />
+		<entity schema="mgdw.Kors" name="recipient" color="BED3F4" x="224" y="384" />
+		<entity schema="mgdw.Kors" name="shift" color="BED3F4" x="48" y="160" />
+		<callout x="256" y="80" pointer="Round" >
+			<comment><![CDATA[Double-click table headers, columns, or foreign keys to edit. 
+Create multiple layouts (diagrams) with the same or different tables. 
+Saving the model to file will also save the layouts.]]></comment>
+		</callout>
+		<group name="email_hours" color="ECF0F7" >
+			<entity schema="mgdw.Kors" name="email_hours" />
+			<entity schema="mgdw.Kors" name="notification" />
+			<entity schema="mgdw.Kors" name="recipient" />
+			<entity schema="mgdw.Kors" name="shift" />
+		</group>
+		<group name="notification_subset" color="EEF7EC" >
+			<entity schema="mgdw.Kors" name="notification_subset" />
+			<entity schema="mgdw.Kors" name="notification_test1" />
+		</group>
+	</layout>
+</project>
