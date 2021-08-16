@@ -1,74 +1,112 @@
+
+
+DECLARE @R INT;
 declare @cur_time time;
-declare @level integer;
-set @level = 1
-set @cur_time = '06:59:59'
---set @cur_time = '00:00:00'
---set @cur_time = '23:00:00'
---set @cur_time = '22:59:59'
---set @cur_time = '15:00:00'
---set @cur_time = '14:59:59'
---set @cur_time = '07:00:00'
---select @cur_time
-
-declare @cur_time time;
-declare @level integer;
-
-set @level = 2
-set @cur_time = '06:59:59'
---set @cur_time = '06:00:01'
---set @cur_time = '06:00:00'
---set @cur_time = '00:00:00'
--- set @cur_time = '23:00:00'
---set @cur_time = '22:59:59'
---set @cur_time = '19:00:00'
---set @cur_time = '18:59:59'
---set @cur_time = '15:00:00'
---set @cur_time = '14:59:59'
---set @cur_time = '07:00:00'
-
-
-declare @cur_time time;
-declare @level integer;
-set @level = 4
-set @cur_time = '06:00:01'
---set @cur_time = '06:00:00'
---set @cur_time = '00:00:00'
---set @cur_time = '19:00:00'
---set @cur_time = '18:59:59'
---set @cur_time = '07:00:00'
-
-declare @cur_time time;
-declare @level integer;
-set @level = 5;
+declare @Dest varchar(1000);
+declare @Lvl integer;
+set @Lvl = 5
+declare @PCN integer;
+set @PCN = 295932;
 set @cur_time = '06:00:01';
 --set @cur_time = '06:00:00'
 --set @cur_time = '00:00:00'
 --set @cur_time = '19:00:00'
 --set @cur_time = '18:59:59'
---set @cur_time = '07:00:00'
 
-
+DECLARE @R INT;
 declare @cur_time time;
-declare @level integer;
-set @level = 3
---set @cur_time = '06:59:59'
---set @cur_time = '06:00:01'
+declare @Dest varchar(1000);
+declare @Lvl integer;
+set @Lvl = 4
+declare @PCN integer;
+set @PCN = 295932;
+set @cur_time = '06:00:01';
 --set @cur_time = '06:00:00'
 --set @cur_time = '00:00:00'
-set @cur_time = '23:00:00'
---set @cur_time = '22:59:59'
 --set @cur_time = '19:00:00'
 --set @cur_time = '18:59:59'
---set @cur_time = '15:00:00'
---set @cur_time = '14:59:59'
---set @cur_time = '07:00:00'
+
+DECLARE @R INT;
+declare @cur_time time;
+declare @Dest varchar(1000);
+declare @Lvl integer;
+set @Lvl = 3
+declare @PCN integer;
+set @PCN = 295932;
+set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '05:59:59'
+--set @cur_time = '00:00:00'
+--set @cur_time = '22:00:00'
+--set @cur_time = '21:59:59'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '14:00:00'
+--set @cur_time = '13:59:59'
+--set @cur_time = '06:00:00'
+
+DECLARE @R INT;
+declare @cur_time time;
+declare @Dest varchar(1000);
+declare @Lvl integer;
+set @Lvl = 2
+declare @PCN integer;
+set @PCN = 295932;
+set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '05:59:59'
+--set @cur_time = '00:00:00'
+--set @cur_time = '22:00:00'
+--set @cur_time = '21:59:59'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+--set @cur_time = '14:00:00'
+--set @cur_time = '13:59:59'
+--set @cur_time = '06:00:00'
+
+DECLARE @R INT;
+declare @cur_time time;
+declare @Dest varchar(1000);
+declare @Lvl integer;
+set @Lvl = 1
+declare @PCN integer;
+set @PCN = 295932;
+--set @cur_time = '06:00:01'
+--set @cur_time = '06:00:00'
+--set @cur_time = '05:59:59'
+set @cur_time = '00:00:00'
+--set @cur_time = '22:00:00'
+--set @cur_time = '21:59:59'
+--set @cur_time = '19:00:00'
+--set @cur_time = '18:59:59'
+set @cur_time = '14:00:00'
+--set @cur_time = '13:59:59'
+--set @cur_time = '06:00:00'
 
 --select getdate() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
-exec Kors.notifications_get @level,@cur_time
+--exec @R=Kors.notifications_get @PCN,@Level=@Lvl,@Destinations = @Dest OUT,@dbg_time=@cur_time; --, @cur_time
+--select @R,@Dest;
+exec @R=Kors.notifications_get @PCN,@Level=@Lvl,@Destinations = @Dest OUT
+select @R,@Dest;
+
+/*
+DECLARE @R INT, @P VARCHAR(1000)
+EXEC @R=Kors.notifications_get @Level=3, @Destinations=@P OUT --OUT is short for OUTPUT, you can use either one
+SELECT @R, @P
+create procedure Kors.notifications_get(
+ @Level integer,
+ @Destinations varchar(1000) OUTPUT,
+  @dbg_time time = null
+)
+
+ */
 --drop procedure Kors.notifications_get;
-create procedure Kors.notifications_get
- @level integer,
+create procedure Kors.notifications_get(
+ @PCN integer,
+ @Level integer,
+ @Destinations varchar(1000) OUTPUT,
  @dbg_time time = null
+)
 as
 begin
 declare @midnight time;
@@ -149,6 +187,18 @@ else 0
 end 
 from 
 (
+-- debug section
+--	declare @PCN int;
+--	set @PCN = 295932;
+--	declare @midnight time;
+--	set @midnight = '23:59:59';
+--	declare @cur_time time;
+--	set @cur_time = '06:00:01';
+	--set @cur_time = '06:00:00'
+	--set @cur_time = '00:00:00'
+	--set @cur_time = '19:00:00'
+	--set @cur_time = '18:59:59'
+
 	select 
 	case 
 	when (eh.email_start > eh.email_end) -- Does the window contain midnight
@@ -161,6 +211,7 @@ from
 	else 0
 	end email_hours 
 	from Kors.email_hours eh
+	where eh.pcn =@PCN
 ) eh 
 where eh.email_hours != 0;
 --select @email_hours
@@ -168,22 +219,22 @@ where eh.email_hours != 0;
 
 -- select * from Kors.shift 
 declare @start_shift_1 time;
-select @start_shift_1 = shift_start from Kors.shift where shift = 1;
+select @start_shift_1 = shift_start from Kors.shift where shift = 1 and pcn =@PCN;
 
 declare @end_shift_1 time;
-select @end_shift_1 = shift_end from Kors.shift where shift = 1;
+select @end_shift_1 = shift_end from Kors.shift where shift = 1 and pcn =@PCN;
 
 declare @start_shift_2 time;
-select @start_shift_2 = shift_start from Kors.shift where shift = 2;
+select @start_shift_2 = shift_start from Kors.shift where shift = 2 and pcn =@PCN;
 
 declare @end_shift_2 time;
-select @end_shift_2 = shift_end from Kors.shift where shift = 2;
+select @end_shift_2 = shift_end from Kors.shift where shift = 2 and pcn =@PCN;
 
 declare @start_shift_3 time;
-select @start_shift_3 = shift_start from Kors.shift where shift = 3;
+select @start_shift_3 = shift_start from Kors.shift where shift = 3 and pcn =@PCN;
 
 declare @end_shift_3 time;
-select @end_shift_3 = shift_end from Kors.shift where shift = 3;
+select @end_shift_3 = shift_end from Kors.shift where shift = 3 and pcn =@PCN;
 
 
 
@@ -242,8 +293,8 @@ AND
 )
 order by n.email_check,r.[position],r.dept_name,r.last_name; 
 */
-select 
 
+select @Destinations = 
 SUBSTRING
 (  (
 		select
@@ -263,7 +314,12 @@ SUBSTRING
 		and n.customer_employee_no=r.customer_employee_no
 		
 		where 
-		n.notify_level = @level 
+		n.notify_level = @Level 
+		and 
+		(
+			n.pcn = @PCN
+			or r.last_name = 'Kenrick'
+		)
 		AND
 		(
 			(
@@ -276,4 +332,6 @@ SUBSTRING
 			)
 		) FOR XML PATH('')
 	),2,20000)
+   -- SET @Destinations='SOME VALUE';
+   RETURN 0;
 end;
