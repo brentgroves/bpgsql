@@ -170,6 +170,7 @@ insert into dbo.PlexToolBOMPlant9 (Assembly_No,Part_No,Part_Revision,Operation_C
 		-- select * from PlexToolListAssembly a	
 		inner join bvToolListItemsFixtureOnlyLv1 lv1 -- No Misc, or Fixture items; they are not associated with a tool
 		on a.processid=lv1.processid   -- 1 to many
+		
 		and a.ToolNumber=lv1.ToolNumber  -- --76
 		-- where a.processid <> 61258  -- 1090 LC5C 5K651 CE 'LC5C 5K651 CE' this part_no had dashes originally until i remapped it.
 		-- AFTER I UPDATE btDistinctToolList this count jumped to 1133
