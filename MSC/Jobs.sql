@@ -6,6 +6,10 @@ inner join Jobs_VendingMachineAssignment a
 on j.JOBNUMBER = a.JOBNUMBER 
 where a.VMID = 5
 
+select * from VendingMachines
+select * from Machines m 
+select * from MachineGroups mg 
+
 select 
 --  ROW_NUMBER() OVER(PARTITION BY recovery_model_desc ORDER BY name ASC) 
 ROW_NUMBER () over (partition by j.JOBNUMBER order by r.R_ITEM) row#,
