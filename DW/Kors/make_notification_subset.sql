@@ -7,7 +7,7 @@
  */
 --select * from Kors.notification_subset
 select n.pcn,n.position,n.dept_name,n.last_name,n.first_name,n.email,n.SMS,n.customer_employee_no
---into Kors.notification_subset
+into Kors.notification_subset
 from
 (
 	select n.pcn,1 shift,1 email_check,n.position,n.dept_name,n.last_name,n.first_name,n.email,n.SMS,n.customer_employee_no 

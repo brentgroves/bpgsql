@@ -6,7 +6,7 @@ select * from ssis.ScriptComplete
 
 -- drop TABLE myDW.SSIS.ScriptComplete
  
--- truncate TABLE myDW.SSIS.ScriptComplete;
+-- truncate TABLE mgdw.SSIS.ScriptComplete;
 /*
 CREATE TABLE mgdw.SSIS.ScriptComplete (
 	ID int NOT NULL,
@@ -25,13 +25,14 @@ values
 (4,'part_op_with_tool_list',0),
 (5,'part_tool_assembly',0),
 (6,'AlbMSCItemSummary',0),
-(7,'part_tool_BOM',0),
+(7,'Albion part_tool_BOM',0),
 (8,'Albion MSC Restrictions2',0),
 (9,'purchasing_item_summary',0),
 (10,'purchasing_item_usage',0),
 (11,'purchasing_item_inventory',0),
 (12,'purchasing_item_inv_cube',0),
 (13,'kors_recipient',0),
-(14,'kors_notification',0)
+(14,'kors_notification',0),
+(15,'Edon part_tool_BOM',0)
 
 */

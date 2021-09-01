@@ -1,9 +1,10 @@
 /*
- * Find part info to use to update TL_Plex_PN_Op_Map_Plant8
+ * Find part info to use to update TL_Plex_PN_Op_Map_Plant9
  */
-select * from [ToolList PartNumbers] m where PartNumbers like '%DZ106753%'
+select * from [ToolList PartNumbers] m 
+--PartNumbers like --'%2021282%'--'%2017710%'
 --where PartNumbers like '%5221%'  --52215T6N 
-where processid = 40129 --41202 
+where processid = 50025 --41202 
 select * from [ToolList Plant] m where processid = 62372 41202 41207 54071 -- 50868  
 from bvToolListsInPlants tl
 where partnumber like '%0924%'
@@ -11,17 +12,19 @@ where plant = 8
 --and tl.Originalprocessid = 40750
 and partnumber like '%0924%'
 -- 51210T6N
-select * from [ToolList Master] m where PartFamily like '%52210%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%10024899%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%51211%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%52211%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%52216%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%51216%' and released = 1
 
 
-select * from [ToolList Master] m where PartFamily like '%Knuckle%' and released = 1
+select * from [ToolList Master] m where PartFamily like '%31X%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+
+
 
 -- run in Plex SDE
 select * from part_v_part where part_no like '%0924%'
@@ -44,7 +47,9 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant9 (
 select * from TL_Plex_PN_Op_Map_Plant9 
 insert into TL_Plex_PN_Op_Map_Plant9 
 values
-(48661,62444,'DZ106753',2794224,7868688,'DZ106753','A','Final')
+-- (40998,50025,'2021280',2795740,7873443,'2017707','J','Final')
+ (41362,52964,'2021282',2795739,7873452,'2017710','J','Final')
+--(48661,62444,'DZ106753',2794224,7868688,'DZ106753','A','Final')
 
 select * from TL_Plex_PN_Op_Map_Plant9
 
@@ -149,7 +154,7 @@ insert into PlexToolListAssemblyTemplatePlant9 (ProcessID,ToolID,ToolNumber,Asse
 			from bvToolListsInPlants tl
 			inner join [ToolList Tool] tt  
 			on tl.processid = tt.ProcessID
-			inner join TL_Plex_PN_Op_Map_Plant8 m 
+			inner join TL_Plex_PN_Op_Map_Plant9 m 
 			on tl.processid = m.processid  
 			group by tl.processid,tt.ToolNumber 
 			having count(*) > 1	-- 0	
@@ -236,12 +241,12 @@ select count(*) from PlexToolListAssemblyTemplatePlant9-- 3
 select * from PlexToolListAssemblyTemplatePlant9-- 3
 where Part_No = '28245973'
 
-select * from TL_Plex_PN_Op_Map_Plant8
+select * from TL_Plex_PN_Op_Map_Plant9
 
 /*
  * Plex ToolAssembly Template
  */
-select * from PlexToolListAssemblyTemplatePlant8
+select * from PlexToolListAssemblyTemplatePlant9
 -- where Part_No != '28245973' 
 order by Part_No,Operation,Assembly_No 
 

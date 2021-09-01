@@ -18,6 +18,53 @@ select * from [ToolList Toolboss Stock Items] tbs
 select '(''' + itemnumber + '''),' 
 	from
 	(
+	
+	create procedure Kors.destinations_get(
+ @PCN int,
+ @Level int,
+ @Destinations varchar(1000) OUTPUT
+)
+as
+begin
+	
+declare @x xml;
+
+select @x=(
+select
+--',' +
+/* Debug section
+n.notify_level,
+--n.email_check,
+case 
+when n.email_check = 0 then cast (r.shift_std as varchar) 
+else 'N/A'
+end shift,
+r.[position],r.dept_name,r.last_name,
+*/ 
+CASE 
+when n.email_check = 0 then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-2604380796@vtext.com' + CHAR(13) + CHAR(10) -- r.SMS
+else ' Lv' + cast(n.notify_level as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + '2604380796@vtext.com,' + r.email + CHAR(13) + CHAR(10)
+end --notify
+from Kors.notification n
+--from Kors.notification_test1 n
+inner join Kors.recipient r 
+on n.pcn=r.pcn
+and n.customer_employee_no=r.customer_employee_no
+where n.notify_level = @Level
+and 
+(
+	n.pcn = @PCN
+	or r.last_name = 'Kenrick'
+)
+order by n.notify_level,n.email_check,r.shift_std,r.[position],r.dept_name, r.last_name 
+
+for xml path(''),type);
+select @Destinations=(@x.value('(./text())[1]','nvarchar(max)'));
+--select len(@x.value('(./text())[1]','nvarchar(max)')) j  -- 834
+--   SET @Destinations='SOME VALUE';
+   RETURN 0;
+end;
+
 			select originalprocessid,processid,descript,partNumber,plant,
 			itemNumber,lv1.itemClass,UDFGLOBALTOOL,toolbossStock  
 			from
@@ -25,7 +72,7 @@ select '(''' + itemnumber + '''),'
 			/* Used for generating tool list item list */
 				select '(''' + itemNumber + '''),' 
 				from bvToolListItemsInPlants
-				where processid =  62444
+				where processid =  52964
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
 				--and itemNumber like '%17292%'
 			/* Used for generating tool boss item list */
@@ -34,12 +81,12 @@ select '(''' + itemnumber + '''),'
 				inner join
 				[ToolList Toolboss Stock Items] tbs
 				on i.itemClass=tbs.ItemClass
-				where processid =  62444 -- 33 --62372 -- 26
+				where processid =  52964 -- 33 --62372 -- 26
 				and toolbossstock=0 and UDFGLOBALTOOL <> 'YES'-- 40
 			/* Used for generating toolbossstock item list */
 				select '(''' + itemNumber + '''),' -- 14
 				from bvToolListItemsInPlants i
-				where processid =  62444 
+				where processid =  52964 
 				and toolbossstock=1
 
 				/* This is the actual sql for the original query. */

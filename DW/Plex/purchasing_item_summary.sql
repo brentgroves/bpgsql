@@ -15,6 +15,12 @@ create table Plex.purchasing_item_summary
   storage_location varchar(50),
   active smallint
 )
+-- myDW.Plex.purchasing_item_summary definition
+
+-- Drop table
+
+-- DROP TABLE myDW.Plex.purchasing_item_summary;
+
 */
 
 select count(distinct item_no) 

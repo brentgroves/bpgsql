@@ -6,7 +6,7 @@ inner join Jobs_VendingMachineAssignment a
 on j.JOBNUMBER = a.JOBNUMBER 
 where a.VMID = 6
 
-select * from VendingMachines vm 
+Pl
 
 select a.*,j.* 
 from jobs j 

@@ -1,11 +1,14 @@
 /*
+ * -- create schema AlbSPS
 -- myDW.AlbSPS.ItemSummary definition
 
 -- Drop table
 
 -- DROP TABLE myDW.AlbSPS.ItemSummary;
+truncate table AlbSPS.ItemSummary
 
-CREATE TABLE myDW.AlbSPS.ItemSummary (
+create schema AlbSPS
+CREATE TABLE mgdwdb.AlbSPS.ItemSummary (
 	pcn int NULL,
 	VMID int NULL,
 	ITEMNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -21,5 +24,5 @@ CREATE TABLE myDW.AlbSPS.ItemSummary (
 	datecreated datetime NULL,
 	DATELASTMODIFIED datetime NULL
 );
-
+select * from AlbSPS.ItemSummary
 */
