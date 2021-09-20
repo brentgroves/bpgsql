@@ -1,17 +1,21 @@
 /*
  * Find part info to use to update TL_Plex_PN_Op_Map_Plant9
  */
+SELECT @@version
 select * from [ToolList PartNumbers] m 
+where PartNumbers like  '%10115487%' 
 --PartNumbers like --'%2021282%'--'%2017710%'
 --where PartNumbers like '%5221%'  --52215T6N 
 where processid = 50025 --41202 
-select * from [ToolList Plant] m where processid = 62372 41202 41207 54071 -- 50868  
+select * from [ToolList Plant] m where processid = 63837 62372 41202 41207 54071 -- 50868  
 from bvToolListsInPlants tl
 where partnumber like '%0924%'
 where plant = 8
 --and tl.Originalprocessid = 40750
 and partnumber like '%0924%'
 -- 51210T6N
+
+select * from [ToolList Master] m where processid in (63837,63269) --PartFamily like '%10115487%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%10024899%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%51211%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%52211%' and released = 1
@@ -22,7 +26,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%31X%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 63269 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 
 
@@ -47,8 +51,9 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant9 (
 select * from TL_Plex_PN_Op_Map_Plant9 
 insert into TL_Plex_PN_Op_Map_Plant9 
 values
+(61866,63269,'10115487',2908637,8293437,'10115487','H','Machine A - WIP')  -- op 10
 -- (40998,50025,'2021280',2795740,7873443,'2017707','J','Final')
- (41362,52964,'2021282',2795739,7873452,'2017710','J','Final')
+-- (41362,52964,'2021282',2795739,7873452,'2017710','J','Final')
 --(48661,62444,'DZ106753',2794224,7868688,'DZ106753','A','Final')
 
 select * from TL_Plex_PN_Op_Map_Plant9

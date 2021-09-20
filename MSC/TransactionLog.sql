@@ -23,7 +23,7 @@ SUPPLIERNUMBER,
 SUPPLIERPARTNUMBER
 -- select count(*) -- 1316, 6/8/2021
 FROM sps.dbo.TransactionLog
-where VMID in (4) -- vmid 4/Plant 6 tooling
+where VMID in (3) -- vmid 4/Plant 6 tooling
 and transcode = 'WN'
 and jobnumber <> ''
  and tranenddatetime > '2021-04-27 00:00:00'

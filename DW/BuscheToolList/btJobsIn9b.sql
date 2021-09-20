@@ -5,7 +5,7 @@ Create schema btl
 
 -- DROP TABLE mgdw.btl..btJobsIn9B;
 /*
-CREATE TABLE mgdw.btl.btJobsIn9B (
+CREATE TABLE mgdw.btl.btJobsIn9BBak (
 	JobNumber int NULL,
 	Descr nvarchar(50) NULL,
 	alias nvarchar(50) NULL,
@@ -18,4 +18,5 @@ CREATE TABLE mgdw.btl.btJobsIn9B (
 	DATERANGEENABLE int NOT NULL
 );
 */
-select * from btl.btJobsIn9B
+--TRUNCATE table btl.btJobsIn9B
+select * from btl.btJobsIn9BBak

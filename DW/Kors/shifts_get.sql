@@ -21,6 +21,7 @@ ORDER BY colid
 
 --drop procedure Kors.shifts_get_rs;
 create procedure Kors.shifts_get_rs(
+--create procedure Kors.shifts_get_rs(
  @PCN int = 295932
 )
 as
@@ -43,7 +44,12 @@ begin
    	RETURN 0;
 end
 
-
+exec Kors.test
+create procedure Kors.test
+as
+begin
+	select 'test';
+end
 --drop procedure Kors.shifts_get_op;
 create procedure Kors.shifts_get_op(
  @PCN int= 295932,

@@ -1,10 +1,21 @@
 /*
+Albion
+VMID in (4,5,6)
+Avilla
+VMID in (3)
+Edon
+VMID in (3,4) both have the same jobs
+ */
+/*
+ * USED BY AlbMSCJobs ETL script
+ */
+/*
  select *
  into AlbSPS.JobsNO
  from AlbSPS.Jobs 
  where JOBNUMBER not like '%[A-Z]%'
 */ 
-select * from myDW.AlbSPS.Jobs
+select * from myDW.MSC.Jobs
 -- delete from AlbSPS.Jobs where DESCR like 'DANA%'
 --truncate table AlbSPS.Jobs  
 select '"' + jobnumber + '"' JOBNUMBER ,DESCR from AlbSPS.Jobs j 

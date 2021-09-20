@@ -19,14 +19,14 @@ select * from ssis.ScriptComplete
 /*
 INSERT into ssis.ScriptComplete (ID,Description,Done)
 values
-(1,'Albion MSC Jobs Import',0),
-(2,'Albion MSC TransactionLog Import',0),
+(1,'MSC Jobs Import',0),
+(2,'MSC TransactionLog Import',0),
 (3,'customer_release_due_WIP_ready_loaded',0),
 (4,'part_op_with_tool_list',0),
 (5,'part_tool_assembly',0),
-(6,'AlbMSCItemSummary',0),
-(7,'Albion part_tool_BOM',0),
-(8,'Albion MSC Restrictions2',0),
+(6,'MSCItemSummary',0),
+(7,'part_tool_BOM',0),
+(8,'MSC Restrictions2',0),
 (9,'purchasing_item_summary',0),
 (10,'purchasing_item_usage',0),
 (11,'purchasing_item_inventory',0),

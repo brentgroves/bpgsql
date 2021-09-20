@@ -20,7 +20,16 @@ create table Kors.recipient
   customer_employee_no varchar(50)  -- plex reference
 )
 select * from Kors.recipient
+SELECT CONVERT (varchar, SERVERPROPERTY('collation')) AS 'Server Collation';
+-- mgsqlmi SQL_Latin1_General_CP1_CI_AS
+SELECT name, collation_name FROM sys.databases;
 */
+
+create table Kors.OLEDBTest
+(
+  TestColumn varchar(50)  -- plex reference
+)
+select * from Kors.OLEDBTest
 /*
 truncate table Kors.notification
 -- drop table Kors.notification

@@ -4,8 +4,8 @@
 -- do this from the master database
 /*
 -- do this from the master database
--- CREATE LOGIN kors
--- WITH PASSWORD = 't`8V8Uj\/*ht>;M6';
+CREATE LOGIN kors
+WITH PASSWORD = 't`8V8Uj\/*ht>;M6';
 */
 
 /*

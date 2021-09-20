@@ -1,3 +1,7 @@
+/*
+ * NOT USED
+ */
+
 select * from albsps.import
 /*
 update albsps.import
@@ -9,9 +13,9 @@ where id=1
 
 -- Drop table
 
--- DROP TABLE myDW.AlbSPS.Import;
--- truncate TABLE myDW.AlbSPS.Import;
-CREATE TABLE myDW.AlbSPS.Import (
+-- DROP TABLE mgdw.AlbSPS.Import;
+-- truncate TABLE mgdw.AlbSPS.Import;
+CREATE TABLE mgdw.AlbSPS.Import (
 	ID int NOT NULL,
 	Description varchar(100) NULL,
 	LastSuccess datetime NULL,
@@ -19,6 +23,6 @@ CREATE TABLE myDW.AlbSPS.Import (
 );
 declare @start_date datetime
 set @start_date = '2021-04-27 00:00:00'
-insert into myDW.AlbSPS.Import (ID,Description,LastSuccess)
+insert into mgdw.AlbSPS.Import (ID,Description,LastSuccess)
 values (1,'AlbMSCTransactions',@start_date)
-select * from myDW.AlbSPS.Import
+select * from mgdw.AlbSPS.Import

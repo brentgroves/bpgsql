@@ -2,11 +2,16 @@
 declare @PCN integer;
 set @PCN = 295932;
 DECLARE @R INT, @L int, @P VARCHAR(1000)
-set @L = 3
+set @L = 5
 EXEC @R=Kors.destinations_get_rs @PCN,@Level=@L 
 SELECT @R 
 select * from kors.recipient
 */
+create procedure Kors.destinations_get_oa
+as
+begin
+	select 'test';
+end
 
 --drop procedure Kors.destinations_get_rs
 create procedure Kors.destinations_get_rs(
@@ -31,8 +36,14 @@ r.[position],r.dept_name,r.last_name,
 */
 select
 CASE 
-when n.email_check = 0 then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-2604380796@vtext.com' + CHAR(13) + CHAR(10) -- r.SMS
-else ' Lv' + cast(n.notify_level as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + '2604380796@vtext.com,' + r.email + CHAR(13) + CHAR(10)
+when n.email_check = 0 and (r.SMS is null or r.SMS ='') then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-No SMS address' + CHAR(13) + CHAR(10) -- r.SMS
+when n.email_check = 0 and (r.SMS is not null and r.SMS <> '') then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + r.SMS + CHAR(13) + CHAR(10) -- r.SMS
+
+when (n.email_check = 1 and ((r.SMS is null) or (r.SMS = '')) and ((r.email is null) or (r.email=''))) then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-No SMS or email address' + CHAR(13) + CHAR(10) -- r.SMS
+when (n.email_check = 1 and ((r.SMS is null) or (r.SMS = '')) and ((r.email is not null) and (r.email<>''))) then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-No SMS address,' + r.email + CHAR(13) + CHAR(10) -- r.SMS
+when (n.email_check = 1 and ((r.SMS is not null) and (r.SMS <> '')) and ((r.email is null) or (r.email=''))) then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + r.SMS + ',No email address' + CHAR(13) + CHAR(10) -- r.SMS
+when (n.email_check = 1 and ((r.SMS is not null) and (r.SMS <> '')) and ((r.email is not null) or (r.email<>''))) then ' Lv' + cast(n.notify_level as varchar) + '-Shift' + cast(r.shift_std as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + r.SMS + ',' + r.email + CHAR(13) + CHAR(10) -- r.SMS
+--else ' Lv' + cast(n.notify_level as varchar) + '-' + left(r.first_name,1) + r.last_name + '-' + '2604380796@vtext.com,' + r.email + CHAR(13) + CHAR(10)
 end --notify
 from Kors.notification n
 --from Kors.notification_test1 n

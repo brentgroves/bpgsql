@@ -1,11 +1,11 @@
--- myDW.Plex.Customer_Release_Due_WIP_Ready_Loaded definition
+-- mgdw.Plex.Customer_Release_Due_WIP_Ready_Loaded definition
 
 -- Drop table
 
--- DROP TABLE myDW.Plex.Customer_Release_Due_WIP_Ready_Loaded;
+-- DROP TABLE mgdw.Plex.Customer_Release_Due_WIP_Ready_Loaded;
 
 /*
-create table myDW.Plex.Customer_Release_Due_WIP_Ready_Loaded
+create table mgdw.Plex.Customer_Release_Due_WIP_Ready_Loaded
 (
 ID int,
 pcn int,

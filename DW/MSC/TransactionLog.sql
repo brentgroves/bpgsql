@@ -30,9 +30,16 @@ select i.location, '"' + i.item_no + '"' item_no, quantity
 
 end;
 
-
+-- TRUNCATE table MSC.TransactionLog 
 select tl.*
-from AlbSPS.TransactionLog tl  
+from MSC.TransactionLog tl 
+--where pcn = 300758 and vmid = 4 
+--where pcn = 300758 and vmid = 5 
+--where pcn = 300758 and vmid = 6 -- none
+where vmid = 310507 and vmid = 3
+where vmid = 306766 and vmid = 3
+where vmid = 306766 and vmid = 3
+
 /*
  select *
  into AlbSPS.TransactionLogNO
