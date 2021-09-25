@@ -1,7 +1,7 @@
 #Extended file properties defined by DbVisualizer
-#Thu Sep 23 16:52:24 EDT 2021
+#Thu Sep 23 18:21:50 EDT 2021
 file.comment=
-chart.category_column=transtartdatetime
+chart.category_column=shift
 monitor.frame_bounds=
 chart.yaxis_minor_grid_visible=false
 chart.xaxis_label_overlap=false

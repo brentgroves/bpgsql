@@ -1,3 +1,38 @@
+-- TRUNCATE table MSC.TransactionLog 
+select tl.*
+from MSC.TransactionLog tl 
+--where pcn = 300758 and vmid = 4 
+--where pcn = 300758 and vmid = 5 
+--where pcn = 300758 and vmid = 6 -- none
+--where pcn = 310507 and vmid = 3
+where pcn = 306766 and vmid = 3
+where pcn = 306766 and vmid = 3
+-- truncate table MSC.Restrictions2
+select * from MSC.Restrictions2
+--where pcn = 300758
+where pcn = 310507
+--where pcn = 306766
+where pcn = 306766
+-- truncate table mgdw.MSC.Jobs 
+select * from mgdw.MSC.Jobs 
+--where pcn = 300758
+where pcn = 310507
+where pcn = 306766
+where pcn = 306766
+
+--truncate table MSC.ItemSummary;
+select * from MSC.ItemSummary
+--select count(*) from MSC.ItemSummary
+--where pcn = 300758
+where pcn = 310507
+where pcn = 306766  -- 691
+where pcn = 306766
+-- truncate table Kors.recipient
+select * from Kors.recipient
+select * from SSIS.ScriptComplete
+--update SSIS.ScriptComplete set Done = 0
+-- EXECUTE sp_executesql N'update SSIS.ScriptComplete set Done = 1'
+
 -- 
 create PROCEDURE AlbSPS.GetTransactions  
 @PCN int = 300758,
@@ -30,15 +65,6 @@ select i.location, '"' + i.item_no + '"' item_no, quantity
 
 end;
 
--- TRUNCATE table MSC.TransactionLog 
-select tl.*
-from MSC.TransactionLog tl 
---where pcn = 300758 and vmid = 4 
---where pcn = 300758 and vmid = 5 
---where pcn = 300758 and vmid = 6 -- none
-where vmid = 310507 and vmid = 3
-where vmid = 306766 and vmid = 3
-where vmid = 306766 and vmid = 3
 
 /*
  select *
@@ -77,14 +103,14 @@ where id=1
  */
 select *
 --select count(*) cnt  -- 1389
-from myDW.AlbSPS.TransactionLog
+from MSC.TransactionLog
 /*
 
--- DROP TABLE mgdw.AlbSPS.TransactionLog;
+-- DROP TABLE MSC.TransactionLog;
 
-CREATE TABLE mgdw.AlbSPS.TransactionLog (
-	PCN int NULL,
-	tlid numeric(27,15) NULL,
+CREATE TABLE MSC.TransactionLog (
+	PCN int NOT NULL,
+	tlid numeric(27,15) NOT NULL,
 	VMID int NULL,
 	transtartdatetime datetime NULL,
 	TRANENDDATETIMe datetime NULL,
@@ -100,6 +126,7 @@ CREATE TABLE mgdw.AlbSPS.TransactionLog (
 	ITEMGROUP nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	ITEMALIASNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	SUPPLIERNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	SUPPLIERPARTNUMBER nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL
+	SUPPLIERPARTNUMBER nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	primary key(PCN,tlid)
 );
 */
