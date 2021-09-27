@@ -54,4 +54,18 @@ values
 (22,'Edon MSCItemSummary',0),
 (23,'Edon MSC Restrictions2',0),
 
+
+*/
+
+/*
+select * from SSIS.ScriptComplete where ID in (1,2,6,8) -- Albion MSC to DW Script ID  
+select * from SSIS.ScriptComplete where ID in (16,17,18,19) -- Avilla MSC to DW Script ID  
+select * from SSIS.ScriptComplete where ID in (20,21,22,23) -- Edon MSC to DW Script ID  
+
+update SSIS.ScriptComplete set Done = 0 where ID in (1,2,6,8)
+(1,'Albion MSCJobs',0),
+(2,'Albion MSCTransactionLog',0),
+(6,'Albion MSCItemSummary',0),
+(8,'Albion MSC Restrictions2',0),
+
 */

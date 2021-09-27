@@ -1,7 +1,7 @@
 -- select * from Kors.shift s 
-declare @PCN integer;
-set @PCN = 295932;
-DECLARE @R INT, @P VARCHAR(1000);
+declare @PCN integer
+set @PCN = 295932
+DECLARE @R INT, @P VARCHAR(1000)
 EXEC @R=Kors.shifts_get_rs @PCN
 --,@Destinations=@P OUT --OUT is short for OUTPUT, you can use either one
 SELECT @R

@@ -1,5 +1,5 @@
 #Extended file properties defined by DbVisualizer
-#Mon Sep 27 13:02:29 EDT 2021
+#Mon Sep 27 13:59:22 EDT 2021
 file.comment=
 monitor.frame_bounds=
 chart.category_column=shift
@@ -10,7 +10,7 @@ chart.line_width=2
 chart.yaxis_auto_start_value=true
 chart.yaxis_end_value=0.0
 chart.yaxis_major_grid_visible=true
-exec.connection=2
+exec.connection=1
 file.encoding=UTF-8
 chart.bg_top_color=\#ffffff
 chart.bar_type=Flat

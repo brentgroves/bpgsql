@@ -1,0 +1,7 @@
+#Extended file properties defined by DbVisualizer
+#Mon Sep 27 13:48:30 EDT 2021
+file.comment=
+exec.connection=1
+file.encoding=UTF-8
+exec.schema=dbo
+exec.catalog=mgdw
