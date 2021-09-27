@@ -102,6 +102,24 @@ FROM LOGIN [kors]
 WITH DEFAULT_SCHEMA=Kors;
 ALTER ROLE db_owner ADD MEMBER [kors];
 
+/****** Object:  Table [Kors].[notification]    Script Date: 9/27/2021 4:41:27 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [Kors].[notification](
+	[notification_key] [int] NULL,
+	[pcn] [int] NULL,
+	[notify_level] [tinyint] NULL,
+	[email_check] [tinyint] NULL,
+	[customer_employee_no] [varchar](50) NULL
+) ON [PRIMARY]
+select * from [Kors].[notification]
+GO
+
+
 
 
 
