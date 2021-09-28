@@ -1,3 +1,4 @@
+OBSELETE *** RENAMED TO PRP_Screen
 -- mgdw.Plex.Customer_Release_Due_WIP_Ready_Loaded definition
 
 -- Drop table

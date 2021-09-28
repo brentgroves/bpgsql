@@ -3,6 +3,7 @@
  */
 SELECT @@version
 select * from [ToolList PartNumbers] m 
+where processid = 62445
 where PartNumbers like  '%10115487%' 
 --PartNumbers like --'%2021282%'--'%2017710%'
 --where PartNumbers like '%5221%'  --52215T6N 
@@ -16,6 +17,9 @@ and partnumber like '%0924%'
 -- 51210T6N
 
 select * from [ToolList Master] m where processid in (63837,63269) --PartFamily like '%10115487%' and released = 1
+
+select * from [ToolList Master] m where PartFamily like '%DZ107549%' and released = 1  
+select * from [ToolList Master] m where PartFamily like '%R568546%' and released = 1  -- Check with Cliff
 select * from [ToolList Master] m where PartFamily like '%10024899%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%51211%' and released = 1
 select * from [ToolList Master] m where PartFamily like '%52211%' and released = 1
@@ -51,7 +55,8 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant9 (
 select * from TL_Plex_PN_Op_Map_Plant9 
 insert into TL_Plex_PN_Op_Map_Plant9 
 values
-(61866,63269,'10115487',2908637,8293437,'10115487','H','Machine A - WIP')  -- op 10
+(49138,62445,'DZ107549',2805121,7895835,'DZ107549','C','Final')
+--(61866,63269,'10115487',2908637,8293437,'10115487','H','Machine A - WIP')  -- op 10
 -- (40998,50025,'2021280',2795740,7873443,'2017707','J','Final')
 -- (41362,52964,'2021282',2795739,7873452,'2017710','J','Final')
 --(48661,62444,'DZ106753',2794224,7868688,'DZ106753','A','Final')

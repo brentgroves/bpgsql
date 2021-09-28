@@ -109,16 +109,22 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+-- mgsqlsrv has not been updated with the primary key yet
+-- may need to find another pk because of pcn of ceo
 CREATE TABLE [Kors].[notification](
-	[notification_key] [int] NULL,
-	[pcn] [int] NULL,
-	[notify_level] [tinyint] NULL,
-	[email_check] [tinyint] NULL,
-	[customer_employee_no] [varchar](50) NULL
-) ON [PRIMARY]
+	[notification_key] [int] not NULL,
+	[pcn] [int] not NULL,
+	[notify_level] [tinyint] not NULL,
+	[email_check] [tinyint] not NULL,
+	[customer_employee_no] [varchar](50) not NULL,
+	primary key (notification_key,pcn)
+)
 select * from [Kors].[notification]
+-- delete from [Kors].[notification] where notify_level = 5
+select count(*) from [Kors].[notification]  -- 50
 GO
 
+--CREATE TABLE notification (notification_key INT, pcn INT, notify_level TINYINT, email_check TINYINT, customer_employee_no VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS);
 
 
 

@@ -1,8 +1,8 @@
 #Extended file properties defined by DbVisualizer
-#Wed Sep 15 19:29:43 EDT 2021
+#Tue Sep 28 15:09:36 EDT 2021
 file.comment=
 monitor.frame_bounds=
-chart.category_column=Assembly_No
+chart.category_column=shift
 chart.yaxis_minor_grid_visible=false
 chart.xaxis_label_overlap=false
 chart.yaxis_number_format=\#,\#\#0.\#

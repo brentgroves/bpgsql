@@ -1,5 +1,5 @@
 #Extended file properties defined by DbVisualizer
-#Tue Sep 28 15:10:50 EDT 2021
+#Tue Sep 28 17:40:37 EDT 2021
 file.comment=
 monitor.frame_bounds=
 chart.category_column=shift
@@ -10,7 +10,7 @@ chart.line_width=2
 chart.yaxis_auto_start_value=true
 chart.yaxis_end_value=0.0
 chart.yaxis_major_grid_visible=true
-exec.connection=2
+exec.connection=0
 file.encoding=UTF-8
 chart.bg_top_color=\#ffffff
 chart.bar_type=Flat
@@ -30,7 +30,7 @@ chart.font=Liberation Sans-plain-15
 chart.xaxis_title_visible=true
 chart.bar_group_gap=4
 chart.pie_type=Flat
-exec.catalog=mgdw
+exec.catalog=busche toollist
 chart.bg_bottom_color=\#b4b4fa
 chart.line_type=Straight
 chart.yaxis_start_value=0.0
