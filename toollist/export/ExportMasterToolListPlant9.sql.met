@@ -1,8 +1,8 @@
 #Extended file properties defined by DbVisualizer
-#Tue Sep 28 17:43:29 EDT 2021
+#Tue Sep 28 18:05:33 EDT 2021
 file.comment=
-monitor.frame_bounds=
 chart.category_column=shift
+monitor.frame_bounds=
 chart.yaxis_minor_grid_visible=false
 chart.xaxis_label_overlap=false
 chart.yaxis_number_format=\#,\#\#0.\#
@@ -10,15 +10,15 @@ chart.line_width=2
 chart.yaxis_auto_start_value=true
 chart.yaxis_end_value=0.0
 chart.yaxis_major_grid_visible=true
-exec.connection=0
 chart.serie.0.name=ProcessID
+exec.connection=0
 file.encoding=UTF-8
-chart.bg_top_color=\#ffffff
 chart.bar_type=Flat
+chart.bg_top_color=\#ffffff
 chart.xaxis_date_as_text=true
 chart.serie.0.visible=true
-monitor.default_view=Grid
 chart.xaxis_title=
+monitor.default_view=Grid
 chart.yaxis_auto_end_value=true
 chart.serie.0.label=ProcessID
 chart.bar_gap=2
@@ -28,9 +28,9 @@ chart.pie_label_type=Line Labels
 chart.series_shadow_visible=true
 exec.schema=dbo
 chart.line_points_visible=true
+chart.xaxis_title_visible=true
 chart.title=
 chart.font=Liberation Sans-plain-15
-chart.xaxis_title_visible=true
 chart.bar_group_gap=4
 chart.pie_type=Flat
 exec.catalog=busche toollist

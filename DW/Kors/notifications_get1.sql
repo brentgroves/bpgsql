@@ -159,14 +159,14 @@ set @cur_time = '06:00:01'
 --set @cur_time = '13:59:59'
 --set @cur_time = '06:00:00'
 
-DECLARE @R INT;
-declare @cur_time time;
-declare @dbg_time time;
-declare @Dest varchar(1000);
-declare @Lvl integer;
+DECLARE @R INT
+declare @cur_time time
+declare @dbg_time time
+declare @Dest varchar(1000)
+declare @Lvl integer
 set @Lvl = 4
-declare @PCN integer;
-set @PCN = 295932;
+declare @PCN integer
+set @PCN = 295932
 set @cur_time = '06:00:01'
 --set @cur_time = '06:00:00'
 --set @cur_time = '05:59:59'
@@ -180,9 +180,12 @@ set @cur_time = '06:00:01'
 --set @cur_time = '06:00:00'
 
 --select getdate() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
---exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl
-exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl,@dbg_time=@cur_time; --, @cur_time
+exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl
+--exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl,@dbg_time=@cur_time; --, @cur_time
 select @R,@Dest,@dbg_time;
+-- 2604380796@vtext.com
+SELECT * FROM Kors.notification
+select * from Kors.recipient where customer_employee_no = 054109
 
 --select * from Kors.notification
 -- select * from Kors.recipient

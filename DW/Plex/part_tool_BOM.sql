@@ -12,9 +12,9 @@
 
 -- DROP TABLE mgdw.Plex.part_tool_BOM;
 
-CREATE TABLE mgdw.Plex.part_tool_BOM (
+CREATE TABLE Plex.part_tool_BOM (
 	id int NOT NULL,
-	pcn int NULL,
+	pcn int NOT NULL,
 	part_key int NULL,
 	part_no varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	revision varchar(8) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -37,14 +37,18 @@ CREATE TABLE mgdw.Plex.part_tool_BOM (
 	standard_tool_life int NULL,
 	rework_tool_life int NULL,
 	Quantity_Required int NULL,
-	--PRIMARY KEY (id)
+	PRIMARY KEY (id,pcn)
 );
 */
 --truncate table Plex.part_tool_BOM
-
---select count(*) from Plex.part_tool_BOM  -- 1548
+select count(*) from Plex.part_tool_BOM  -- 1639, 1548
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
+--where pcn = 300758  -- Albion 1639
+--where pcn = 310507  -- Avilla 1291
+--where pcn = 306766 -- Edon 1818
 
+select * from SSIS.ScriptComplete
+--update SSIS.ScriptComplete set Done = 0
 --select id,pcn from Plex.part_tool_BOM where pcn != 300758  -- 779
 
 
@@ -55,4 +59,4 @@ where b.part_no = 'R568616'
 and b.tool_no not like '%[A-Z-]%'  --17558
 and b.tool_no in ('16845','17292','17137')
 
-select * from AlbSPS.ItemSummary is2 
+select * from MSC.ItemSummary is2 

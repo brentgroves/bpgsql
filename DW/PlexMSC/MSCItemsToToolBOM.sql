@@ -50,6 +50,7 @@ where i.ITEMNUMBER is null
 
 
 /*
+select * from Plex.part_tool_BOM
 select i.itemnumber from AlbSPS.ItemSummary i where itemnumber like '%1651%'  -- '16516'
 select * 
 from AlbSPS.ItemSummary i 
