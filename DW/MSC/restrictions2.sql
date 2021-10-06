@@ -12,7 +12,12 @@ CREATE TABLE MSC.Restrictions2 (
 */
 -- truncate table MSC.Restrictions2
 select * from MSC.Restrictions2
-
+--where pcn = 300758 and vmid = 4 
+--where pcn = 300758 and vmid = 5 
+--where pcn = 300758 and vmid = 6 -- none
+where pcn = 310507 and vmid = 3
+--where pcn = 306766 and vmid = 3
+where pcn = 306766 and vmid = 3
 --truncate table MSC.ItemSummary;
 select * from MSC.ItemSummary
 -- truncate table Kors.recipient

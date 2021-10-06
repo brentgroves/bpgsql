@@ -6,7 +6,7 @@
 
 /*
 -- create schema Plex
--- drop table Plex.PrpScreen
+-- drop table Plex.PRP_Screen
 create table Plex.PRP_Screen
 (
 ID int,
@@ -24,10 +24,14 @@ qty_wip int,
 qty_ready int,
 qty_loaded int,
 qty_ready_or_loaded int,
-primary key(ID,PCN)
+primary key(ID,PCN,building_key)
 )
+CREATE TABLE PrpScreen (ID INT NOT NULL, pcn INT NOT NULL, building_key INT, building_code VARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS, part_key INT, 
+part_no VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS, name VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS, qty_rel INT, qty_shipped INT, qty_due INT, 
+past_due INT, qty_wip INT, qty_ready INT, qty_loaded INT, qty_ready_or_loaded INT, PRIMARY KEY (ID, pcn));
+
 */
--- truncate table Plex.PrpScreen
+-- truncate table Plex.PRP_Screen
 select count(*) from Plex.PRP_Screen -- 46
 select * from Plex.PRP_Screen order by qty_rel desc
 

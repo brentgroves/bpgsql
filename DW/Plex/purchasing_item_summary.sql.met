@@ -1,8 +1,8 @@
 #Extended file properties defined by DbVisualizer
-#Thu Sep 30 15:55:49 EDT 2021
+#Tue Oct 05 16:59:28 EDT 2021
 file.comment=
 monitor.frame_bounds=
-chart.category_column=shift
+chart.category_column=transtartdatetime
 chart.yaxis_minor_grid_visible=false
 chart.xaxis_label_overlap=false
 chart.yaxis_number_format=\#,\#\#0.\#
@@ -11,16 +11,13 @@ chart.yaxis_auto_start_value=true
 chart.yaxis_end_value=0.0
 chart.yaxis_major_grid_visible=true
 exec.connection=2
-chart.serie.0.name=1 N/A
 file.encoding=UTF-8
 chart.bg_top_color=\#ffffff
 chart.bar_type=Flat
 chart.xaxis_date_as_text=true
-chart.serie.0.visible=true
 monitor.default_view=Grid
 chart.xaxis_title=
 chart.yaxis_auto_end_value=true
-chart.serie.0.label=1 N/A
 chart.bar_gap=2
 chart.xaxis_rotate=45
 chart.line_point_labels_visible=false

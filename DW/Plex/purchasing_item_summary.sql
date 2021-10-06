@@ -32,7 +32,7 @@ from Plex.purchasing_item_summary  -- 975
 where storage_location = 'Tool Boss'  -- 496
 )s 496
 
-
+--truncate table Plex.purchasing_item_summary
 select count(*) from Plex.purchasing_item_summary  -- 975,1865,2174
 --where pcn = 300758  -- Albion 1639
 --where pcn = 310507  -- Avilla 1291

@@ -41,9 +41,10 @@ CREATE TABLE Plex.part_tool_BOM (
 );
 */
 --truncate table Plex.part_tool_BOM
+-- delete from Plex.part_tool_BOM where pcn = 300758
 select count(*) from Plex.part_tool_BOM  -- 1639, 1548
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
---where pcn = 300758  -- Albion 1639
+where pcn = 300758  -- Albion 1639
 --where pcn = 310507  -- Avilla 1291
 --where pcn = 306766 -- Edon 1818
 

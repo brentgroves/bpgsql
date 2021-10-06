@@ -184,8 +184,9 @@ exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl
 --exec @R=Kors.notifications_get_rs @PCN,@Level=@Lvl,@dbg_time=@cur_time; --, @cur_time
 select @R,@Dest,@dbg_time;
 -- 2604380796@vtext.com
-SELECT * FROM Kors.notification
-select * from Kors.recipient where customer_employee_no = 054109
+SELECT * FROM Kors.notification -- 50
+select * from Kors.recipient -- 35
+where customer_employee_no = 054109
 
 --select * from Kors.notification
 -- select * from Kors.recipient

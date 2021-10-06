@@ -3,13 +3,13 @@
 
 -- Drop table
 
--- DROP TABLE mgdw.AlbSPS.ItemSummary;
--- TRUNCATE TABLE mgdw.AlbSPS.ItemSummary;
+-- DROP TABLE MSC.ItemSummary;
+-- TRUNCATE TABLE MSC.ItemSummary;
 /*
-CREATE TABLE mgdw.AlbSPS.ItemSummary (
-	pcn int NULL,
-	VMID int NULL,
-	ITEMNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+CREATE TABLE MSC.ItemSummary (
+	pcn int not NULL,
+	VMID int not NULL,
+	ITEMNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	DESCR nvarchar(255) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	ITEMALIASNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	SUPPLIERNUMBER nvarchar(32) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -20,12 +20,19 @@ CREATE TABLE mgdw.AlbSPS.ItemSummary (
 	locationexist int NULL,
 	UNITCOST numeric(12,4) NULL,
 	datecreated datetime NULL,
-	DATELASTMODIFIED datetime NULL
+	DATELASTMODIFIED datetime NULL,
+	primary key (pcn,VMID,ITEMNUMBER)
 );
 
 */
 --truncate table MSC.ItemSummary;
 select * from MSC.ItemSummary
+--where pcn = 300758 and vmid = 4 -- plant 6
+-- where pcn = 300758 and vmid = 5 -- plant 8
+-- where pcn = 300758 and vmid = 6 -- plant 9 
+--where pcn = 310507 and vmid = 3
+where pcn = 306766 and vmid = 3
+
 -- truncate table Kors.recipient
 select * from Kors.recipient
 select * from SSIS.ScriptComplete

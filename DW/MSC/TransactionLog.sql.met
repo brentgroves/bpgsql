@@ -1,5 +1,5 @@
 #Extended file properties defined by DbVisualizer
-#Sat Sep 25 18:46:25 EDT 2021
+#Mon Oct 04 19:18:13 EDT 2021
 file.comment=
 monitor.frame_bounds=
 chart.category_column=transtartdatetime
@@ -10,7 +10,7 @@ chart.line_width=2
 chart.yaxis_auto_start_value=true
 chart.yaxis_end_value=0.0
 chart.yaxis_major_grid_visible=true
-exec.connection=1
+exec.connection=2
 chart.serie.0.name=PCN
 file.encoding=UTF-8
 chart.bg_top_color=\#ffffff
