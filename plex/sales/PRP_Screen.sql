@@ -46,6 +46,25 @@ select CAST(''' + @By_Due_Date + ''' AS datetime)
 select convert(datetime, @By_Due_Date, 112);
 
 */
+/*
+create PCN table from param
+*/
+create table #list
+(
+ tuple int
+)
+declare @delimiter varchar(1)
+set @delimiter = ','
+declare @in_string varchar(max)
+set @in_string = @PCNList
+WHILE LEN(@in_string) > 0
+BEGIN
+    INSERT INTO #list
+    SELECT cast(left(@in_string, charindex(@delimiter, @in_string+',') -1) as int) as tuple
+
+    SET @in_string = stuff(@in_string, 1, charindex(@delimiter, @in_string + @delimiter), '')
+end
+-- select tuple from #list
 
 -- reduce part set
 create table #part
@@ -70,53 +89,51 @@ and p.building_key=b.building_key
 where 
 p.part_status='Production'
 and p.part_type <> 'Raw Material'
-and p.plexus_customer_no = @PCN
+and p.plexus_customer_no in
+(
+ select tuple from #list
+)
 and p.building_key <> 5642  -- plant 3 albion
 )
 
 
 
--- select * from #part  -- 114
+--select count(*) parts from #part  -- 114 1 PCN, 340 3 PCN
 /*
 Reduce huge set of containers
 */
 -- reduce container set
-create table #containers
-(
-pcn int not null,
-part_key int not null,
-building_key int not null,
-building_code varchar(50) not null
-)
-      select c.plexus_customer_no pcn,
-      c.container_key,
-      c.part_key
-      into #container
-      --select count(*)
-      from part_v_container_e AS c  -- 6,766,306
-  --    where c.active = 1 
-  --    and c.part_key = 0 -- 0
-  --    and c.part_key is null -- 0
+select c.plexus_customer_no pcn,
+c.container_key,
+c.part_key
+into #container
+--select count(*)
+from part_v_container_e AS c  -- 6,766,306
+--    where c.active = 1 
+--    and c.part_key = 0 -- 0
+--    and c.part_key is null -- 0
 --      where c.plexus_customer_no = @PCN -- 924,683
-      inner join #part ps 
-      on c.plexus_customer_no = ps.pcn
-      and c.part_key=ps.part_key 
-      left outer join common_v_location_e l  -- 1 to 1
-      on c.location=l.location
-      and c.plexus_customer_no=l.plexus_customer_no   
-      left outer join part_v_container_status_e AS cs -- 1 to 1
-      on c.container_status = cs.container_status
-      and c.plexus_customer_no=cs.plexus_customer_no
-      -- container filter
-      where c.active = 1
-      and (((cs.allow_ship = 1) and (l.location not like '%Hold%'))  
-          or ((cs.allow_ship = 0) and (c.container_status ='Rework')))  -- this is the only filter that I found that gives the same results as the prp screen
-      and c.quantity > 0   -- 	14,494 Without being joined to #part, 1141 with being joined to #part, 1.6 secs for 1 PCN
-      
+inner join #part ps 
+on c.plexus_customer_no = ps.pcn
+and c.part_key=ps.part_key 
+left outer join common_v_location_e l  -- 1 to 1
+on c.location=l.location
+and c.plexus_customer_no=l.plexus_customer_no   
+left outer join part_v_container_status_e AS cs -- 1 to 1
+on c.container_status = cs.container_status
+and c.plexus_customer_no=cs.plexus_customer_no
+-- container filter
+where c.active = 1
+and (((cs.allow_ship = 1) and (l.location not like '%Hold%'))  
+    or ((cs.allow_ship = 0) and (c.container_status ='Rework')))  -- this is the only filter that I found that gives the same results as the prp screen
+and c.quantity > 0   -- 	14,494 Without being joined to #part, 1141 with being joined to #part, 1.6 secs for 1 PCN
+
+--select count(*) containers from #container    -- 3 PCN = 2361  
 
 /*
 reduce huge sales release set
 */
+
 select 
 sr.pcn,
 sr.release_key
@@ -137,7 +154,61 @@ and pl.part_key=sp.part_key
 where rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
 -- does not include Canceled, Hold,Closed
 and due_date < CONVERT(datetime, @By_Due_Date) --193
-and sr.pcn = @PCN
+--and sr.pcn = @PCN
+
+--select count(*) releases from #release  -- 3 PCN = 424 
+
+
+create table #sales_release_part
+(
+  pcn int,
+  part_key int,
+  quantity decimal, 
+  quantity_shipped int,
+  past_due int
+)
+
+
+insert into #sales_release_part (
+pcn,
+part_key,
+quantity,quantity_shipped,past_due)
+select 
+sr.pcn,
+pl.part_key,
+quantity,
+quantity_shipped,
+case 
+when getdate() > sr.due_date then sr.quantity - sr.quantity_shipped
+else 0
+end past_due
+from #release r  --  reduced release set
+inner join sales_v_release_e sr -- 1,175,205
+on r.pcn=sr.pcn
+and r.release_key=sr.release_key
+--from sales_v_release_e sr
+inner join sales_v_po_line_e pl --1 to 1
+on sr.pcn = pl.pcn
+and sr.po_line_key=pl.po_line_key 
+--inner join sales_v_po_e po  -- 1 to 1
+--on pl.pcn = po.pcn
+--and pl.po_key=po.po_key  
+--inner join sales_v_release_status_e rs  -- 1 to 1
+--on sr.pcn = rs.pcn
+--and sr.release_status_key=rs.release_status_key  
+--inner join #part sp
+--on pl.pcn = sp.pcn
+--and pl.part_key=sp.part_key
+
+--select count(*) sales_release_part from #sales_release_part
+
+
+select rp.pcn,rp.part_key,sum(rp.quantity) qty_rel, sum(rp.quantity_shipped) qty_shipped, sum(rp.quantity - rp.quantity_shipped) qty_due, sum(rp.past_due) past_due
+into #sales_release_due
+from #sales_release_part rp -- 34
+group by rp.pcn,rp.part_key
+--//7/11/2021 12:00:00 AM 
+--select count(*) sales_release_due from #sales_release_due
 
 --//////////////////////////////////////////////////////////////////////
 -- Potential Problems:
@@ -261,7 +332,8 @@ insert into #part_container (
           and jo2.op_no > jo.op_no  -- INTERESTING --- Only job ops > containers job op
           and ( (cs.test_material = 1 and ISNULL(pot.test,0) = 1)  --(test_material && !test) 
                 or (cs.test_material = 0 and ISNULL(pot.standard,1) = 1)) --Not test_material && standard operation type
-          and jo2.pcn = @PCN      
+          and jo2.pcn = c.plexus_customer_no     
+--          and jo2.pcn = @PCN      
         order by
           jo2.op_no
       ) next_job_op,
@@ -281,12 +353,14 @@ insert into #part_container (
               where po2.part_key = c.part_key 
                 and po2.part_operation_key = c.part_operation_key 
                 and po2.active = 1  -- there can be only active part_operation_key record for a part operation number
-                and po2.plexus_customer_no = @PCN
+                and po2.plexus_customer_no = c.plexus_customer_no
+--                and po2.plexus_customer_no = @PCN
             )
           and po.active = 1  -- I don't think this is necessary?
           and (pot.[Standard] = 1 OR pot.test = 1)  -- What is the brackets for?  Could we have put this in the inner select abov
           and po.suboperation = 0
-          and po.plexus_customer_no = @PCN          
+          and po.plexus_customer_no = c.plexus_customer_no          
+--          and po.plexus_customer_no = @PCN          
         order by
           po.operation_no asc 
       ) as next_operation,
@@ -312,6 +386,8 @@ insert into #part_container (
       ON c.material_key=m.material_key 
       and c.plexus_customer_no=m.plexus_customer_no      
     )s1
+    
+--select count(*) part_containers from #part_container    -- 3 PCN = 236`
 /*
 This is the set of containers that we assume that we can ship and has the same values as
 the PRP screen; although the PRP screen does not distinguish between ready and loaded containers.
@@ -392,70 +468,10 @@ insert into #part_wip_ready_loaded (pcn,part_key,qty_wip,wip_containers,qty_read
   group by pc.pcn,pc.part_key 
 )
 
+--select count(*) part_wip_ready_loaded from #part_wip_ready_loaded
 --select r.pcn,r.part_key,qty_wip,qty_ready,qty_loaded from #part_wip_ready_loaded r 
 
-/*
---///////////////////////////////////////////////////////////////////////////
--- All active sales releases for the building before the due date parameter. 
-does some mobex part keys map to multiple customer_part_keys?
-Even if they do the purpose of this SPROC is determine tooling totals 
-which are based on tool lists that are based on Mobex part numbers
-so do not group releases by customer part key.
--- Trying to duplicate the PRP screen in this SPROC as far as Inv WIP and Inv FG go
--- For customer release we are showing sales release marked as active
-and rs.active = 1  --Open,Staged,Scheduled,Open - Scheduled
--- does not include Canceled, Hold,Closed
-The PRP screen has a Scheduled column which brings up a job screen
-I don't know if I should add scheduled jobs which have no active sales releases
-in this SPROC?  Currently I am not including scheduled job quanties but only
-active sales release due quantities.
---//////////////////////////////////////////////////////////////////////////
-*/
-create table #sales_release_part
-(
-  pcn int,
-  part_key int,
-  quantity decimal, 
-  quantity_shipped int,
-  past_due int
-)
 
-
-insert into #sales_release_part (
-pcn,
-part_key,
-quantity,quantity_shipped,past_due)
-select 
-sr.pcn,
-pl.part_key,
-quantity,
-quantity_shipped,
-case 
-when getdate() > sr.due_date then sr.quantity - sr.quantity_shipped
-else 0
-end past_due
-from #release r  --  reduced release set
-inner join sales_v_release_e sr -- 1,175,205
-on r.pcn=sr.pcn
-and r.release_key=sr.release_key
-inner join sales_v_po_line_e pl --1 to 1
-on sr.pcn = pl.pcn
-and sr.po_line_key=pl.po_line_key 
-inner join sales_v_po_e po  -- 1 to 1
-on pl.pcn = po.pcn
-and pl.po_key=po.po_key  
-inner join sales_v_release_status_e rs  -- 1 to 1
-on sr.pcn = rs.pcn
-and sr.release_status_key=rs.release_status_key  
-inner join #part sp
-on pl.pcn = sp.pcn
-and pl.part_key=sp.part_key
-
-select rp.pcn,rp.part_key,sum(rp.quantity) qty_rel, sum(rp.quantity_shipped) qty_shipped, sum(rp.quantity - rp.quantity_shipped) qty_due, sum(rp.past_due) past_due
-into #sales_release_due
-from #sales_release_part rp -- 34
-group by rp.pcn,rp.part_key
---//7/11/2021 12:00:00 AM 
 
 create table #Customer_Release_Due_WIP_Ready_Loaded
 (
@@ -497,7 +513,7 @@ case
 when wr.pcn is null then 0
 else wr.qty_ready+wr.qty_loaded 
 end qty_ready_or_loaded
-from #part pb
+from #part pb  -- 340
 inner join part_v_part_e p 
 on pb.pcn=p.plexus_customer_no
 and pb.part_key=p.part_key
@@ -513,9 +529,8 @@ and pb.part_key=rd.part_key
 where (wr.pcn is not null) or (rd.pcn is not null)
 -- select * from common_v_building
 select * from #Customer_Release_Due_WIP_Ready_Loaded si
-where name not like '%K Body%'
-and name not like '%Hone%'
-
-and si.building_key = 5641
+--where name not like '%K Body%'
+--and name not like '%Hone%'
+--and si.building_key = 5641
 --where part_no like  '%10115487%'
-order by si.pcn,si.building_code,si.qty_due desc
+order by si.pcn,si.building_code,si.qty_due desc, si.name

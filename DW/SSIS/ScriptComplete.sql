@@ -1,4 +1,7 @@
 -- update ssis.ScriptComplete set done=1 where id=1
+-- update ssis.ScriptComplete set done=1 where id in (7,24,25)
+--update ssis.ScriptComplete set done=0 where id in (7,24,25)
+
 -- update ssis.ScriptComplete set done=0
 -- create schema ssis;
 select * from ssis.ScriptComplete
@@ -27,11 +30,12 @@ select * from ssis.ScriptComplete
 2	295932 Fruit Port
 
 /*
+truncate table ssis.ScriptComplete
 INSERT into ssis.ScriptComplete (ID,Description,Done)
 values
 (1,'Albion MSCJobs',0),
 (2,'Albion MSCTransactionLog',0),
-(3,'PRP Screen',0),
+(3,'Albion PRP Screen',0),
 (4,'part_op_with_tool_list',0),
 (5,'part_tool_assembly',0),
 (6,'Albion MSCItemSummary',0),
@@ -55,9 +59,18 @@ values
 (24,'Avilla part_tool_BOM',0),
 (25,'Edon part_tool_BOM',0),
 (26,'Avilla purchasing_item_summary',0),
-(27,'Edon purchasing_item_summary',0)
+(27,'Edon purchasing_item_summary',0),
+(28,'Avilla PRP Screen',0),
+(29,'Edon PRP Screen',0),
+(30,'Alabama PRP Screen',0),
+(31,'Alabama part_tool_BOM',0),
+(32,'Alabama purchasing_item_summary',0),
 
-
+Plex pipelines
+update SSIS.ScriptComplete set Done = 0 where ID in (13,14,3,7,24,25,9,26,27,28,29,30)
+(3,28,29,30) -- PRP screen
+(7,24,25,31) -- Tool_BOM
+(9,26,27,32) -- PurchasingItemSummary
 */
 
 /*

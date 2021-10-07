@@ -55,22 +55,26 @@ where customer_employee_no = 054109
 -- truncate table Plex.PRP_Screen
 select count(*) from Plex.PRP_Screen -- 46,133
 select * from Plex.PRP_Screen 
---where pcn = 300758  -- Albion 1639
---where pcn = 310507  -- Avilla 1291
-where pcn = 306766 -- Edon 1818
+where pcn = 300758  -- Albion 136
+--where pcn = 300757  -- Alabama 120
+--where pcn = 310507  -- Avilla 15
+--where pcn = 306766 -- Edon 65
+
 
 --truncate table Plex.purchasing_item_summary
 select count(*) from Plex.purchasing_item_summary  -- 975,1865,2174
---where pcn = 300758  -- Albion 1639
---where pcn = 310507  -- Avilla 1291
---where pcn = 306766 -- Edon 1818
+--where pcn = 300758  -- Albion 1255
+--where pcn = 300757  -- Alabama 1152
+--where pcn = 310507  -- Avilla 611
+--where pcn = 306766 -- Edon 309
 
 --truncate table Plex.part_tool_BOM
 select count(*) from Plex.part_tool_BOM  -- 1639, 1548
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
 --where pcn = 300758  -- Albion 1639
+--where pcn = 300757  -- Alabama 4844
 --where pcn = 310507  -- Avilla 1291
---where pcn = 306766 -- Edon 1818
+where pcn = 306766 -- Edon 2010
 
 select * from SSIS.ScriptComplete
 --update SSIS.ScriptComplete set Done = 0
@@ -84,11 +88,12 @@ select * from SSIS.ScriptComplete
 -- select * from SSIS.ScriptComplete where ID in (20,21,22,23) -- Edon MSC
 -- -- update SSIS.ScriptComplete set Done = 0 where ID in (20,21,22,23) -- Edon MSC
 /*
+truncate table ssis.ScriptComplete
 INSERT into ssis.ScriptComplete (ID,Description,Done)
 values
 (1,'Albion MSCJobs',0),
 (2,'Albion MSCTransactionLog',0),
-(3,'PRP Screen',0),
+(3,'Albion PRP Screen',0),
 (4,'part_op_with_tool_list',0),
 (5,'part_tool_assembly',0),
 (6,'Albion MSCItemSummary',0),
@@ -112,7 +117,18 @@ values
 (24,'Avilla part_tool_BOM',0),
 (25,'Edon part_tool_BOM',0),
 (26,'Avilla purchasing_item_summary',0),
-(27,'Edon purchasing_item_summary',0)
+(27,'Edon purchasing_item_summary',0),
+(28,'Avilla PRP Screen',0),
+(29,'Edon PRP Screen',0),
+(30,'Alabama PRP Screen',0),
+(31,'Alabama part_tool_BOM',0),
+(32,'Alabama purchasing_item_summary',0),
 
-
+Plex pipelines
+update SSIS.ScriptComplete set Done = 0 where ID in (13,14,3,7,24,25,9,26,27,28,29,30)
+(3,28,29,30) -- PRP screen
+(7,24,25,31) -- Tool_BOM
+(9,26,27,32) -- PurchasingItemSummary
 */
+
+
