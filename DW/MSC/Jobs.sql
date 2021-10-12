@@ -24,6 +24,8 @@ VMID in (3,4) both have the same jobs
 
 select * from MSC.jobs where pcn = 300758 --jobnumber in ()= '-'
 -- delete from MSC.jobs where pcn = 300758
+-- select * from MSC.Jobs where vmid = 6 descr like '%JD%'
+-- 7868688
 -- truncate table mgdw.MSC.Jobs 
 select * from MSC.Jobs 
 --where pcn = 300758 and vmid = 4 -- plant 6

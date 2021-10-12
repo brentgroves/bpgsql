@@ -106,7 +106,7 @@ order by tc.totalcost desc
 
 
 
-select * from albsps.import
+select * from MSC.import
 /*
 update albsps.import
 set LastSuccess='2021-04-27 00:00:00'

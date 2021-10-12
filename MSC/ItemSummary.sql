@@ -1,7 +1,10 @@
 /* summary query */
 select * from jobs where JOBNUMBER like '788%'-- descr like '%141%'
+select * from items where itemnumber
 select * from items
-where ITEMNUMBER in 
+where ITEMNUMBER like '%166%' -- 16649
+16691
+16691
 ('485','500','1047','2020','2021','2022','2144','2563','2566','2573','2592','3024','3084','3144','3178','3179','3180','3683','5187','5188','7157','8488')
 order by itemnumber
 /* not in VM

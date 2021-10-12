@@ -27,7 +27,11 @@ declare @cur_time time
 declare @dbg_time time
 declare @Dest varchar(1000)
 declare @Lvl integer
-set @Lvl = 3
+--set @Lvl = 1
+--set @Lvl = 2
+--set @Lvl = 3
+set @Lvl = 4
+--set @Lvl = 5
 declare @PCN integer
 set @PCN = 295932
 set @cur_time = '06:00:01'
@@ -55,31 +59,53 @@ where customer_employee_no = 054109
 -- truncate table Plex.PRP_Screen
 select count(*) from Plex.PRP_Screen -- 46,133
 select * from Plex.PRP_Screen 
-where pcn = 300758  -- Albion 136
+--where pcn = 300758  -- Albion 136
 --where pcn = 300757  -- Alabama 120
 --where pcn = 310507  -- Avilla 15
---where pcn = 306766 -- Edon 65
+where pcn = 306766 -- Edon 65
 
 
 --truncate table Plex.purchasing_item_summary
 select count(*) from Plex.purchasing_item_summary  -- 975,1865,2174
---where pcn = 300758  -- Albion 1255
---where pcn = 300757  -- Alabama 1152
---where pcn = 310507  -- Avilla 611
---where pcn = 306766 -- Edon 309
+where pcn = 300758  -- Albion 1255
+where pcn = 300757  -- Alabama 1152
+where pcn = 310507  -- Avilla 611
+where pcn = 306766 -- Edon 309
 
 --truncate table Plex.part_tool_BOM
 select count(*) from Plex.part_tool_BOM  -- 1639, 1548
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
---where pcn = 300758  -- Albion 1639
---where pcn = 300757  -- Alabama 4844
+where pcn = 300758  -- Albion 1639
+where pcn = 300757  -- Alabama 4844
+where pcn = 310507  -- Avilla 1291
+--where pcn = 306766 -- Edon 2010
+
+select * from Plex.campfire_extract
+--where pcn = 123681 -- Southfield  29
+--where pcn = 300758  -- Albion 51
+--where pcn = 300757  -- Alabama 38
+--where pcn = 310507  -- Avilla 6
+--where pcn = 306766 -- Edon 29
+--where pcn = 295932 -- Fruitport 89
+select count(*) from Plex.campfire_extract  -- 1639, 2930
+--where pcn = 123681 -- Southfield  29
+--where pcn = 300758  -- Albion 51
+--where pcn = 300757  -- Alabama 38
+--where pcn = 310507  -- Avilla 6
+--where pcn = 306766 -- Edon 29
+--where pcn = 295932 -- Fruitport 89
+
+
+
+--select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
+where pcn = 300758  -- Albion 1639
 --where pcn = 310507  -- Avilla 1291
-where pcn = 306766 -- Edon 2010
+--where pcn = 306766 -- Edon 1818
 
 select * from SSIS.ScriptComplete
 --update SSIS.ScriptComplete set Done = 0
 
---select * from SSIS.ScriptComplete where ID in (13,14,3,7,24,25,9,26,27)
+--select * from SSIS.ScriptComplete where ID in (13,14,3,7,24,25,9,26,27)  -- Plex
 --update SSIS.ScriptComplete set Done = 0 where ID in (13,14,3,7,24,25,9,26,27)
 -- select * from SSIS.ScriptComplete where ID in (1,2,6,8) -- Albion MSC
 --update SSIS.ScriptComplete set Done = 0 where ID in (1,2,6,8)  -- Albion MSC
@@ -87,6 +113,9 @@ select * from SSIS.ScriptComplete
 -- update SSIS.ScriptComplete set Done = 0 where ID in (16,17,18,19) -- Avilla MSC
 -- select * from SSIS.ScriptComplete where ID in (20,21,22,23) -- Edon MSC
 -- -- update SSIS.ScriptComplete set Done = 0 where ID in (20,21,22,23) -- Edon MSC
+-- select * from SSIS.Scriptcomplete where id in (33,34,35,36,37,38)
+
+
 /*
 truncate table ssis.ScriptComplete
 INSERT into ssis.ScriptComplete (ID,Description,Done)
@@ -123,12 +152,20 @@ values
 (30,'Alabama PRP Screen',0),
 (31,'Alabama part_tool_BOM',0),
 (32,'Alabama purchasing_item_summary',0),
+(33,'Southfield CampfireExtract',0),
+(34,'Albion CampfireExtract',0),
+(35,'Avilla CampfireExtract',0),
+(36,'Edon CampfireExtract',0),
+(37,'Alabama CampfireExtract',0),
+(38,'Fruitport CampfireExtract',0)
 
 Plex pipelines
-update SSIS.ScriptComplete set Done = 0 where ID in (13,14,3,7,24,25,9,26,27,28,29,30)
+update SSIS.ScriptComplete set Done = 0 where ID in (3,28,29,30,7,24,25,31,9,26,27,32,33,34,35,36,37,38)
 (3,28,29,30) -- PRP screen
 (7,24,25,31) -- Tool_BOM
 (9,26,27,32) -- PurchasingItemSummary
+(13,14)
+select * from SSIS.Scriptcomplete where id in (33,34,35,36,37,38)
 */
 
 

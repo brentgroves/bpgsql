@@ -65,12 +65,21 @@ values
 (30,'Alabama PRP Screen',0),
 (31,'Alabama part_tool_BOM',0),
 (32,'Alabama purchasing_item_summary',0),
+(33,'Southfield CampfireExtract',0),
+(34,'Albion CampfireExtract',0),
+(35,'Avilla CampfireExtract',0),
+(36,'Edon CampfireExtract',0),
+(37,'Alabama CampfireExtract',0),
+(38,'Fruitport CampfireExtract',0),
+
+MSC pipelines
 
 Plex pipelines
-update SSIS.ScriptComplete set Done = 0 where ID in (13,14,3,7,24,25,9,26,27,28,29,30)
+update SSIS.ScriptComplete set Done = 0 where ID in (3,28,29,30,7,24,25,31,9,26,27,32)
 (3,28,29,30) -- PRP screen
 (7,24,25,31) -- Tool_BOM
 (9,26,27,32) -- PurchasingItemSummary
+(13,14)
 */
 
 /*

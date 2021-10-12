@@ -3,7 +3,7 @@
  */
 SELECT @@version
 select * from [ToolList PartNumbers] m 
-where processid = 62445
+where processid = 62480
 where PartNumbers like  '%10115487%' 
 --PartNumbers like --'%2021282%'--'%2017710%'
 --where PartNumbers like '%5221%'  --52215T6N 
@@ -18,6 +18,7 @@ and partnumber like '%0924%'
 
 select * from [ToolList Master] m where processid in (63837,63269) --PartFamily like '%10115487%' and released = 1
 
+select * from [ToolList Master] m where PartFamily like '%R568546%'
 select * from [ToolList Master] m where PartFamily like '%DZ107549%' and released = 1  
 select * from [ToolList Master] m where PartFamily like '%R568546%' and released = 1  -- Check with Cliff
 select * from [ToolList Master] m where PartFamily like '%10024899%' and released = 1
@@ -30,7 +31,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%31X%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 63269 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 62480 63269 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 
 
@@ -55,7 +56,11 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant9 (
 select * from TL_Plex_PN_Op_Map_Plant9 
 insert into TL_Plex_PN_Op_Map_Plant9 
 values
-(49138,62445,'DZ107549',2805121,7895835,'DZ107549','C','Final')
+(56626,62480,'R568546',2812672,7933023,'R568546','B','Machine A - WIP') -- JD Sleeve R568546 -- op 10
+(62157) -- JD Sleeve R568546 -- op 20
+(62158) -- JD Sleeve R568546 -- op 30
+
+--(49138,62445,'DZ107549',2805121,7895835,'DZ107549','C','Final')
 --(61866,63269,'10115487',2908637,8293437,'10115487','H','Machine A - WIP')  -- op 10
 -- (40998,50025,'2021280',2795740,7873443,'2017707','J','Final')
 -- (41362,52964,'2021282',2795739,7873452,'2017710','J','Final')
