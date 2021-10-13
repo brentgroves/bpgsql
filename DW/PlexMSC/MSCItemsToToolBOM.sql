@@ -78,7 +78,7 @@ b.tool_type_code,
 b.tool_descr,
 --i.VMID, 
 --@PartName part_name,
-'Thermostat Cover - DZ107549' part_name,
+'Sleeve - R568546 OP 20 Lathe' part_name,
 b.part_no,
 b.assembly_no,
 b.assy_descr
@@ -93,7 +93,8 @@ from
 	b.tool_no,b.part_no,b.operation_no,b.operation_code,
 	b.assembly_no,b.assy_descr,b.tool_type_code, b.tool_descr,b.storage_location 
 	from Plex.part_tool_BOM b
-	where b.part_operation_key = 7933023  -- JD Sleeve R568546
+	where b.part_operation_key = 7933024  -- JD Sleeve R568546 op 20
+--	where b.part_operation_key = 7933023  -- JD Sleeve R568546 op 10
 --	where b.part_operation_key = 7895835 --DZ107549
 --	where b.part_operation_key = 7873443 -- 7873443	31X Bracket RH - 2017707
 --	where b.part_operation_key = 7873452 -- 31X Bracket LH - 2017710

@@ -29,7 +29,7 @@ select * from MSC.jobs where pcn = 300758 --jobnumber in ()= '-'
 -- truncate table mgdw.MSC.Jobs 
 select * from MSC.Jobs 
 --where pcn = 300758 and vmid = 4 -- plant 6
--- where pcn = 300758 and vmid = 5 -- plant 8
+ where pcn = 300758 and vmid = 5 -- plant 8
 -- where pcn = 300758 and vmid = 6 -- plant 9 
 --where pcn = 310507 and vmid = 3
 where pcn = 306766 and vmid = 3

@@ -83,7 +83,7 @@ insert into dbo.PlexToolBOMPlant9 (Assembly_No,Part_No,Part_Revision,Operation_C
  * Second insert Misc ToolList Items
  */
 -- select count(*) from dbo.bvToolListItemsMiscOnlyLv1 btlimol -- 244
---	select * from dbo.bvToolListItemsMiscOnlyLv1 btlimol where processid = 62480 62445 63269 62444 40129 41202 41207 40173 54071  48625  54522 50868 54351 54339 63710 63747 62372 63810 --63810
+--	select * from dbo.bvToolListItemsMiscOnlyLv1 btlimol where processid = 62158 62157 62480 62445 63269 62444 40129 41202 41207 40173 54071  48625  54522 50868 54351 54339 63710 63747 62372 63810 --63810
 -- select count(*) from btDistinctToolLists tb  -- 521
 -- select * from btDistinctToolLists tb  -- 521  
 -- where processid = 63810
@@ -134,7 +134,7 @@ select * from dbo.PlexToolBOMPlant9
  * Third insert Fixture ToolList Items
  */
 -- select count(*) from dbo.bvToolListItemsFixtureOnlyLv1 btlimol -- 750
---	select * from dbo.bvToolListItemsFixtureOnlyLv1 btlimol where processid = 62480 62445 63269 62444 40129 41202 41207 40173 54071 48625 54522 50868 54351 54339 63710 63747 62372 63811 63810 --61622 --14218 --63810
+--	select * from dbo.bvToolListItemsFixtureOnlyLv1 btlimol where processid =  62158 62157 62480 62445 63269 62444 40129 41202 41207 40173 54071 48625 54522 50868 54351 54339 63710 63747 62372 63811 63810 --61622 --14218 --63810
 -- select count(*) from btDistinctToolLists tb  -- 521
 -- select * from btDistinctToolLists tb  -- 521  
 -- where processid = 63810

@@ -29,8 +29,8 @@ declare @Dest varchar(1000)
 declare @Lvl integer
 --set @Lvl = 1
 --set @Lvl = 2
---set @Lvl = 3
-set @Lvl = 4
+set @Lvl = 3
+--set @Lvl = 4
 --set @Lvl = 5
 declare @PCN integer
 set @PCN = 295932
@@ -67,20 +67,21 @@ where pcn = 306766 -- Edon 65
 
 --truncate table Plex.purchasing_item_summary
 select count(*) from Plex.purchasing_item_summary  -- 975,1865,2174
-where pcn = 300758  -- Albion 1255
-where pcn = 300757  -- Alabama 1152
-where pcn = 310507  -- Avilla 611
+--where pcn = 300758  -- Albion 1255
+--where pcn = 300757  -- Alabama 1152
+--where pcn = 310507  -- Avilla 611
 where pcn = 306766 -- Edon 309
 
 --truncate table Plex.part_tool_BOM
 select count(*) from Plex.part_tool_BOM  -- 1639, 1548
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
-where pcn = 300758  -- Albion 1639
-where pcn = 300757  -- Alabama 4844
+--where pcn = 300758  -- Albion 1639
+--where pcn = 300757  -- Alabama 4844
 where pcn = 310507  -- Avilla 1291
 --where pcn = 306766 -- Edon 2010
 
-select * from Plex.campfire_extract
+-- truncate table Plex.campfire_extract
+select * from Plex.campfire_extract -- 214
 --where pcn = 123681 -- Southfield  29
 --where pcn = 300758  -- Albion 51
 --where pcn = 300757  -- Alabama 38

@@ -3,7 +3,7 @@
  */
 SELECT @@version
 select * from [ToolList PartNumbers] m 
-where processid = 62480
+where processid = 62157
 where PartNumbers like  '%10115487%' 
 --PartNumbers like --'%2021282%'--'%2017710%'
 --where PartNumbers like '%5221%'  --52215T6N 
@@ -31,7 +31,7 @@ select * from [ToolList Master] m where PartFamily like '%51216%' and released =
 select * from [ToolList Master] m where PartFamily like '%31X%' and released = 1
 -- select OriginalProcessID origpid,* from [ToolList Master] m where m.ProcessID = 63813--50868--(chrysler 60 mill complete)  -- -- not released
 select OriginalProcessID origpid,* 
-from [ToolList Master] m where m.ProcessID = 62480 63269 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
+from [ToolList Master] m where m.ProcessID = 62158,62157,62480 63269 50025 52964 62517 62444 62610 40129 62372 40129 41202 41207 40173-- 41207  --, 40137 --(chrysler 60 mill complete)  -- -- released
 
 
 
@@ -56,9 +56,9 @@ CREATE TABLE [Busche ToolList].dbo.TL_Plex_PN_Op_Map_Plant9 (
 select * from TL_Plex_PN_Op_Map_Plant9 
 insert into TL_Plex_PN_Op_Map_Plant9 
 values
-(56626,62480,'R568546',2812672,7933023,'R568546','B','Machine A - WIP') -- JD Sleeve R568546 -- op 10
-(62157) -- JD Sleeve R568546 -- op 20
-(62158) -- JD Sleeve R568546 -- op 30
+--(56626,62480,'R568546',2812672,7933023,'R568546','B','Machine A - WIP') -- JD Sleeve R568546 -- op 10
+--(56627,62157,'R568546',2812672,7933024,'R568546','B','Machine Complete') -- JD Sleeve R568546 -- op 20
+(56628,62158,'R568546',2812672,7933027,'R568546','B','Final') -- JD Sleeve R568546 -- op 30
 
 --(49138,62445,'DZ107549',2805121,7895835,'DZ107549','C','Final')
 --(61866,63269,'10115487',2908637,8293437,'10115487','H','Machine A - WIP')  -- op 10
@@ -254,6 +254,7 @@ on tl.processid = m.processid  -- 27
 
 select count(*) from PlexToolListAssemblyTemplatePlant9-- 3
 select * from PlexToolListAssemblyTemplatePlant9-- 3
+--delete from PlexToolListAssemblyTemplatePlant9 where toolid = 391261
 where Part_No = '28245973'
 
 select * from TL_Plex_PN_Op_Map_Plant9
