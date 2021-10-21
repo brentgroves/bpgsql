@@ -30,6 +30,7 @@ select * from ssis.ScriptComplete
 2	295932 Fruit Port
 
 /*
+ * select * from ssis.ScriptComplete
 truncate table ssis.ScriptComplete
 INSERT into ssis.ScriptComplete (ID,Description,Done)
 values
@@ -71,6 +72,10 @@ values
 (36,'Edon CampfireExtract',0),
 (37,'Alabama CampfireExtract',0),
 (38,'Fruitport CampfireExtract',0),
+(39,'Southfield GLAccountActivitySummary',0),
+(40,'Albion GLAccountActivitySummary',0),
+(41,'Southfield AccountBalanceByPeriod',0),
+(42,'Albion AccountBalanceByPeriod',0)
 
 MSC pipelines
 
