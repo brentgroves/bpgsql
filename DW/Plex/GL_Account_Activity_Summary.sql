@@ -14,6 +14,7 @@ CREATE TABLE Plex.GL_Account_Activity_Summary
   )
 );
 
+-- join select * from Plex.accounting_account as the primary set
 select s.pcn,s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff,
 b.current_debit,b.current_credit,b.ytd_debit,b.ytd_credit,b.ytd_debit-b.ytd_credit ytd_diff
 --select count(*)
