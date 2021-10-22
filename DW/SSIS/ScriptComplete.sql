@@ -75,7 +75,13 @@ values
 (39,'Southfield GLAccountActivitySummary',0),
 (40,'Albion GLAccountActivitySummary',0),
 (41,'Southfield AccountBalanceByPeriod',0),
-(42,'Albion AccountBalanceByPeriod',0)
+(42,'Albion AccountBalanceByPeriod',0),
+(43,'Albion Account',0),
+(44,'Avilla Account',0),
+(45,'Edon Account',0),
+(46,'Alabama Account',0),
+(47,'Southfield Account',0)
+
 
 MSC pipelines
 
