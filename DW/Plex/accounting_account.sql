@@ -1,14 +1,16 @@
 /*
+ * drop table Plex.accounting_account
 create table Plex.accounting_account
 (
 pcn int,
-account_key int,
+account_key int,  -- identity
 Account_No	varchar (20),
 Account_Name	varchar (110),
+active bit,
 Category_Type	varchar (10),
   PRIMARY KEY CLUSTERED
   (
-    PCN,period,account_no
+    PCN,account_no 
   )
 
 )
@@ -33,4 +35,9 @@ Param
 7	310507
 8	312055
 	*/
-select * from Plex.accounting_account
+select * 
+select count(*)
+from Plex.accounting_account
+where  
+pcn = 123681 -- 4,362
+and active = 1 --3,327

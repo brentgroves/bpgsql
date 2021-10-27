@@ -1,0 +1,11 @@
+How does Matt determine the quantity?
+From the ar_invoice_dist_e quantity.
+WHERE (DATEADD(HOUR, LT.Timezone_Offset, AI.Invoice_Date) >= @Current_Month_Begin 
+  AND DATEADD(HOUR, LT.Timezone_Offset, AI.Invoice_Date) < @Month_1_Begin)
+
+
+How does AR_Invoice_Dist_Get customer data source determine the quantity?
+
+How does Accounting_p_AR_Invoices_Get_Routed_All determine the quantity?
+
+How does the Revenue Analysis by Part report determine the quantity?
