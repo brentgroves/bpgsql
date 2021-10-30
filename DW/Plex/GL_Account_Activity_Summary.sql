@@ -40,7 +40,7 @@ and s.account_no=b.no
 where s.pcn = 123681  -- 74
 
 select count(*)
---select b.*
+--select s.*
 from Plex.GL_Account_Activity_Summary s
 where s.pcn = 123681  -- 264
 
@@ -49,14 +49,9 @@ select count(*)
 from Plex.GL_Account_Activity_Summary s
 --where account_no = '10120-000-0000'
 where s.pcn = 123681  -- 264
-select * 
---select pcn,[period_display],no,name,current_debit,current_credit,ytd_debit,ytd_credit
---select count(*)
-from Plex.Account_Balances_by_Periods  
---where pcn = 300758 --6,826/Albion
---where pcn = 123681  -- 8,408
---and category_no = 0
---where no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
-order by no,period
+and s.period = 202101
+and s.period = 202109
+where s.pcn = 300758  -- 364
+and s.period = 202109 -- 364
 
 

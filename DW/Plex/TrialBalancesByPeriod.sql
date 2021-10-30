@@ -334,3 +334,12 @@ from
 )r 
 
 -- select * from Plex.accounting_account a
+
+/*
+ * 1. change period param to take values 0,-1,-2 from  GL_Account_Activity_Summary_DW_Import 
+ * 0 = current period, -1 = previos period, -2 = -X period, etc.
+ * 2. delete Plex.account_balance records for the current period
+ * 3. insert Plex.account_balance records with the new current_debit,current_credit values.
+ * 4. run GL_Account_Activity_Summary_Period for all periods that have not been ran.
+ * 5. sum of all periods for current year and update the Plex.account_balance records with the new ytd_debit,ytd_credit values.
+ */

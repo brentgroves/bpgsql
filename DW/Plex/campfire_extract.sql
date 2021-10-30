@@ -4,13 +4,9 @@
 --truncate table Plex.campfire_extract
 CREATE TABLE Plex.campfire_extract 
 (
-id int, -- row_number() over( order by pcn,part_key,ship_to) id,
 pcn int,
-plexus_customer_code varchar(50), -- Plexus_Control_v_Customer_Group_Member.plexus_customer_code 
-company varchar(50),  -- Plexus_Control_v_Customer_Group_Member.AD_Company_Code
 part_key int,  -- added this for joins
 part_number varchar(50), -- part_v_part.part_no
-Destination_Code int, -- release.ship_to
 Currency varchar(5),  -- Accounting_v_AR_Invoice_e.currency_code
 Period int, -- Accounting_v_Period_e.Period  
 Actual_Units float, -- --   SUM(Accounting_v_AR_Invoice_Dist_e.Quantity),
@@ -30,18 +26,31 @@ BacklogUnits2 int,-- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CT
 BacklogUnits3 int,-- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CTE_Summarized_Releases_By_Month AS CSRBM WHERE CSRBM.PCN = CDLI.PCN AND CSRBM.Month_Sequence = 3 AND CSRBM.Part_Key = CDLI.Part_Key AND CSRBM.Ship_To = CDLI.Ship_To),0) AS CurrBacklogUnits,
 BacklogUnits4 int,-- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CTE_Summarized_Releases_By_Month AS CSRBM WHERE CSRBM.PCN = CDLI.PCN AND CSRBM.Month_Sequence = 4 AND CSRBM.Part_Key = CDLI.Part_Key AND CSRBM.Ship_To = CDLI.Ship_To),0) AS CurrBacklogUnits,
 BacklogUnits5 int,-- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CTE_Summarized_Releases_By_Month AS CSRBM WHERE CSRBM.PCN = CDLI.PCN AND CSRBM.Month_Sequence = 5 AND CSRBM.Part_Key = CDLI.Part_Key AND CSRBM.Ship_To = CDLI.Ship_To),0) AS CurrBacklogUnits,
-BacklogUnits6 int, -- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CTE_Summarized_Releases_By_Month AS CSRBM WHERE CSRBM.PCN = CDLI.PCN AND CSRBM.Month_Sequence = 6 AND CSRBM.Part_Key = CDLI.Part_Key AND CSRBM.Ship_To = CDLI.Ship_To),0) AS CurrBacklogUnits,
-PRIMARY KEY (id)
+BacklogUnits6 int -- ISNULL((SELECT SUM(SUM(Sales_v_Release_e.Quantity)) FROM CTE_Summarized_Releases_By_Month AS CSRBM WHERE CSRBM.PCN = CDLI.PCN AND CSRBM.Month_Sequence = 6 AND CSRBM.Part_Key = CDLI.Part_Key AND CSRBM.Ship_To = CDLI.Ship_To),0) AS CurrBacklogUnits,
+primary key (pcn,part_key,period)
 );
 
 */
+-- truncate table Plex.campfire_extract
 -- delete from Plex.campfire_extract where pcn in (300758)
+select distinct period from Plex.campfire_extract 
 select * from Plex.campfire_extract 
-where pcn in (300758)
+where 
+pcn=123681
+--and period=202101
+--and period=202109
+--and period=202110
+
+select * from Plex.campfire_extract 
+where 
+pcn=300758
+--and period=202101
+--and period=202109
+and period=202110
 select count(*) from Plex.campfire_extract  -- 1639, 2930
-where pcn = 300758 
+--where pcn = 300758 
 --select count(distinct tool_no) from Plex.part_tool_BOM  -- 779
-where pcn = 300758  -- Albion 1639
+--where pcn = 300758  -- Albion 1639
 --where pcn = 310507  -- Avilla 1291
 --where pcn = 306766 -- Edon 1818
 

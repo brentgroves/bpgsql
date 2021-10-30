@@ -54,9 +54,11 @@ set @period_display = cast(@year as varchar(4)) + '-' + @zero_month
 
 --select @year year,@month month,@period period,@period_display period_display;
 /*
+ * 1. remove period params from  GL_Account_Activity_Summary_DW_Import 
  * 2. delete Plex.account_balance records for the current period
  * 3. insert Plex.account_balance records with the new current_debit,current_credit values.
- * 4. sum of all periods for current year and update the Plex.account_balance records with the new ytd_debit,ytd_credit values.
+ * 4. run GL_Account_Activity_Summary_Period for all periods that have not been ran.
+ * 5. sum of all periods for current year and update the Plex.account_balance records with the new ytd_debit,ytd_credit values.
  */
 select
 a.pcn,
