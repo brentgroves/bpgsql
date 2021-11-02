@@ -4,6 +4,27 @@ for each account that has any activitity for the specified period.
 */
 
 
+/*
+Params
+@PCNList varchar(max) = '123681,300758',
+@Period INT =202101,
+@Offset int = 0, --0=current,-1=previous_month,-x=current_month-x
+@Exclude_Period_13 SMALLINT = 0,
+@Exclude_Period_Adjustments BIT = 0
+*/
+declare @month int;
+declare @year int;
+--SELECT GETDATE() 'Today', DATEADD(month,-2,GETDATE()) 'Today - 2 Months'
+set @month = month(DATEADD(month,@MonthOffset,GETDATE()));
+set @year = year(DATEADD(month,@MonthOffset,GETDATE()));
+
+/*
+Determine @period
+*/
+declare @period int;
+set @period = @year*100+@month;
+--select @month month, @year year,@period period;
+
 -- CREATE NONCLUSTERED INDEX IX_Invoices ON #Invoices (Plexus_Customer_No, Part_Key, Ship_To_Address);
 -- I dont thing we need to create an index if we put a primary key clustered in the table definition.
 /*
@@ -113,7 +134,7 @@ FROM (
   JOIN accounting_v_AP_Invoice_e AS I 
     ON I.Plexus_Customer_No = D.Plexus_Customer_No 
     AND I.Invoice_Link = D.Invoice_Link
-    AND I.Period BETWEEN @Period_Start AND @Period_End
+    AND I.Period BETWEEN @period AND @period -- faster than =
   JOIN #Accounts AS A
     ON A.PCN = D.Plexus_Customer_No
     AND A.Account_No = D.Account_No
@@ -138,7 +159,7 @@ FROM (
   JOIN accounting_v_AP_Check_e AS I 
     ON I.Plexus_Customer_No = D.Plexus_Customer_No 
     AND I.Check_Link = D.Check_Link
-    AND I.Period BETWEEN @Period_Start AND @Period_End
+    AND I.Period BETWEEN @period AND @period -- faster than =
   JOIN #Accounts AS A2
     ON A2.PCN = D.Plexus_Customer_No
     AND A2.Account_No = D.Account_No
@@ -156,7 +177,7 @@ FROM (
     ON I.Plexus_Customer_No = D.Plexus_Customer_No 
     AND I.Invoice_Link = D.Invoice_Link
     AND I.Void = 0
-    AND I.Period BETWEEN @Period_Start AND @Period_End
+    AND I.Period BETWEEN @period AND @period -- faster than =
   JOIN #Accounts AS A3
     ON A3.PCN = D.Plexus_Customer_No
     AND A3.Account_No = D.Account_No
@@ -173,7 +194,7 @@ FROM (
   JOIN accounting_v_AR_Invoice_Applied_e AS A 
     ON A.Plexus_Customer_No = D.Plexus_Customer_No 
     AND A.Applied_Link = D.Applied_Link
-    AND A.Period BETWEEN @Period_Start AND @Period_End
+    AND A.Period BETWEEN @period AND @period -- faster than =
   JOIN accounting_v_AR_Invoice_e AS I 
     ON I.Plexus_Customer_No = A.Plexus_Customer_No
     AND I.Invoice_Link = A.Invoice_Link
@@ -193,7 +214,7 @@ FROM (
   JOIN accounting_v_AR_Deposit_e AS I 
     ON I.Plexus_Customer_No = D.Plexus_Customer_No 
     AND I.Deposit_Link = D.Deposit_Link
-    AND I.Period BETWEEN @Period_Start AND @Period_End
+    AND I.Period BETWEEN @period AND @period -- faster than =
   JOIN #Accounts AS A5
     ON A5.PCN = D.Plexus_Customer_No
     AND A5.Account_No = D.Account_No
@@ -213,7 +234,7 @@ FROM (
     AND I.Journal_Link = D.Journal_Link
     AND ( @Exclude_Period_13 = 0 OR I.Period_13 = 0 )
     AND ( @Exclude_Period_Adjustments = 0 OR I.Period_Adjustment = 0 )
-    AND I.Period BETWEEN @Period_Start AND @Period_End
+    AND I.Period BETWEEN @period AND @period -- faster than =
   JOIN #Accounts AS A6
     ON A6.PCN = D.Plexus_Customer_No
     AND A6.Account_No = D.Account_No
