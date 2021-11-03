@@ -332,8 +332,145 @@ from
 	and  a.account_no=s.account_no -- 18,010
 	where a.pcn = 123681  -- 4,362
 )r 
-
+-- select * from Plex.GL_Account_Activity_Summary s 
 -- select * from Plex.accounting_account a
+-- truncate table Plex.GL_Account_Activity_Summary
+
+/*
+ * Validate set by checking totals for a few accounts. 
+ */
+--select '' Revenue,'' Expense,'' Amount, t.Period 
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202110  --259
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202109  --264
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202108  --247
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202107  --250
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202106  --254
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202105  --238
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202104  --241
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202103  --241
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202102  --231
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202101  --233
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+select *, debit - credit net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period = 202012  --245
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+
+/*
+ * Are the YTD totals the same as those found on the Trial Balance report?
+ * For accounts starting with 4 or above you can sum the prior periods.
+ * Don't know about the sign that seems wrong.!!!
+ */
+select d.pcn,d.account_no,d.account_name,sum(d.net) ytd
+from
+(
+--select *, debit - credit net  -- I THOUGHT IT WAS DEBIT - CREDIT
+select *, credit - debit net  -- But the Plex report seems to be the other way around at least for accounts starting with 4 VERIFY THIS!!!!!
+--select count(*)
+from Plex.GL_Account_Activity_Summary s -- 4,362
+where s.pcn = 123681
+and s.period between 202101 and 202107 --245
+and s.account_no = '41100-000-0000'
+--and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
+--and  s.account_no = '11010-000-0000' --	AR - Trade, Products
+--and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
+)d 
+group by d.pcn,d.account_no,d.account_name
+--  4,847,776.49 -- pass,202101
+-- -9144734.35000 --9,144,734.35 202102 pass
+-- -15,689,304.06000,15,689,304.06 202103 pass
+-- -18,796,206.10,18,796,206.10, 202104 pass
+-- -22,139.318.02,22,139,318.02, 202105 pass
+-- -25,779,682.23,25,779,682.23,202106 pass
+-- -29,143,994.13,29,143,994.13
+
+--  
+
+--
 
 /*
  * 1. change period param to take values 0,-1,-2 from  GL_Account_Activity_Summary_DW_Import 
@@ -343,3 +480,7 @@ from
  * 4. run GL_Account_Activity_Summary_Period for all periods that have not been ran.
  * 5. sum of all periods for current year and update the Plex.account_balance records with the new ytd_debit,ytd_credit values.
  */
+/*
+ *  
+ */
+
