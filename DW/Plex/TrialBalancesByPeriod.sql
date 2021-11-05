@@ -275,66 +275,6 @@ CREATE TABLE GL_Account_Activity_Summary_YTD
 );
  
 */
-select 
-r.pcn,
-r.revenue,
-r.expense,
-r.amount,
-r.period,
-r.period_display,
-r.category_type,
-r.category_no,
-r.category_name,
-r.[no],
-r.name,
-r.ytd_debit,
-r.ytd_credit,
-r.ytd_debit-r.ytd_credit diff,  -- for debug only
-r.current_debit,
-r.current_credit,
-r.current_debit-r.current_credit diff  -- for debug only
-from 
-(
-	select 
-	a.pcn,
-	'' revenue,  -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	'' expense, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	'' amount, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	s.period, 
-	--cast(s.year as varchar) + '-' + cast(s.period as varchar),
-	'2021-09' period_display,  
-	a.category_type,
-	0 category_no,  -- Albion has all zeros.
-	'' category_name, -- Albion has all blanks.
-	a.account_no [no],
-	a.account_name name,
-	0 ytd_debit,--GL_Account_Activity_Summary_YTD
-	0 ytd_credit,--GL_Account_Activity_Summary_YTD
-	case
-	when s.pcn is null then 0 
-	else s.debit 
-	end current_debit,
-	case
-	when s.pcn is null then 0 
-	else s.credit 
-	end current_credit,
-	0 sub_category_no,  -- Albion has all zeros. select * from Plex.Account_Balances_by_Periods b where b.pcn = 300758
-	'' sub_category_name, -- Albion does has all blanks.
-	0 subtotal_after, -- Albion has all zeros. select distinct(subtotal_after) from Plex.Account_Balances_by_Periods b where b.pcn = 300758
-	'' subtotal_name -- Albion has all zeros.
-	-- select
-	--s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff
-	--select count(*)
-	--select s.*
-	from Plex.accounting_account a  -- 18,010
-	left outer join Plex.GL_Account_Activity_Summary s 
-	on a.pcn=s.pcn 
-	and  a.account_no=s.account_no -- 18,010
-	where a.pcn = 123681  -- 4,362
-)r 
--- select * from Plex.GL_Account_Activity_Summary s 
--- select * from Plex.accounting_account a
--- truncate table Plex.GL_Account_Activity_Summary
 
 /*
  * Validate set by checking totals for a few accounts. 
@@ -342,9 +282,11 @@ from
 --select '' Revenue,'' Expense,'' Amount, t.Period 
 select *, debit - credit net
 --select count(*)
+--select distinct pcn,period
 from Plex.GL_Account_Activity_Summary s -- 4,362
 where s.pcn = 123681
 and s.period = 202110  --259
+and s.account_no in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000')
 --and s.account_no = '12400-000-0000' --	Raw Materials - Purchased Components
 --and  s.account_no = '11010-000-0000' --	AR - Trade, Products
 and s.account_no = '10120-000-0000' --	Cash Operating Wells Fargo-General-General
@@ -483,4 +425,102 @@ group by d.pcn,d.account_no,d.account_name
 /*
  *  
  */
+select 
+r.pcn,
+r.revenue,
+r.expense,
+r.amount,
+r.period,
+r.period_display,
+r.category_type,
+r.category_no,
+r.category_name,
+r.[no],
+r.name,
+r.ytd_debit,
+r.ytd_credit,
+r.ytd_debit-r.ytd_credit diff,  -- for debug only
+r.current_debit,
+r.current_credit,
+r.current_debit-r.current_credit diff  -- for debug only
+from 
+(
+declare @PCN int
+set @PCN = 123681
+declare @period int 
+set @period = 202001
+declare @year int 
+set @year = @period/100
+declare @prevYear int 
+set @prevYear = @year-1
+declare @strPeriod varchar(6)
+set @strPeriod = cast (@period as varchar)
+declare @periodDisplay varchar(7)
+set @periodDisplay=left(@strPeriod,4)+'-'+right(@strPeriod,2)
+declare @prevPeriod int 
+if(right(@strPeriod,2)='01')
+BEGIN
+	set @prevPeriod = @prevYear*100+12 
+end 
+ELSE 
+BEGIN 
+	set @prevPeriod = @period - 1
+end 
 
+--select @year,@prevYear,@prevPeriod
+
+	select 
+	a.pcn,
+	'' revenue,  -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+	'' expense, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+	'' amount, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+	@Period period, 
+	--cast(s.year as varchar) + '-' + cast(s.period as varchar),
+	@PeriodDisplay period_display,  
+	a.category_type,
+	0 category_no,  -- Albion has all zeros.
+	'' category_name, -- Albion has all blanks.
+	a.account_no [no],
+	a.account_name name,
+	(
+	 select 
+	 case 
+	 when s.pcn is null then b.Ytd_Debit 
+	 else s.debit + b.Ytd_Debit 
+	 end 
+	 from Plex.account_balance b where b.pcn = @PCN and b.period = @prevPeriod and b.[no] = a.Account_No 
+	) ytd_debit, 
+--	0 ytd_debit,
+	0 ytd_credit,
+	case
+	when s.pcn is null then 0 
+	else s.debit 
+	end current_debit,
+	case
+	when s.pcn is null then 0 
+	else s.credit 
+	end current_credit,
+	0 sub_category_no,  -- Albion has all zeros. select * from Plex.Account_Balances_by_Periods b where b.pcn = 300758
+	'' sub_category_name, -- Albion does has all blanks.
+	0 subtotal_after, -- Albion has all zeros. select distinct(subtotal_after) from Plex.Account_Balances_by_Periods b where b.pcn = 300758
+	'' subtotal_name -- Albion has all blanks.
+	-- select
+	--s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff
+	--select count(*)
+	--select s.*
+	from Plex.accounting_account a  -- 18,010
+	left outer join Plex.GL_Account_Activity_Summary s 
+	on a.pcn=s.pcn 
+	and  a.account_no=s.account_no -- 18,010
+	left outer join Plex.GL_LT_4000_Account_YTD_Summary y 
+	on a.pcn=y.pcn 
+	and  a.account_no=y.account_no -- 18,010
+	and y.period = 201912
+	where a.pcn = @PCN -- 123681  -- 4,362
+)r 
+-- select * from Plex.GL_Account_Activity_Summary s 
+-- select * from Plex.accounting_account a
+-- truncate table Plex.GL_Account_Activity_Summary
+
+	--select s.*
+	from Plex.accounting_account a  -- 18,010

@@ -1,18 +1,23 @@
 -- drop table Plex.GL_Account_Activity_Summary
-
+-- truncate table Plex.GL_Account_Activity_Summary
 CREATE TABLE Plex.GL_Account_Activity_Summary
 (
   pcn INT NOT NULL,
   period int not null,
   account_no VARCHAR(20) NOT NULL,
-  account_name varchar(110),
   debit decimal(19,5),
   credit decimal(19,5),
+  net decimal(19,5),
   PRIMARY KEY CLUSTERED
   (
     PCN,period,account_no
   )
 );
+
+select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
+--select count(*)
+from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
+where s.period = 202001
 
 -- join select * from Plex.accounting_account as the primary set
 select s.pcn,s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff,
