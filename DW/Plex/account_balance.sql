@@ -14,6 +14,7 @@ CREATE TABLE Plex.account_balance (
 	Name varchar(110),
 	Ytd_Debit decimal(18,2),
 	Ytd_Credit decimal(18,2),
+	Ytd decimal(18,2),  -- for debug 
 	Current_Debit decimal(18,2),
 	Current_Credit decimal(18,2),
 	Sub_Category_No int,

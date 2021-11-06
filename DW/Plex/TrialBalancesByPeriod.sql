@@ -425,26 +425,6 @@ group by d.pcn,d.account_no,d.account_name
 /*
  *  
  */
-select 
-r.pcn,
-r.revenue,
-r.expense,
-r.amount,
-r.period,
-r.period_display,
-r.category_type,
-r.category_no,
-r.category_name,
-r.[no],
-r.name,
-r.ytd_debit,
-r.ytd_credit,
-r.ytd_debit-r.ytd_credit diff,  -- for debug only
-r.current_debit,
-r.current_credit,
-r.current_debit-r.current_credit diff  -- for debug only
-from 
-(
 declare @PCN int
 set @PCN = 123681
 declare @period int 
@@ -466,58 +446,157 @@ ELSE
 BEGIN 
 	set @prevPeriod = @period - 1
 end 
+declare @YTD_start_period int 
+set @YTD_start_period = 201912
+--select @year,@prevYear,@prevPeriod,@YTD_start_period
+select
+f.pcn,
+f.revenue,
+f.expense,
+f.amount,
+f.period,
+f.period_display,
+f.category_type,
+f.category_no,
+f.category_name,
+f.[no],
+f.name,
+f.account_balance_prev_period_ytd_debit,
+f.account_balance_prev_period_ytd_credit,
+f.account_balance_prev_period_ytd,
+f.YTD_debit_start_value,
+f.YTD_credit_start_value,
+f.YTD_start_value,
+case
+	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_debit_start_value + f.current_debit
+	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd_debit + f.current_debit
+	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd_debit + f.current_debit
+end ytd_debit,
+case
+	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_credit_start_value + f.current_credit
+	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd_credit + f.current_credit
+	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd_credit + f.current_credit
+end ytd_credit,
+case
+	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_start_value + f.current_net
+	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd + f.current_net
+	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd + f.current_net
+end ytd,
+f.current_debit,
+f.current_credit,
+f.current_net
 
---select @year,@prevYear,@prevPeriod
-
+from
+(
 	select 
-	a.pcn,
-	'' revenue,  -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	'' expense, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	'' amount, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
-	@Period period, 
-	--cast(s.year as varchar) + '-' + cast(s.period as varchar),
-	@PeriodDisplay period_display,  
-	a.category_type,
-	0 category_no,  -- Albion has all zeros.
-	'' category_name, -- Albion has all blanks.
-	a.account_no [no],
-	a.account_name name,
+	r.pcn,
+	r.revenue,
+	r.expense,
+	r.amount,
+	r.period,
+	r.period_display,
+	r.category_type,
+	r.category_no,
+	r.category_name,
+	r.[no],
+	r.debit_main,
+	r.first_digit_123,
+	r.name,
+	isnull(r.account_balance_prev_period_ytd_debit,0) account_balance_prev_period_ytd_debit,
+	isnull(r.account_balance_prev_period_ytd_credit,0) account_balance_prev_period_ytd_credit,
+	isnull(r.account_balance_prev_period_ytd,0) account_balance_prev_period_ytd,
+	r.YTD_debit_start_value,
+	r.YTD_credit_start_value,
+	r.YTD_start_value,
+	--r.ytd_debit,
+	--r.ytd_credit,
+	r.current_debit,
+	r.current_credit,
+	r.current_net
+	from 
 	(
-	 select 
-	 case 
-	 when s.pcn is null then b.Ytd_Debit 
-	 else s.debit + b.Ytd_Debit 
-	 end 
-	 from Plex.account_balance b where b.pcn = @PCN and b.period = @prevPeriod and b.[no] = a.Account_No 
-	) ytd_debit, 
---	0 ytd_debit,
-	0 ytd_credit,
-	case
-	when s.pcn is null then 0 
-	else s.debit 
-	end current_debit,
-	case
-	when s.pcn is null then 0 
-	else s.credit 
-	end current_credit,
-	0 sub_category_no,  -- Albion has all zeros. select * from Plex.Account_Balances_by_Periods b where b.pcn = 300758
-	'' sub_category_name, -- Albion does has all blanks.
-	0 subtotal_after, -- Albion has all zeros. select distinct(subtotal_after) from Plex.Account_Balances_by_Periods b where b.pcn = 300758
-	'' subtotal_name -- Albion has all blanks.
-	-- select
-	--s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff
-	--select count(*)
-	--select s.*
-	from Plex.accounting_account a  -- 18,010
-	left outer join Plex.GL_Account_Activity_Summary s 
-	on a.pcn=s.pcn 
-	and  a.account_no=s.account_no -- 18,010
-	left outer join Plex.GL_LT_4000_Account_YTD_Summary y 
-	on a.pcn=y.pcn 
-	and  a.account_no=y.account_no -- 18,010
-	and y.period = 201912
-	where a.pcn = @PCN -- 123681  -- 4,362
-)r 
+	
+	
+		select 
+		a.pcn,
+		'' revenue,  -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+		'' expense, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+		'' amount, -- the account_balances_by_periods plex authored procedure shows only blank values in the query and csv file for Albion and Southfield.
+		@Period period, 
+		--cast(s.year as varchar) + '-' + cast(s.period as varchar),
+		@PeriodDisplay period_display,  
+		a.category_type,
+		0 category_no,  -- Albion has all zeros.
+		'' category_name, -- Albion has all blanks.
+		a.account_no [no],
+		a.debit_main,
+		a.first_digit_123,
+		a.account_name name,
+	--	1. join LT_4000 table with accounts to get 1 record for each account.
+	-- 2. Make subquery to calc 2019_YTD_debit 
+	--	3. add prev_period_ytd_debit with 2019_YTD_debit 
+	--	4. should not need to calc net value because it is not on theis report
+		(
+		 select b.Ytd_Debit 
+		 from Plex.account_balance b where b.pcn = @PCN and b.period = @prevPeriod and b.[no] = a.Account_No 
+		) account_balance_prev_period_ytd_debit, 
+		(
+		 select b.Ytd_Credit 
+		 from Plex.account_balance b where b.pcn = @PCN and b.period = @prevPeriod and b.[no] = a.Account_No 
+		) account_balance_prev_period_ytd_credit, 
+		(
+		 select b.Ytd 
+		 from Plex.account_balance b where b.pcn = @PCN and b.period = @prevPeriod and b.[no] = a.Account_No 
+		) account_balance_prev_period_ytd, 
+		case 
+		when y.pcn is null then 0 
+		else y.debit 
+		end YTD_debit_start_value,
+		case 
+		when y.pcn is null then 0 
+		else y.credit 
+		end YTD_credit_start_value,
+		case 
+		when y.pcn is null then 0 
+		else y.YTD 
+		end YTD_start_value,
+	
+		case
+		when s.pcn is null then 0 
+		else s.debit 
+		end current_debit,
+		case
+		when s.pcn is null then 0 
+		else s.credit 
+		end current_credit,
+		case
+		when s.pcn is null then 0 
+		else s.net 
+		end current_net,
+		0 sub_category_no,  -- Albion has all zeros. select * from Plex.Account_Balances_by_Periods b where b.pcn = 300758
+		'' sub_category_name, -- Albion does has all blanks.
+		0 subtotal_after, -- Albion has all zeros. select distinct(subtotal_after) from Plex.Account_Balances_by_Periods b where b.pcn = 300758
+		'' subtotal_name -- Albion has all blanks.
+		-- select
+		--s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff
+		--select count(*)
+		--select s.*
+		from Plex.accounting_account a  -- 18,010
+		left outer join Plex.GL_Account_Activity_Summary s 
+		on a.pcn=s.pcn 
+		and  a.account_no=s.account_no -- 18,010
+		and s.period = @period
+		-- select * from Plex.GL_LT_4000_Account_YTD_Summary
+		left outer join Plex.GL_LT_4000_Account_YTD_Summary y -- contains starting YTD value from which to add to--2019_12 YTD calc.
+		on a.pcn=y.pcn 
+		and  a.account_no=y.account_no -- 18,010
+		and y.period = @YTD_start_period -- 2019_12 YTD calc.
+		where a.pcn = @PCN -- 123681  -- 4,362
+		--and a.account_no in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+		
+	)r 
+)f
+where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
 -- select * from Plex.GL_Account_Activity_Summary s 
 -- select * from Plex.accounting_account a
 -- truncate table Plex.GL_Account_Activity_Summary
