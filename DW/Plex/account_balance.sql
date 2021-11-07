@@ -1,29 +1,42 @@
 -- drop table Plex.account_balance
 -- truncate table Plex.account_balance
+Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
 CREATE TABLE Plex.account_balance (
 	pcn int NOT NULL,
-	revenue decimal(19,5) NULL,  -- Always null for now  
-	expense decimal(19,5) NULL, -- Always null for now
-	amount decimal(19,5) NULL, -- Always null for now
 	period int NOT NULL,
-	Period_Display varchar(10),
 	Category_Type varchar(10),
-	Category_No int NULL,
 	Category_Name varchar(50),
 	[No] varchar(20),
 	Name varchar(110),
 	Ytd_Debit decimal(18,2),
 	Ytd_Credit decimal(18,2),
-	Ytd decimal(18,2),  -- for debug 
+	Ytd_Debit_Credit decimal(18,2),  -- for debug 
 	Current_Debit decimal(18,2),
 	Current_Credit decimal(18,2),
-	Sub_Category_No int,
-	Sub_Category_Name varchar(50),
-	Subtotal_After int,
-	Subtotal_Name varchar(50),
+	Current_Debit_Credit decimal(18,2),
 	PRIMARY KEY (pcn,period,[No])
 );
 select * from Plex.account_balance
+
+select 
+period,
+category_type,
+'' category_name,
+'' sub_category_name, -- Albion does has all blanks.
+[no],
+name,
+--current_debit,current_credit,
+
+--ytd_debit,ytd_credit,
+--ytd,
+subtotal_after,'' subtotal_name
+-- Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
+-- select count(*)
+select *
+from Plex.account_balance b --4362
+where b.period=202001
+
+
 select * from Plex.Account_Balances_by_Periods abbp 
 /*
 	a.pcn,
