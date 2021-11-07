@@ -2,17 +2,18 @@
  * drop table Plex.accounting_account
 create table Plex.accounting_account
 (
-pcn int,
-account_key int,  -- identity
-Account_No	varchar (20),
-Account_Name	varchar (110),
-active bit,
-Category_Type	varchar (10),
-  PRIMARY KEY CLUSTERED
-  (
-    PCN,account_no 
-  )
-
+	pcn int,
+	account_key int,  -- identity
+	account_no	varchar (20),
+	account_name	varchar (110),
+	active bit,
+	category_type	varchar (10),
+	debit_main bit,
+	first_digit_123 bit
+	PRIMARY KEY CLUSTERED
+	(
+	   PCN,account_no 
+	)
 )
 Param 
 @PCNList varchar(max) = '123681,300758'
@@ -36,7 +37,7 @@ Param
 8	312055
 	*/
 select * 
-select count(*)
+--select count(*)
 from Plex.accounting_account
 where  
 pcn = 123681 -- 4,362

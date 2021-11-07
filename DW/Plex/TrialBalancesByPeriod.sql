@@ -428,7 +428,7 @@ group by d.pcn,d.account_no,d.account_name
 declare @PCN int
 set @PCN = 123681
 declare @period int 
-set @period = 202001
+set @period = 202111
 declare @year int 
 set @year = @period/100
 declare @prevYear int 
@@ -436,7 +436,7 @@ set @prevYear = @year-1
 declare @strPeriod varchar(6)
 set @strPeriod = cast (@period as varchar)
 declare @periodDisplay varchar(7)
-set @periodDisplay=left(@strPeriod,4)+'-'+right(@strPeriod,2)
+set @periodDisplay=right(@strPeriod,2)+'-'+left(@strPeriod,4)
 declare @prevPeriod int 
 if(right(@strPeriod,2)='01')
 BEGIN
@@ -448,11 +448,15 @@ BEGIN
 end 
 declare @YTD_start_period int 
 set @YTD_start_period = 201912
---select @year,@prevYear,@prevPeriod,@YTD_start_period
+--select @periodDisplay,@prevPeriod,@YTD_start_period
+-- period_offset=-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0
+--select count(*) from  Plex.GL_Account_Activity_Summary -- 221,432,650,829,1039,1260,1500
+--select distinct period from  Plex.GL_Account_Activity_Summary order by period -- 202001,202002,202003,202004,202005,202006,202007
 select
 	--Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
 f.pcn,
 f.period,
+@periodDisplay period_display,
 f.category_type,
 f.category_name,
 f.sub_category_name,
@@ -471,20 +475,23 @@ f.YTD_debit_credit_start_value,
 case
 	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_debit_start_value + f.current_debit
 	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd_debit + f.current_debit
-	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd_debit + f.current_debit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)='01')) then f.current_debit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)!='01')) then f.account_balance_prev_period_ytd_debit + f.current_debit
 end ytd_debit,
 case
 	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_credit_start_value + f.current_credit
 	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd_credit + f.current_credit
-	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd_credit + f.current_credit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)='01')) then f.current_credit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)!='01')) then f.account_balance_prev_period_ytd_credit + f.current_credit
 end ytd_credit,
 case
 	when ((f.first_digit_123=1) and (@prevperiod=@YTD_start_period)) then f.YTD_debit_credit_start_value + f.current_debit_credit
 	when ((f.first_digit_123=1) and (@prevperiod!=@YTD_start_period)) then f.account_balance_prev_period_ytd_debit_credit + f.current_debit_credit
-	when (f.first_digit_123!=1) then f.account_balance_prev_period_ytd_debit_credit + f.current_debit_credit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)='01')) then f.current_debit_credit
+	when ((f.first_digit_123!=1) and (right(@strPeriod,2)!='01')) then f.account_balance_prev_period_ytd_debit_credit + f.current_debit_credit
 end ytd_debit_credit
 -- drop table Plex.trial_balance_2020_01
-into Plex.trial_balance_2020_01
+into Plex.trial_balance_2021_11
 from
 (
 	--Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
@@ -564,6 +571,7 @@ from
 		--select count(*)
 		--select s.*
 		from Plex.accounting_account a  -- 18,010
+
 		left outer join Plex.GL_Account_Activity_Summary s 
 		on a.pcn=s.pcn 
 		and  a.account_no=s.account_no -- 18,010
@@ -582,33 +590,33 @@ where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000
 -- select * from Plex.GL_Account_Activity_Summary s 
 -- select * from Plex.accounting_account a
 -- truncate table Plex.GL_Account_Activity_Summary
-/*
-	pcn int NOT NULL,
-	revenue decimal(19,5) NULL,  -- Always null for now  
-	expense decimal(19,5) NULL, -- Always null for now
-	amount decimal(19,5) NULL, -- Always null for now
-	period int NOT NULL,
-	Period_Display varchar(10),
-	Category_Type varchar(10),
-	Category_No int NULL,
-	Category_Name varchar(50),
-	[No] varchar(20),
-	Name varchar(110),
-	Ytd_Debit decimal(18,2),
-	Ytd_Credit decimal(18,2),
-	Ytd decimal(18,2),  -- for debug 
-	Current_Debit decimal(18,2),
-	Current_Credit decimal(18,2),
-	Sub_Category_No int,
-	Sub_Category_Name varchar(50),
-	Subtotal_After int,
-	Subtotal_Name varchar(50),
- */
----- Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
 
+
+/*
+ * Insert into account_balance
+ */
+select count(*) from Plex.account_balance  -- 4362,8742,13086,17448,21810,26172,30534,34896,39258,43620,47982,52344,56706,61068,65430,69792,74154,78516,82878,87240,91602,95964,100326
+select distinct period from Plex.account_balance order by period  -- 202001,202002,202003,202004,202005,202006,202007,202008
+--,202009,202010,202011,202012,202101,202102,202103,202104,202105,202106,202107,202108,202109,202110,202111
+insert into Plex.account_balance 
+--Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
+(pcn,period,category_type,category_name,sub_category_name,[no],name,current_debit,current_credit,current_debit_credit,ytd_debit,ytd_credit,ytd_debit_credit)
+select pcn,period,category_type,category_name,sub_category_name,[no],name,current_debit,current_credit,current_debit_credit,ytd_debit,ytd_credit,ytd_debit_credit
+from Plex.trial_balance_2021_11 f
+--where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+
+/*
+ * back
+ */
+select * 
+--into Plex.account_balance_2021_11
+from Plex.account_balance 
+/*
+ * export CSV file
+ */
 select
 --f.pcn,
-f.period,
+f.period_display,
 f.category_type,
 f.category_name, -- Albion has all blanks.
 f.sub_category_name,
@@ -617,7 +625,7 @@ f.name,
 f.current_debit_credit,
 f.ytd_debit_credit
 --'' subtotal_name -- Albion has all zeros.
-from Plex.trial_balance_2020_01 f
+from Plex.trial_balance_2020_04 f
 
 /*
  * 
@@ -628,9 +636,3 @@ from Plex.trial_balance_2020_01 f
 select * 
 -- select count(*)
 from Plex.account_balance ab --4362
-/*
- * Insert into account_balance
- */
-insert into Plex.account_balance 
---Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
-(pcn,period,category_type,category_name,sub_category_name,[no],name,ytd_debit,ytd_credit,ytd_debit_credit,current_debit,current_credit,current_debit_credit)

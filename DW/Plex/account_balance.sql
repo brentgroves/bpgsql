@@ -4,16 +4,17 @@ Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Cred
 CREATE TABLE Plex.account_balance (
 	pcn int NOT NULL,
 	period int NOT NULL,
-	Category_Type varchar(10),
-	Category_Name varchar(50),
-	[No] varchar(20),
-	Name varchar(110),
-	Ytd_Debit decimal(18,2),
-	Ytd_Credit decimal(18,2),
-	Ytd_Debit_Credit decimal(18,2),  -- for debug 
-	Current_Debit decimal(18,2),
-	Current_Credit decimal(18,2),
-	Current_Debit_Credit decimal(18,2),
+	category_type varchar(10),
+	category_name varchar(50),
+	sub_category_name varchar(50),
+	[no] varchar(20),
+	name varchar(110),
+	current_debit decimal(18,2),
+	current_credit decimal(18,2),
+	current_debit_credit decimal(18,2),
+	ytd_debit decimal(18,2),
+	ytd_credit decimal(18,2),
+	ytd_debit_credit decimal(18,2),  -- for debug 
 	PRIMARY KEY (pcn,period,[No])
 );
 select * from Plex.account_balance
