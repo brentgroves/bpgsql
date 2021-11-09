@@ -491,7 +491,7 @@ case
 	when ((f.first_digit_123!=1) and (right(@strPeriod,2)!='01')) then f.account_balance_prev_period_ytd_debit_credit + f.current_debit_credit
 end ytd_debit_credit
 -- drop table Plex.trial_balance_2020_01
-into Plex.trial_balance_2021_11
+--into Plex.trial_balance_2021_11
 from
 (
 	--Period,Category Type,Category Name,Sub Category Name,No,Name,Current Debit/(Credit),YTD Debit/(Credit)
@@ -611,9 +611,10 @@ from Plex.trial_balance_2021_11 f
 select * 
 --into Plex.account_balance_2021_11
 from Plex.account_balance 
+
 /*
- * export CSV file
- */
+ * CSV export 
+*/
 select
 --f.pcn,
 f.period_display,
@@ -625,14 +626,253 @@ f.name,
 f.current_debit_credit,
 f.ytd_debit_credit
 --'' subtotal_name -- Albion has all zeros.
-from Plex.trial_balance_2020_04 f
+--where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+--from Plex.trial_balance_2020_03 f --
+--from Plex.trial_balance_2020_02 f --
+ 
+from Plex.trial_balance_2021_11 f -- 
+where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+ */
+/*
+ * Try to create a pivot table
+*/
+--select * 
+select 
+--b.period_display,
+--b.period,
+-- 
+b.category_type,
+b.category_name, -- Albion has all blanks.
+b.sub_category_name,
+--b.[no],
+b.name
+--b.current_debit_credit,
+--b.ytd_debit_credit
+--select count(*)
+from Plex.account_balance b 
+where b.period between 202110 and 202111  -- 4362
+and b.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
 
 /*
- * 
+ * account_no are the rows
  */
---///////////////////////////////////////////////////
--- old stuff
--- truncate table Plex.account_balance 
+select a.account_no  
+from Plex.accounting_account a
+where a.pcn = 123681
+and a.account_no in ('10220-000-00000')
+
+/*
+ * periods are the rows
+ */
+select distinct period column_name from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 
+/*
+ * current_debit_credit are column values
+ */
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+
+/*
+ * https://www.sqlservertutorial.net/sql-server-basics/sql-server-pivot/
+ * 1. First, select a base dataset for pivoting.
+ */
+
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+/*
+ * Second, create a temporary result by using a derived table or common table expression (CTE)
+ */
 select * 
--- select count(*)
-from Plex.account_balance ab --4362
+from 
+( 
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+)s
+/*
+ * Third, apply the PIVOT operator:
+ */
+select * 
+from 
+( 
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+)s
+PIVOT(
+    max(current_debit_credit) 
+    FOR period IN (
+        [202110], 
+        [202111])
+) AS pivot_table;
+
+
+/*
+ * https://www.sqlservertutorial.net/sql-server-basics/sql-server-pivot/
+ * 1. First, select a base dataset for pivoting.
+ */
+
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+/*
+ * Second, create a temporary result by using a derived table or common table expression (CTE)
+ */
+select * 
+from 
+( 
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+)s
+/*
+ * Third, apply the PIVOT operator:
+ */
+select * 
+from 
+( 
+select b.period,b.current_debit_credit from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 and b.[no] in ('11900-000-0000')
+)s
+PIVOT(
+    max(current_debit_credit) 
+    FOR period IN (
+        [202110], 
+        [202111])
+) AS pivot_table;
+
+
+
+/*
+ * Now, any additional column which you add to the select list of the query that returns the base data will automatically form row groups in the pivot table. 
+ * For example, you can add the model year column to the above query:
+ */
+select *
+from 
+( 
+select b.period,b.current_debit_credit,b.[no] 
+from Plex.account_balance b 
+where b.pcn = 123681 and b.period between 202101 and 202111 --and b.[no] in ('11900-000-0000')
+and b.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+)s
+PIVOT(
+    min(current_debit_credit) 
+    FOR period IN (
+        [202101],
+        [202102],
+        [202103],
+        [202104],
+        [202105],
+        [202106],
+        [202107],
+        [202108],
+        [202109],
+        [202110], 
+        [202111])
+) AS pivot_table;
+
+select cdc.[no] account_no,
+cdc.[202101] debit_credit_202101,
+ytd.[202101] ytd_202101,
+cdc.[202102] debit_credit_202102,
+ytd.[202102] ytd_202102,
+cdc.[202103] debit_credit_202103,
+ytd.[202103] ytd_202103,
+cdc.[202104] debit_credit_202104,
+ytd.[202104] ytd_202104,
+cdc.[202105] debit_credit_202105,
+ytd.[202105] ytd_202105,
+cdc.[202106] debit_credit_202106,
+ytd.[202106] ytd_202106,
+cdc.[202107] debit_credit_202107,
+ytd.[202107] ytd_202107,
+cdc.[202108] debit_credit_202108,
+ytd.[202108] ytd_202108,
+cdc.[202109] debit_credit_202109,
+ytd.[202109] ytd_202109,
+cdc.[202110] debit_credit_202110, 
+ytd.[202110] ytd_202110,
+cdc.[202111] debit_credit_202111,
+ytd.[202111] ytd_202111
+FROM 
+(
+	select *
+	from 
+	( 
+	select b.period,b.current_debit_credit,b.[no] 
+	from Plex.account_balance b 
+	where b.pcn = 123681 and b.period between 202101 and 202111 --and b.[no] in ('11900-000-0000')
+	and b.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+	)s
+	PIVOT(
+	    min(current_debit_credit) 
+	    FOR period IN (
+	        [202101],
+	        [202102],
+	        [202103],
+	        [202104],
+	        [202105],
+	        [202106],
+	        [202107],
+	        [202108],
+	        [202109],
+	        [202110], 
+	        [202111])
+	) AS pivot_table
+)cdc
+join 
+(
+	select *
+	from 
+	( 
+	select b.period,b.ytd_debit_credit,b.[no] 
+	from Plex.account_balance b 
+	where b.pcn = 123681 and b.period between 202101 and 202111 --and b.[no] in ('11900-000-0000')
+	and b.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+	)s
+	PIVOT(
+	    min(ytd_debit_credit) 
+	    FOR period IN (
+	        [202101],
+	        [202102],
+	        [202103],
+	        [202104],
+	        [202105],
+	        [202106],
+	        [202107],
+	        [202108],
+	        [202109],
+	        [202110], 
+	        [202111])
+	) AS pivot_table
+)ytd 
+on cdc.[no]=ytd.[no]
+
+select
+--f.pcn,
+f.period_display,
+f.category_type,
+f.category_name, -- Albion has all blanks.
+f.sub_category_name,
+f.[no],
+f.name,
+f.current_debit_credit,
+f.ytd_debit_credit
+--'' subtotal_name -- Albion has all zeros.
+--where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+--from Plex.trial_balance_2020_03 f --
+--from Plex.trial_balance_2020_02 f --
+ 
+from Plex.trial_balance_2021_11 f -- 
+where f.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+select b.period,b.current_debit_credit,b.[no] 
+from Plex.account_balance b 
+where b.pcn = 123681 and b.period between 202101 and 202101 --and b.[no] in ('11900-000-0000')
+and b.[no] in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+
+10220-000-00000	0.00	0.00
+10250-000-00000	0.00	0.00
+11010-000-0000	978569.68	190040.90
+11900-000-0000	278484.62	-413915.62
+41100-000-0000	5107477.52	338088.38
+50100-200-0000	3403301.27	0.00
+51450-200-0000	-702217.64	0.00
+/*
+ * account_no,period set
+ */
+select account_no  
+from Plex.accounting_account a
+(
+select distinct period from Plex.account_balance b where b.pcn = 123681 and b.period between 202110 and 202111 
+) p 
+
+where a.pcn = 123681
+
