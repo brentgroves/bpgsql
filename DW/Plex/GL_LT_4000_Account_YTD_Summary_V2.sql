@@ -59,6 +59,55 @@ end
 DECLARE @PCN_Currency_Code CHAR(3);
 set @PCN_Currency_Code = 'USD'
 -- select @PCN_Currency_Code
+
+-- https://www.sqlshack.com/the-table-variable-in-sql-server/
+
+DECLARE @PeriodsAll TABLE
+(
+  period_key INT PRIMARY KEY IDENTITY(1,1) ,
+  period INT ,
+  period_display VARCHAR(10) ,
+  [Open] BIT
+);
+
+INSERT @PeriodsAll 
+SELECT
+  P.Period,
+  P.Period_Display,
+  P.Period_Status
+FROM accounting_v_Period_e AS P
+where p.plexus_customer_no in
+(
+ select tuple from #list
+)
+AND P.Period BETWEEN @PeriodStart AND @PeriodEnd
+ORDER BY
+  P.Period;
+
+select p.*
+FROM accounting_v_Period_e AS P
+where p.plexus_customer_no in
+(
+ select tuple from #list
+)
+and period_display in 
+(
+select period_display from @periodsAll where period_display like '%[abc]%'
+)
+
+select * from @periodsAll where period_display like '%[abc]%'
+declare @period_count int
+declare @period_key int
+SET   @period_count = @@ROWCOUNT; -- dont' move
+SET   @period_key = 1;
+  
+--select @pecord_count period_count,@period_key period_key
+
+
+--where s.account_no in ('20100-000-0000')
+--where s.account_no in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','20100-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+
+
 CREATE TABLE #Accounts
 (
   pcn INT NOT NULL,
@@ -103,8 +152,65 @@ where a.plexus_customer_no in
 )
 and left(a.account_no,1) < '4'  -- 661
 
+declare @account_count int
+select @account_count=count(*) from #Accounts
 --select count(*) accounts from #Accounts  -- 661
 
+--select count(*) from @Periods_All pa 
+
+Declare @AccountPeriod table
+(
+  pcn INT NOT NULL,
+  account_no VARCHAR(20) NOT NULL,
+  period int, 
+  --/*  -- 17
+  PRIMARY KEY CLUSTERED
+  (
+    pcn,account_no,period
+  )
+  --*/
+);
+insert into @AccountPeriod
+select a.pcn,a.account_no,b.period
+from #Accounts a
+inner join accounting_v_balance_e b
+on a.pcn=b.plexus_customer_no
+and a.account_no=b.account_no
+
+-- select distinct period from accounting_v_balance_e where plexus_customer_no = 123681 order by period
+--select * from accounting_v_balance_e where plexus_customer_no = 123681 and period_adjustment != 0
+--select * from accounting_v_balance_e where plexus_customer_no = 123681 and period_13 != 0
+--select * from accounting_v_balance_e where plexus_customer_no = 123681 
+--and account_no = '10220-000-00000'
+--and account_no in ('11010-000-0000') order by period
+--and s.account_no in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','20100-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
+
+declare @account_period_count int
+select @account_period_count=count(*) from @AccountPeriod
+/*
+select @account_count account_count,@period_count period_count
+select @account_count*@period_count account_times_period
+select @account_period_count account_period_count
+select @account_count*@period_count - @account_period_count all_periods_minus_account_periods
+*/
+/*
+
+select top 100 pa.*,a.*
+into
+from @Periods_All pa 
+cross join #Accounts a 
+
+DECLARE @AccountPeriod TABLE
+(
+  id INT PRIMARY KEY IDENTITY(1,1) ,
+  pcn int,
+  account_no varchar(20),
+  period INT
+);
+*/
+
+/*
+Old Method
 select a.pcn,a.account_no,min(b.period) start_period
 into #Start_Period
 from #Accounts a
@@ -126,7 +232,7 @@ and a.account_no=s.account_no
 --select count(*) Start_Period from #Account_with_Start_Period  -- 398
 select * from #AccountsWithStartPeriod s  -- 398
 where s.account_no in ('10220-000-00000','10250-000-00000','11900-000-0000','11010-000-0000','20100-000-0000','41100-000-0000','50100-200-0000','51450-200-0000')
-
+*/
 /*
 What period should we start in if there are no accounting_v_account_balance records?
 like in account: 10305-000-00817
