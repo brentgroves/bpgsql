@@ -30,27 +30,32 @@ select * from Plex.Account_Balances_by_Periods_View
 	--truncate table Plex.Account_Balances_by_Periods
 select * 
 --select count(*)
+select distinct pcn,period
 from Plex.Account_Balances_by_Periods
 where period_display != 'Total'
-order by no
 --where pcn = 300758
 where pcn = 123681  -- 8408
+and period = 202110
 and category_no = 0
 
 select * 
 --select count(*)
+--select distinct pcn,period
+--delete 
 from Plex.Account_Balances_by_Periods  -- 15,234
 
-where period_display != 'Total'
-order by no
---where pcn = 300758
-where pcn = 123681  -- 8408
-and category_no = 0
+where 
+--period_display != 'Total'
+--and pcn = 300758
+--and pcn = 123681  -- 8408
+--and period = 202110
+ period = 0
+--and category_no = 0
 
 
 /*
 update Plex.Account_Balances_by_Periods 
 set pcn=123681
-where pcn is null
+where pcn is null and period=202110
 */
 -- delete from Plex.Account_Balances_by_Periods WHERE pcn in (123681,300758)
