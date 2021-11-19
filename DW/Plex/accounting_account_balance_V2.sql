@@ -278,6 +278,10 @@ AS
 -- references expression name
 SELECT *
 FROM   calc_ytd
+/*
+ * Verified calc_ytd with just 1 ytd account.
+ * Next create view for account123 and determine its ytd value.
+ */
 
 202101	11010-000-0000	2392605.71000	2392605.71000
 202102	11010-000-0000	986341.72000	986341.72000
