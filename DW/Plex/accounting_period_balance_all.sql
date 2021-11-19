@@ -230,17 +230,21 @@ SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance F
 /*
  * Working solution
  */
-select count(*)
+select *
+-- select count(*)
 from
 (
 	select * 
-	select count(*)
+	--select count(*)
 	from Plex.accounting_period_balance_low_2021_10 -- 3,930 / all:37,138
 	where period >202012
 	union
 	select *
-	select count(*)
+	--select count(*)
 	from Plex.accounting_period_balance_high_2021_10 --37,010
 	where period >202012
 )s
+--where left(account_no,1) > '3'
+order by period,account_no
+
 -- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);

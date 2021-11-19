@@ -128,6 +128,21 @@ AS
 SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low OPTION (MAXRECURSION 210); 
 
 select * 
-into Plex.accounting_period_balance_low_2021_10
+-- into Plex.accounting_period_balance_low_2021_10
 from Plex.accounting_period_balance_low -- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);
 OPTION (MAXRECURSION 210);
+
+select * from Plex.accounting_period_balance_low_2021_10 b where b.account_no like '27800-000%' and b.period = 202110 order by b.account_no
+select distinct pcn,period from Plex.Account_Balances_by_Periods 
+select * from Plex.Account_Balances_by_Periods p where p.pcn = 123681 and p.period=202110 and p.[no] like '27800-000%' order by p.[no]
+select * from Plex.accounting_account_ext where account_no = '27800-000-9806'
+/*
+asset/equity/expense/liability/revenue
+Assets naturally have debit balances, so they should normally appear as positive numbers
+Liabilities and Equity naturally have credit balances, so would normally appear as negative numbers
+Revenue accounts naturally have credit balances, so normally these would be negative
+Expense accounts naturally have debit balances, so normally would be positive numbers
+there are exceptions in every category for a variety of reasons (of course)
+*/
+
+
