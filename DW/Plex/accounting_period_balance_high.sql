@@ -11,9 +11,10 @@
 	    a.account_no,
 	    202101 period
 		--select count(*) cnt
+	    --select *
 		from Plex.accounting_account a  -- high: 3,701 * 10 = 37,010 /// all: 4,362 X 10 = 43,620
 		where pcn = 123681
-		and left(a.account_no,1) > '3' 
+		and a.low_account = 0
 	--	and account_no = '10000-000-00000'
 	    UNION ALL
 	    -- Recursive member that references expression_name.

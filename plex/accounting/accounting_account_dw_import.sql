@@ -46,48 +46,44 @@ BEGIN
     SELECT cast(left(@in_string, charindex(@delimiter, @in_string+',') -1) as int) as tuple
 
     SET @in_string = stuff(@in_string, 1, charindex(@delimiter, @in_string + @delimiter), '')
-end
+end;
 --select tuple from #list
-select 
-a.plexus_customer_no pcn,
-a.account_key,
-a.account_no,
-a.account_name,
-a.active,
-a.category_type,
---t.[in],
-case
-when t.[in] = 'Debit' then 1
-else 0
-end debit_main,
-case
-when left(a.account_no,1) in (1,2,3) then 1
-else 0
-end left_digit_123
--- select count(*)
-from accounting_v_account_e  a -- 36,636
--- select * from accounting_v_category_type
-/*
-asset/equity/expense/liability/revenue
-Assets naturally have debit balances, so they should normally appear as positive numbers
-Liabilities and Equity naturally have credit balances, so would normally appear as negative numbers
-Revenue accounts naturally have credit balances, so normally these would be negative
-Expense accounts naturally have debit balances, so normally would be positive numbers
-there are exceptions in every category for a variety of reasons (of course)
-*/
 
-join accounting_v_category_type t 
-on a.category_type=t.category_type
---where a.plexus_customer_no = 123681  -- 4362
-where a.plexus_customer_no in
+WITH account_balance (pcn,account_key,account_no,period)
+as
 (
- select tuple from #list
+	select plexus_customer_no pcn,account_key,account_no,period
+	from accounting_v_balance_e b
+  where b.plexus_customer_no in
+  (
+   select tuple from #list
+  )
+),
+--select count(*) from account_balance  -- 52,140
+--select * from account_balance
+account_balance_start (pcn,account_key,account_no,start_period)
+as
+(
+	select pcn,account_key,account_no,min(period) start_period
+	from account_balance b
+	group by b.pcn,b.account_key,b.account_no 	
+),
+--select count(*) from account_balance_start   -- 2131
+--select * from account_balance_start 
+--where pcn=123681  -- 4204
+--and account_no like '27800-000%'
+--and t.[in] = t2.[in]  -- 4204
+--and t.[in] != t2.[in]  -- 0
+account_ext
+(
+pcn,account_key,account_no,account_name,active,
+account_category_type,
+category_no,category_name,category_type,category_type_in,
+sub_category_no,sub_category_name,sub_category_type,sub_category_type_in,
+debit_balance,low_account,start_period
 )
---and a.account_no like '27800-000%'
--- and a.active is null  --0
--- and a.active= 1 -- 3327
-
-/*
+as
+(
 select 
 a.plexus_customer_no pcn,
 a.account_key,
@@ -127,15 +123,23 @@ case
 when t2.category_type is null then ''
 else t2.[in] 
 end sub_category_type_in,
+-- select distinct [in] from accounting_v_category_type -- Credit/Debit
+-- select count(*) from accounting_v_category_type where [in] = 'Credit' -- 3
+-- select count(*) from accounting_v_category_type where [in] = 'Debit' -- 2
 case
-when t.[in] is null then -1
+when t.[in] is null and act.[in] = 'Debit' then 1
+when t.[in] is null and act.[in] = 'Credit' then 0
 when t.[in] = 'Debit' then 1
-else 0
+else 0  -- should never happen
 end debit_balance,
 case
 when left(a.account_no,1) in (1,2,3) then 1
 else 0
-end left_digit_123
+end low_account,
+case 
+when b.pcn is null then 0 
+else b.start_period 
+end start_period
 --ca.*,
 --ca.category_name,
 --b.*,
@@ -146,52 +150,71 @@ end left_digit_123
 -- select count(*)
 from accounting_v_account_e  a -- 36,636
 --where a.plexus_customer_no=123681  -- 4362 
---join accounting_v_category_type t -- DONT DO THIS
---on a.category_type=t.category_type
-join accounting_v_category_account_e ca  --
+join accounting_v_category_type act -- DONT DO THIS
+on a.category_type=act.category_type  -- 36,636
+left outer join accounting_v_category_account_e ca  --
 on a.plexus_customer_no=ca.plexus_customer_no
 and a.account_no=ca.account_no
 --where a.plexus_customer_no=123681  -- 4204
 
-join accounting_v_category_e c  --
+left outer join accounting_v_category_e c  --
 on ca.plexus_customer_no=c.plexus_customer_no
 and ca.category_no=c.category_no
-join accounting_v_category_type t 
+left outer join accounting_v_category_type t 
 on c.category_type=t.category_type
 --where a.plexus_customer_no=123681  -- 4204
+--and t.[in] = 'Debit' -- 3998
+--and t.[in] = 'Credit' -- 206
 
 
-join accounting_v_sub_category_account_e sca  --
+left outer join accounting_v_sub_category_account_e sca  --
 on a.plexus_customer_no=sca.plexus_customer_no
 and a.account_no=sca.account_no
-join accounting_v_sub_category_e sc  --
+left outer join accounting_v_sub_category_e sc  --
 on sca.plexus_customer_no=sc.plexus_customer_no
 and sca.sub_category_no=sc.sub_category_no
-join accounting_v_category_e c2  --
+left outer join accounting_v_category_e c2  --
 on sc.plexus_customer_no=c2.plexus_customer_no
 and sc.category_no=c2.category_no
-join accounting_v_category_type t2 
+left outer join accounting_v_category_type t2 
 on c2.category_type=t2.category_type
 
+left outer join account_balance_start b 
+on a.plexus_customer_no = b.pcn
+and a.account_key=b.account_key
 
-where a.plexus_customer_no=123681  -- 4204
---and a.account_no like '27800-000%'
---and t.[in] = t2.[in]  -- 4204
-and t.[in] != t2.[in]  -- 0
---join accounting_v_base_e b 
---on a.plexus_customer_no=b.plexus_customer_no
---and a.base_no=b.base_no
---select distinct category_type from accounting_v_category_e where plexus_customer_no=123681
---select * from accounting_v_category_e where plexus_customer_no=123681 and category_type='asset'
--- select * from accounting_v_project_type_e -- 0 records.
--- select * from accounting_v_Allocation_To_Account_e	o records
---select * from  accounting_v_consolidation_account_e 0 
-left outer join accounting_v_standard_account_e sa  --no record
-on a.plexus_customer_no=sa.pcn
-and a.account_no=sa.account_no
-join accounting_v_cost_center_e cc 
-on a.plexus_customer_no=cc.plexus_customer_no
-and a.cost_center_no=cc.cost_center_no -- 36,636
-where a.plexus_customer_no=123681
-and a.account_no like '27800-000%'
+where a.plexus_customer_no in
+(
+ select tuple from #list
+)
+)
+-- ALL TESTS WITH PCN=123681
+--select count(*) from account_ext   -- 4362 -- albion+edon:7775
+--where start_period !=0 -- 1323 -- albion+edon:2131
+--where start_period =0 -- 3039 -- albion+edon:5644
+--select count(*) from account_ext where debit_balance =1 -- 4083=7289-- albion+edon:486
+--select count(*) from account_ext where debit_balance =0 --279=4362-- albion+edon:486
+--select b.period,b.debit,b.credit, a.*
+/*
+select count(*)
+from account_ext a 
+join accounting_v_balance_e b
+on a.pcn=b.plexus_customer_no
+and a.account_key=b.account_key -- 40700 
+where a.debit_balance in (1,0)  --40700
 */
+--select start_period,* from account_ext where start_period !=0
+select * from account_ext 
+
+/*
+asset/equity/expense/liability/revenue
+Assets naturally have debit balances, so they should normally appear as positive numbers
+Liabilities and Equity naturally have credit balances, so would normally appear as negative numbers
+Revenue accounts naturally have credit balances, so normally these would be negative
+Expense accounts naturally have debit balances, so normally would be positive numbers
+there are exceptions in every category for a variety of reasons (of course)
+--and a.account_no like '27800-000%'
+
+@PCNList varchar(max) = '123681,300758'
+*/
+

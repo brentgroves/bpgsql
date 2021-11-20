@@ -3,18 +3,27 @@
 create table Plex.accounting_account
 (
 	pcn int,
-	account_key int,  -- identity
+	account_key int,
 	account_no	varchar (20),
 	account_name	varchar (110),
 	active bit,
-	category_type	varchar (10),
-	debit_main bit,
-	first_digit_123 bit
+	account_category_type	varchar (10),
+	category_no int,
+	category_name varchar(50),
+	category_type varchar(10),
+	category_type_in varchar(6),
+	sub_category_no int,
+	sub_category_name varchar(50),
+	sub_category_type varchar(10),
+	sub_category_type_in varchar(6),
+	debit_balance bit,
+	low_account bit,
+	start_period int,
 	PRIMARY KEY CLUSTERED
 	(
-	   PCN,account_no 
+	   PCN,account_key 
 	)
-)
+)	
 Param 
 @PCNList varchar(max) = '123681,300758'
 */

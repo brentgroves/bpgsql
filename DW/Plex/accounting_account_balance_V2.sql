@@ -185,8 +185,8 @@ select * from Plex.accounting_account123
  * https://learnsql.com/blog/sql-subquery-cte-difference/
  */
 
-	--drop view Plex.accounting_period_balance
-	create view Plex.accounting_period_balance_2021(pcn,account_key,account_no,period,debit,credit,balance)
+	--drop view Plex.accounting_period_balance_high
+	create view Plex.accounting_period_balance_high(pcn,account_key,account_no,period,debit,credit,balance)
 	as
 
 	WITH account_period (pcn,account_key,account_no,period)
@@ -199,8 +199,9 @@ select * from Plex.accounting_account123
 	    a.account_no,
 	    202101 period
 		--select count(*) cnt
-		from Plex.accounting_account a  -- 4,362 X 10 = 43,620
+		from Plex.accounting_account a  -- high: 3,701 * 10 = 37,010 /// all: 4,362 X 10 = 43,620
 		where pcn = 123681
+		and left(a.account_no,1) > '3' 
 	--	and account_no = '10000-000-00000'
 	    UNION ALL
 	    -- Recursive member that references expression_name.
@@ -212,8 +213,8 @@ select * from Plex.accounting_account123
 	    from account_period p
 	    where p.period < 202110
 	),
-	--select count(*) from account_period -- 4,362
---	select * from account_period -- 4,362
+--	select count(*) from account_period -- high:37,010 all:43,620
+--	select * from account_period
 	account_period_balance( pcn,account_key,account_no,period,debit,credit,balance)
 	as 
 	(
@@ -242,42 +243,49 @@ select * from Plex.accounting_account123
 		-- references expression name
 		select *
 		--SELECT count(*)
-		FROM   account_period_balance;  -- 43,620
+		FROM   account_period_balance;  -- 37,010
 
-	select * from Plex.accounting_period_balance_2021
-	
+	select count(*) from Plex.accounting_period_balance_high  -- 37,010
+	select * from Plex.accounting_period_balance_high  -- 37,010
+	where account_no = '41100-000-0000'
 	
 
-WITH calc_ytd (period,account_no,balance,ytd)
+WITH calc_ytd_high (period,account_no,debit,ytd_debit,balance,ytd_balance)
 AS
 (
     -- Anchor member
     select 
     period,
     account_no, 
+    debit,
+    debit as ytd_debit,
     balance,
-    balance as ytd
-	from Plex.accounting_period_balance_2021 
+    balance as ytd_balance
+    --select count(*)
+	from Plex.accounting_period_balance_high 
 	--where period between 202101 and 202102
 	where period = 202101
 	--and debit > 0
-	and account_no = '41100-000-0000'
+	--and account_no = '41100-000-0000'
+	and left(account_no,1) < '7' --1,886
     UNION ALL
     -- Recursive member that references expression_name.
     select 
     y.period+1,
     y.account_no,
+    b.debit,
+    cast(y.ytd_debit+b.debit as decimal(19,5)) as ytd_debit,
     b.balance,
-    cast(y.ytd+b.balance as decimal(19,5)) as ytd
-    from calc_ytd y
-    inner join Plex.accounting_period_balance_2021 b 
+    cast(y.ytd_balance+b.balance as decimal(19,5)) as ytd_balance
+    from calc_ytd_high y
+    inner join Plex.accounting_period_balance_high b 
     on y.period+1=b.period 
     and y.account_no=b.account_no
     where y.period < 202110
 )
 -- references expression name
-SELECT *
-FROM   calc_ytd
+SELECT count(*) FROM   calc_ytd_high
+--SELECT * FROM   calc_ytd
 /*
  * Verified calc_ytd with just 1 ytd account.
  * Next create view for account123 and determine its ytd value.
