@@ -7,16 +7,18 @@ create table Plex.accounting_account
 	account_no	varchar (20),
 	account_name	varchar (110),
 	active bit,
-	account_category_type	varchar (10),
-	category_no int,
-	category_name varchar(50),
-	category_type varchar(10),
+	category_type	varchar (10),
 	category_type_in varchar(6),
-	sub_category_no int,
-	sub_category_name varchar(50),
-	sub_category_type varchar(10),
-	sub_category_type_in varchar(6),
-	debit_balance bit,
+	category_no_legacy int,
+	category_name_legacy varchar(50),
+	category_type_legacy varchar(10),
+	category_type_in_legacy varchar(6),
+	sub_category_no_legacy int,
+	sub_category_name_legacy varchar(50),
+	sub_category_type_legacy varchar(10),
+	sub_category_type_in_legacy varchar(6),
+	debit_balance smallint,
+	debit_balance_legacy smallint,
 	low_account bit,
 	start_period int,
 	PRIMARY KEY CLUSTERED
@@ -45,9 +47,24 @@ Param
 7	310507
 8	312055
 	*/
-select * 
+select account_no,account_name,active,category_type old_category_type, account_category_type new_category_type 
 --select count(*)
-from Plex.accounting_account
+from Plex.accounting_account 
+where pcn = 123681  -- 4362
+--and account_category_type = category_type -- 4,199
+and account_category_type != category_type -- 163
+and category_type = ''
+--and category_type != ''
+
+--where account_no like '27800-000%'
+--where category_type_in = 'Debit'  -- 3,998
+--and debit_balance = 1 -- 3,998
+--where category_type_in = 'Credit'  -- 206
+--and debit_balance = 0 -- 206
 where  
 pcn = 123681 -- 4,362
 and active = 1 --3,327
+-- select * from Plex.account_balance where [no] like '27800-000%' and period = 201812 -- odd 27800-000-9806
+-- select distinct pcn,period from Plex.account_balance where [no] like '27800-000%' and period = 201812 -- odd 27800-000-9806
+
+

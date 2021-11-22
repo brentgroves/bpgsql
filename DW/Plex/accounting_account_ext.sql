@@ -1,3 +1,7 @@
+/*
+ * This view is Obsolete. We now import this info directly from Plex.
+ */
+/*
 create view Plex.accounting_account_ext
 as
 WITH account_balance_start (pcn,account_key,account_no,start_period)
