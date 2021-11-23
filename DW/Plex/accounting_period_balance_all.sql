@@ -308,3 +308,8 @@ and b.period = p.period
 where b.period=202110  -- 
 and p.[no] is null  -- 96
 
+
+select * from Plex.Account_Balances_by_Periods p 
+where p.pcn=123681 
+and p.period=202109
+

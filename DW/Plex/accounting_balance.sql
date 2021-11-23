@@ -10,4 +10,5 @@ CREATE TABLE Plex.accounting_balance (
 	balance_legacy decimal(19,5),
 	PRIMARY KEY (pcn,account_key,period)
 );
+select distinct pcn,period from Plex.accounting_balance ab order by pcn,period
 select * from Plex.accounting_balance ab 
