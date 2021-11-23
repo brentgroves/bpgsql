@@ -10,6 +10,7 @@ CREATE TABLE Plex.accounting_balance
   debit decimal(19,5),
   credit decimal(19,5),
   balance decimal(19,5),
+  balance_legacy decimal(19,5),
   PRIMARY KEY CLUSTERED
   (
     PCN,account_key,period

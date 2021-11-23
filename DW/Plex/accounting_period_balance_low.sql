@@ -18,10 +18,10 @@
 	    end next_period
 		--select count(*) cnt
 	    --select *
-		from Plex.accounting_account_ext a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+		from Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
 		where a.pcn = 123681
-		and a.first_digit_123 =1  -- 661
-		and a.start_period != 0
+		and a.low_account =1  -- 661
+		and a.start_period != 0  -- 398
 	--	and left(a.account_no,1) < '4' 
 	--	and account_no = '10000-000-00000'
 	    UNION ALL
@@ -41,7 +41,7 @@
 	    from account_period_low p
 	    where p.period < 202110
 	),
---	select count(*) from account_period -- low:37,138 all:43,620
+--	select count(*) from account_period_low -- low:37,168 
 --	select * from account_period
 --	OPTION (MAXRECURSION 210)
 
@@ -72,7 +72,7 @@
 		
 	),
 	-- references expression name
-	--	SELECT count(*) FROM   account_period_balance OPTION (MAXRECURSION 210);  -- 37,138
+	--	SELECT count(*) FROM   account_period_balance_low OPTION (MAXRECURSION 210);  -- 37,161
 	--where account_no = '41100-000-0000'
 	
 
@@ -92,7 +92,7 @@ AS
     b.balance as ytd_balance
     --select count(*)
 	from account_period_balance_low b
-	join Plex.accounting_account_ext a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+	join Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
 	on b.pcn=a.pcn
 	and b.account_key=a.account_key
 	where b.period = a.start_period

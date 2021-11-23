@@ -58,7 +58,8 @@ CHANGE THIS AND LOW TO WORK WITH NEW Plex.accounting_account
 		and a.account_no = b.account_no
 		and a.period=b.period
 		
-	)
+	),
+	-- select * from Plex.accounting_balance b
 		-- references expression name
 		--select *
 	--	SELECT count(*) FROM   account_period_balance;  -- 37,010
@@ -111,7 +112,7 @@ AS
     where y.period < 202110
 )
 -- references expression name
---SELECT count(*) FROM   calc_ytd_high
+SELECT count(*) FROM   calc_ytd_high
 SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM   calc_ytd_high
 
 select * 

@@ -232,6 +232,7 @@ SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance F
  */
 select *
 -- select count(*)
+--into Plex.accounting_period_balance_all_2021_10
 from
 (
 	select * 
@@ -246,5 +247,64 @@ from
 )s
 --where left(account_no,1) > '3'
 order by period,account_no
-
 -- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);
+
+select distinct pcn,period from Plex.Account_Balances_by_Periods abbp 
+select *
+-- select count(*)
+from Plex.Account_Balances_by_Periods p 
+where p.pcn=123681 and p.period = 202110  -- 4204
+
+
+select *
+-- select count(*)
+from Plex.accounting_period_balance_all_2021_10 b
+where b.period = 202110  -- 4099
+
+
+
+select *
+-- select count(*)
+from 
+(
+	select * from Plex.Account_Balances_by_Periods p 
+	where p.pcn=123681 
+	and p.period=202110
+) p
+left outer join Plex.accounting_period_balance_all_2021_10 b
+on p.[no] = b.account_no
+and p.period = b.period 
+where b.account_no is null  -- 201
+
+
+select *
+-- select count(*)
+from 
+(
+	select * from Plex.Account_Balances_by_Periods p 
+	where p.pcn=123681 
+	and p.period=202110
+) p
+left outer join Plex.accounting_period_balance_all_2021_10 b
+on p.[no] = b.account_no
+and p.period = b.period 
+where p.current_balance != b.balance -- 0
+--where p.current_debit != b.debit -- 0
+--where p.current_credit != b.credit -- 0
+
+
+
+select *
+-- select count(*)
+from Plex.accounting_period_balance_all_2021_10 b 
+left outer join 
+(
+	select * from Plex.Account_Balances_by_Periods p 
+	where p.pcn=123681 
+	and p.period=202110
+) p
+on b.account_no = p.[no]  
+and b.period = p.period   
+where b.period=202110  -- 
+and p.[no] is null  -- 96
+
