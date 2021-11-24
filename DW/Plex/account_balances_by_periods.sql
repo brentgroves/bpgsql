@@ -39,8 +39,8 @@ where pcn = 123681  -- 8408
 and period = 202110
 and category_no = 0
 
---delete from Plex.Account_Balances_by_Periods
---where period between 202501 and 202502 and pcn =123681
+select * from Plex.trial_balance_2020_01
+
 /*
  * Must cleanup Total lines when importing CSV
  */
@@ -51,7 +51,22 @@ set pcn = 123681 where pcn is null
 
 select count(*)
 from Plex.Account_Balances_by_Periods
-where pcn=123681 and period=202012  -- 4204
+--where pcn=123681 and period=200912  -- 4204
+--where pcn=123681 and period=200911  -- 4204
+--where pcn=123681 and period=200910  -- 4204
+--where pcn=123681 and period=200909  -- 4204
+--where pcn=123681 and period=200908  -- 4204
+--where pcn=123681 and period=200907  -- 4204
+--where pcn=123681 and period=200906  -- 4204
+--where pcn=123681 and period=200905  -- 4204
+--where pcn=123681 and period=200904  -- 4204
+--where pcn=123681 and period=200903  -- 4204
+--where pcn=123681 and period=200902  -- 4204
+--where pcn=123681 and period=200901  -- 4204
+--where pcn=123681 and period=200812  -- 4204
+
+
+--where pcn=123681 and period=202012  -- 4204
 --where pcn=123681 and period=202011  -- 4204
 --where pcn=123681 and period=202010  -- 4204
 --where pcn=123681 and period=202009  -- 4204
