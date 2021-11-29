@@ -74,16 +74,21 @@ Compare Trial Balance download with Accounting_p_Account_Balances_by_Periods_Get
  */
 select s.period,s.account_no,
 s.current_debit,s.current_credit,
-s.current_debit_credit,s.static_calc,s.calc_debit_credit,s.calc_debit_credit_legacy,
-s.debit_balance,s.debit_balance_legacy
---,p.Current_Debit,p.Current_Credit,
+--s.current_debit-s.current_credit current_debit_minus_credit,
+s.Account_Balances_by_Periods_Get_debit_credit, -- Account_Balances_by_Periods_Get
+s.trial_balance_debit_credit -- trial_balance_multi_level
+--s.calc_debit_credit,s.calc_debit_credit_legacy,
+--s.debit_balance,s.debit_balance_legacy
+--,p.Current_Debit,p.Current_Credit
 --select count(*)
 from 
 (
 	select d.pcn,d.period,d.account_no,
-	a.debit_balance,a.debit_balance_legacy,
-	d.current_debit_credit,p.Current_Debit,p.Current_Credit,
-	p.current_debit-p.current_credit static_calc, 	
+	--a.debit_balance,a.debit_balance_legacy,
+	d.current_debit_credit trial_balance_debit_credit,-- trial_balance_multi_level
+	p.Current_Debit,p.Current_Credit,
+	p.current_debit-p.current_credit Account_Balances_by_Periods_Get_debit_credit 	-- Account_Balances_by_Periods_Get
+	/*  THIS IS WRONG YOU ALWAY TAKE p.current_debit-p.current_credit
 	case 
 	when a.debit_balance = 1 then p.current_debit-p.current_credit
 	when a.debit_balance = 0 then p.current_credit - p.current_debit 
@@ -94,10 +99,13 @@ from
 	when a.debit_balance_legacy = 0 then p.current_credit - p.current_debit 
 	else 999.99
 	end calc_debit_credit_legacy 
-	
+	*/
+	-- select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period
+	--select distinct pcn,period
 	--select count(*)
-	from Plex.trial_balance_multi_level d 
-	join Plex.Account_Balances_by_Periods p 
+	from Plex.trial_balance_multi_level d -- 54,652
+	--order by pcn,period {200812,200912}
+	join Plex.Account_Balances_by_Periods p -- static_calc
 	on d.pcn=p.pcn 
 	and d.account_no = p.[no]
 	and d.period = p.period 
@@ -109,8 +117,8 @@ from
 )s
 where s.pcn= 123681 
 and s.period between 200812 and 200912 
---and s.static_calc = s.current_debit_credit   -- 54,646
-and s.static_calc != s.current_debit_credit   -- 6 All 1 cent OFF 
+--and s.trial_balance_debit_credit = s.Account_Balances_by_Periods_Get_debit_credit   -- 54,646
+and s.trial_balance_debit_credit != s.Account_Balances_by_Periods_Get_debit_credit   -- 6 All 1 cent OFF 
 --and s.period = 200812  -- 4,204
 
 where s.calc_debit_credit = s.current_debit_credit and s.debit_balance = 0 and s.calc_debit_credit != 0 -- 0  

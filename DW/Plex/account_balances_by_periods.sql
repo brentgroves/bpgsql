@@ -30,7 +30,12 @@ select *
 --select count(*)
 --select distinct pcn,period
 --select distinct Period_Display 
+--delete 
 from Plex.Account_Balances_by_Periods order by period
+where period between 200812 and 200912
+--where period between 201001 and 201811
+--where period in (200812)  --4204
+where period in (200912)  --4204
 where period in (201812)  --4204
 where period in (999999,0)  --4,206
 where period_display != 'Total'
@@ -51,7 +56,9 @@ set pcn = 123681 where pcn is null
 
 select count(*)
 from Plex.Account_Balances_by_Periods
---where pcn=123681 and period=200912  -- 4204
+where pcn=123681 and period=201811  -- 4204
+where pcn=123681 and period=201001  -- 4204
+where pcn=123681 and period=200912  -- 4204
 --where pcn=123681 and period=200911  -- 4204
 --where pcn=123681 and period=200910  -- 4204
 --where pcn=123681 and period=200909  -- 4204
