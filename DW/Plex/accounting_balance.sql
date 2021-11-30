@@ -78,8 +78,66 @@ and s.period between 200812 and 200912
 	)
 	-- select distinct pcn,period from Plex.accounting_balance order by pcn,period  -- 200812 to 202110
 	-- select distinct pcn,period from Plex.trial_balance_multi_level order by pcn,period  -- 200812 to 200912
-	-- select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period  -- 200812 to 200912,201812 TO 202110
+	-- select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period  -- 200812 to 202110
+	-- select count(*) from (select distinct [no] from Plex.Account_Balances_by_Periods) s  order by pcn,period  -- 200812 to 202110
+	-- select distinct pcn,period from Plex.GL_Account_Activity_Summary order by pcn,period  -- 202001 to 202111
+	-- select count(*) from Plex.GL_Account_Activity_Summary where period = 201807  -- 202001 to 202111
+	-- start at -47 for period 201712
+	-- 
+		select count(*)
+		from Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+		left outer join
+		( 
+			select distinct pcn,[no] from Plex.Account_Balances_by_Periods
+		)p
+		on a.pcn = p.pcn 
+		and a.account_no = p.[no]
+		where a.pcn = 123681
+		and p.pcn is null  -- 158
 
+		select count(*)
+		from Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+		left outer join
+		( 
+			select distinct pcn,account_no from Plex.GL_Account_Activity_Summary
+		)s
+		on a.pcn = s.pcn 
+		and a.account_no = s.account_no 
+		where a.pcn = 123681
+		and s.pcn is null  -- 158
+				
+	-- select count(*) from 
+	--	(
+	--		select distinct [no] from Plex.Account_Balances_by_Periods p
+	--		where ((p.Current_Debit != 0.0) or (p.Current_Credit != 0.0))
+	--	) s  -- 1,520
+		
+	-- select count(*) from 
+	--	(
+	--		select distinct [no] from Plex.Account_Balances_by_Periods p
+	--		where ((p.Current_Debit = 0.0) and (p.Current_Credit = 0.0))
+	--	) s  -- 4,428		
+	
+	-- select distinct pcn,period from Plex.GL_Account_Activity_Summary order by pcn,period -- 202001 to 202111
+	-- select count(*) from (select distinct account_no from Plex.GL_Account_Activity_Summary)s  -- 202001 to 202111
+	
+	select count(*)
+	select distinct p.[no]
+	from Plex.Account_Balances_by_Periods p
+	left outer join Plex.accounting_balance b
+	on p.pcn = b.pcn 
+	and p.[no] = b.account_no 
+	and p.period = b.period 
+--	where p.period = 202110
+	where p.period between 200812 and 202110
+	--and b.pcn is not null 
+	-- 	p.period = 200812 = 49
+	--  p.period = 202110 = 260
+	--and ((p.Current_Debit != 0.0) or (p.Current_Credit != 0.0))  -- 39,917
+	and b.pcn is null 
+	-- 	p.period = 200812 = 4,155
+	--  p.period between 200812 and 202110 = 622,917
+	and ((p.Current_Debit != 0.0) or (p.Current_Credit != 0.0))  -- 0
 	--select * 
 	--into Plex.accounting_balance_11_29  
 	--from Plex.accounting_balance b 

@@ -1,3 +1,7 @@
+/*
+ * Did try to make 1 large CTE that worked for both low and high accounts but it would 
+ * always time out.  So look at the end of this file for the union statement.
+ */
 	WITH account_period (pcn,account_key,account_no,period)
 	AS
 	(
@@ -230,24 +234,28 @@ SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance F
 /*
  * Working solution
  */
+-- drop table Plex.accounting_period_balance_all_2021_10
 select *
--- select count(*)
+--into Plex.accounting_period_balance_all_2021_10_bak
+from Plex.accounting_period_balance_all_2021_10
+
+select *
+-- select count(*)  -- 37,010+3,930=40,940
 --into Plex.accounting_period_balance_all_2021_10
 from
 (
 	select * 
 	--select count(*)
-	from Plex.accounting_period_balance_low_2021_10 -- 3,930 / all:37,138
+	from Plex.accounting_period_balance_low_2021_10 -- 3,930 
 	where period >202012
 	union
 	select *
 	--select count(*)
 	from Plex.accounting_period_balance_high_2021_10 --37,010
-	where period >202012
+	where period >202012 -- not needed because the high account table starts at 202101
 )s
 --where left(account_no,1) > '3'
 order by period,account_no
--- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);
 
 select distinct pcn,period from Plex.Account_Balances_by_Periods abbp 
 select *

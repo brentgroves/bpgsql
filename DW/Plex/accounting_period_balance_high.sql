@@ -23,12 +23,12 @@ CHANGE THIS AND LOW TO WORK WITH NEW Plex.accounting_account
 		and a.low_account = 0
 	--	and account_no = '10000-000-00000'
 	    UNION ALL
-	    -- Recursive member that references expression_name.
+	    -- Starting at 202101 make a period account record for each period upto 202110.
 	    select
 	    p.pcn,
 	    p.account_key,
 	    p.account_no,
-	    p.period+1
+	    p.period+1  -- this is ok if we do not want to include periods for multiple years.
 	    from account_period p
 	    where p.period < 202110
 	),
@@ -50,7 +50,7 @@ CHANGE THIS AND LOW TO WORK WITH NEW Plex.accounting_account
 		when b.pcn is null then 0 
 		else b.balance 
 		end balance
-		
+		-- if it exists join the balance record to each period account.
 		--SELECT count(*)
 		FROM   account_period a -- 198,110
 		left outer join Plex.accounting_balance b
@@ -95,7 +95,8 @@ AS
 	--and account_no = '41100-000-0000'
 	--and left(account_no,1) < '7' --1,886
     UNION ALL
-    -- Recursive member that references expression_name.
+    -- join each calc_ytd_high record to the next account_period_balance record to
+    -- add the previous credit,debit, and balance ytd values to the next periods account_period_balance records values.
     select 
     y.period+1,
     y.account_no,
@@ -112,10 +113,15 @@ AS
     where y.period < 202110
 )
 -- references expression name
-SELECT count(*) FROM   calc_ytd_high
+--SELECT count(*) FROM   calc_ytd_high
 SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM   calc_ytd_high
 
 select * 
-into Plex.accounting_period_balance_high_2021_10
+--into Plex.accounting_period_balance_high_2021_10_bak
+from Plex.accounting_period_balance_high_2021_10
+-- drop table Plex.accounting_period_balance_high_2021_10
+
+select * 
+--into Plex.accounting_period_balance_high_2021_10
 from Plex.accounting_period_balance_high
 where account_no = '47100-000-0000'

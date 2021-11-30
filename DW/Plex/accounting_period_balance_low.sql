@@ -30,6 +30,7 @@
 	    p.pcn,
 	    p.account_key,
 	    p.account_no,
+	    -- create a record for this account with the next period
 	    case 
 	    when p.period%100 < 12 then p.period+1
 	    else ((p.period/100 + 1)*100) + 1 
@@ -61,11 +62,13 @@
 		when b.pcn is null then 0 
 		else b.balance 
 		end balance
-		
-		--SELECT count(*)
+		/*
+		 * Join to a balance record if one exists for each account and period
+		 */
+		-- SELECT count(*)
 		FROM   account_period_low a -- 198,110
 		-- select * from Plex.accounting_balance b
-		left outer join Plex.accounting_balance b
+		left outer join Plex.accounting_balance b  -- There are alot more balance records now. 200812 to 202110
 		on a.pcn=b.pcn
 		and a.account_no = b.account_no
 		and a.period=b.period
@@ -95,7 +98,8 @@ AS
 	join Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
 	on b.pcn=a.pcn
 	and b.account_key=a.account_key
-	where b.period = a.start_period
+	-- Only get 1 balance record for each account.  That is the balance record with the 1st period for the account.
+	where b.period = a.start_period  
 	--and debit > 0
 	--and account_no = '41100-000-0000'
 	--and left(account_no,1) < '7' --1,886
@@ -118,6 +122,8 @@ AS
 	    b.balance,
 	    cast(y.ytd_balance+b.balance as decimal(19,5)) as ytd_balance
     from calc_ytd_low y
+    -- join the calc_ytd_low record with the accounts next account_period_balance_low record and 
+    -- create a new calc_ytd_low record for this next period.
     inner join account_period_balance_low b 
     on y.next_period=b.period 
     and y.account_no=b.account_no
@@ -125,10 +131,15 @@ AS
 )
 -- references expression name
 --SELECT count(*) FROM   calc_ytd_low OPTION (MAXRECURSION 210);  -- 37,138
-SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low OPTION (MAXRECURSION 210); 
+SELECT period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low 
+OPTION (MAXRECURSION 210); 
 
 select * 
--- into Plex.accounting_period_balance_low_2021_10
+--into Plex.accounting_period_balance_low_2021_10_Bak
+from Plex.accounting_period_balance_low_2021_10
+-- drop table Plex.accounting_period_balance_low_2021_10
+select * 
+into Plex.accounting_period_balance_low_2021_10
 from Plex.accounting_period_balance_low -- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);
 OPTION (MAXRECURSION 210);
 
