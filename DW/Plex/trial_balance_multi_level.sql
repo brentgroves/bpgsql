@@ -53,6 +53,12 @@ where pcn is null
 select *
 --select count(*)
 from Plex.trial_balance_multi_level
+where pcn=123681 and period=202112  -- 4204
+--where pcn=123681 and period=201801  -- 4204
+--where pcn=123681 and period=201712  -- 4204
+--where pcn=123681 and period=201401  -- 4204
+--where pcn=123681 and period=201312  -- 4204
+--where pcn=123681 and period=201001  -- 4204
 --where pcn=123681 and period=200912  -- 4204
 --where pcn=123681 and period=200911  -- 4204
 --where pcn=123681 and period=200910  -- 4204

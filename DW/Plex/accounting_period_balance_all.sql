@@ -257,7 +257,7 @@ from
 --where left(account_no,1) > '3'
 order by period,account_no
 
-select distinct pcn,period from Plex.Account_Balances_by_Periods abbp 
+select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period
 select *
 -- select count(*)
 from Plex.Account_Balances_by_Periods p 
@@ -321,3 +321,118 @@ select * from Plex.Account_Balances_by_Periods p
 where p.pcn=123681 
 and p.period=202109
 
+/*
+ * Final result set needs to have a record for each account and period.
+ */
+Plex.trial_balance_202101_202110
+--drop view Plex.trial_balance
+	create view Plex.trial_balance(pcn,account_key,account_no,period,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+	as
+
+	WITH account_period (pcn,account_key,account_no,period)
+	AS
+	(
+	    -- Anchor member
+	    select 
+	    a.pcn,
+	    a.account_key,
+	    a.account_no,
+	    202101 period
+		--select count(*) cnt
+	    --select *
+		from Plex.accounting_account a  -- high: 3,701 * 10 = 37,010 /// all: 4,362 X 10 = 43,620
+		where pcn = 123681
+--		and a.low_account = 0
+	--	and account_no = '10000-000-00000'
+	    UNION ALL
+	    -- Starting at 202101 make a period account record for each period upto 202110.
+	    select
+	    p.pcn,
+	    p.account_key,
+	    p.account_no,
+	    p.period+1  -- this is ok if we do not want to include periods for multiple years.
+	    from account_period p
+	    where p.period < 202110
+	),
+--	select count(*) from account_period -- high:37,010 all:43,620
+--	select * from account_period
+	account_period_balance( pcn,account_key,account_no,period,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+	as 
+	(
+		select a.pcn,a.account_key,a.account_no,a.period,
+		case 
+		when b.debit is null then 0 
+		else b.debit 
+		end debit,
+		case 
+		when b.ytd_debit is null then 0 
+		else b.ytd_debit 
+		end ytd_debit,
+		case 
+		when b.credit is null then 0 
+		else b.credit 
+		end credit,
+		case 
+		when b.ytd_credit is null then 0 
+		else b.ytd_credit 
+		end ytd_credit,
+		case 
+		when b.balance is null then 0 
+		else b.balance 
+		end balance,
+		case 
+		when b.ytd_balance is null then 0 
+		else b.ytd_balance 
+		end ytd_balance
+		-- if it exists join the balance record to each period account.
+		--SELECT count(*)
+		FROM   account_period a -- 198,110
+		left outer join Plex.accounting_period_balance_all_2021_10 b 
+		on a.account_no = b.account_no
+		and a.period=b.period
+	)
+	--select count(*) from account_period_balance b  -- 43,620
+	select * from account_period_balance 
+
+	--create schema Scratch
+	
+	select distinct t.account_no 
+	--select t.debit - t.credit balance, m.current_debit_credit 
+	--select t.account_no,t.period,t.ytd_debit,t.ytd_credit,t.ytd_balance,m.ytd_debit_credit,t.ytd_balance-m.ytd_debit_credit diff 
+	--select t.account_no,t.period,t.balance,p.current_debit_credit 
+	--select count(*)
+	--into Scratch.ytd_problem
+	from Plex.trial_balance t
+	left outer join 
+	(
+	select * from Plex.trial_balance_multi_level where pcn = 123681
+	)m 
+	on t.account_no=m.account_no 
+	and t.period=m.period  -- 43,620
+	--where m.pcn is null  -- 1580
+	--where (t.debit - t.credit)!=m.current_debit_credit -- 23 
+--	where (m.pcn is not null) and t.ytd_balance!=m.ytd_debit_credit -- 1,237 
+	where left(t.account_no,1) < '4' and (m.pcn is not null) and t.ytd_balance!=m.ytd_debit_credit -- 1,228 
+--	where left(t.account_no,1) > '4' and (m.pcn is not null) and t.ytd_balance!=m.ytd_debit_credit -- 1,228 
+	order by t.ytd_balance-m.ytd_debit_credit
+	--order by t.account_no,t.period 
+	
+--	where t.balance=p.current_debit_credit -- 42,017 
+--	where t.balance!=p.current_debit_credit -- 42,017 
+	
+	--create view Plex.trial_balance(pcn,account_key,account_no,period,debit,credit,balance)
+	--select count(*) from Plex.trial_balance -- 43620 
+	select count(*)
+	from Plex.trial_balance t
+	left outer join 
+	(
+	select * from Plex.Account_Balances_by_Periods where pcn = 123681
+	)p 
+	on t.account_no=p.[no] 
+	and t.period=p.period  -- 43,620
+--	where p.pcn is null
+	where t.credit=p.current_credit -- 42,040 = 4204*10
+--	where t.debit=p.current_debit -- 42,040 = 4204*10
+	
+	
+	--into Plex.trial_balance_202101_202110
