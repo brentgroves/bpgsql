@@ -1,3 +1,164 @@
+SELECT pcn, period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance 
+from Plex.accounting_period_balance_low 
+select *
+--select count(*) from Plex.accounting_period_balance_low -- 37,970
+-- select distinct pcn,period from Plex.trial_balance_multi_level d where d.pcn =123681 order by pcn,period -- 200812 to 202112
+-- select distinct pcn,period from Plex.accounting_period_balance_low b where b.pcn =123681 order by b.pcn,b.period -- 200701 to 202111
+-- select pcn,period,account_no,balance from Plex.accounting_period_balance_low b where b.pcn =123681 and period < 200812 order by b.pcn,b.period -- 200701 to 202111
+-- select pcn,period,account_no,current_debit_credit from Plex.trial_balance_multi_level d where d.pcn =123681 and period be< 200901 order by pcn,period -- 200812 to 202112
+
+-- select distinct pcn,period from Plex.Account_Balances_by_Periods b where b.pcn =123681 order by b.pcn,b.period -- 200812 to 202110
+-- select pcn,period,* from Plex.Account_Balances_by_Periods b where b.pcn =123681 order by b.pcn,b.period -- 200812 to 202110
+
+select count(*) from Plex.trial_balance_multi_level d 
+where left(d.account_no,1) < '4' and d.pcn = 123681 and period = 200812 -- 570 --period between 200812 and 200901  -- 1,140
+
+select count(*) from Plex.accounting_period_balance_low b 
+where b.pcn = 123681 and b.period between 200812 and 200901  -- 120
+
+select *
+-- select count(*)
+from 
+(
+	select 
+	b.pcn,
+	b.account_no,
+	b.period,
+	b.period_display,
+	b.balance,
+	p.current_debit-p.current_credit PP_balance,
+	d.current_debit_credit TB_balance,
+	b.ytd_balance,
+	p.ytd_debit - p.ytd_credit PP_ytd_balance,
+	d.ytd_debit_credit TB_ytd_balance,
+	
+	b.debit,
+	p.current_debit PP_Debit, 
+	b.credit,
+	p.current_credit PP_credit, 
+	b.ytd_debit,
+	p.ytd_debit PP_ytd_debit,
+	b.ytd_credit,
+	p.ytd_credit PP_ytd_credit
+	
+	--select count(*)
+	--select d.*
+	from 
+	(
+		select ap.period_display,ap.begin_date,b.* 
+		-- select count(*)
+		from Plex.accounting_period_balance_low b  -- 37,970
+		--select * from Plex.accounting_period ap 
+		join Plex.accounting_period ap 
+		on b.pcn=ap.pcn
+		and b.period= ap.period -- 37,970
+		where b.pcn = 123681
+		and b.account_no = '20104-300-00000'
+	--	and b.period between 200812 and 201001 -- 1,043
+	--where b.period between 200812 and 201006  -- 1,567
+	--where b.period between 200812 and 201011 -- 2,182
+	--where b.period between 200812 and 202110 -- 37,549
+	--where b.period between 201012 and 201012 -- 131
+	) b
+	--where b.period between 201012 and 201013 -- 266
+	--where b.period between 200812 and 202110 -- 37,549
+	-- select count(*) from Plex.accounting_period_balance_low b where b.period = 201013  -- 135
+	--select * from Plex.trial_balance_multi_level d where d.period = 201013  -- none
+	--select distinct period_display from Plex.trial_balance_multi_level d where d.period = 201012  -- none
+	--select distinct period,period_display from Plex.trial_balance_multi_level d where d.period = 201012  -- none
+	--select count(*) from Plex.Account_Balances_by_Periods p where p.period = 201013  -- 4,204
+	left outer join Plex.trial_balance_multi_level d 
+	on b.pcn=d.pcn
+	and b.account_no = d.account_no
+	and b.period_display = d.period_display -- 38,345
+	--where b.period between 200812 and 201001 -- 1,043
+	--where b.period between 200812 and 201006  -- 1,567
+	--where b.period between 200812 and 201011 -- 2,182
+	--where b.period between 201012 and 201012 -- 255
+	--where b.period between 200812 and 202110 -- 37,924
+	
+	left outer join Plex.Account_Balances_by_Periods p 
+	on b.pcn=p.pcn
+	and b.account_no = p.[no]
+	and b.period = p.period 
+)s 	-- 37,970
+--where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 1,231
+--where (((s.TB_ytd_balance - s.PP_ytd_balance) > .01) or ((s.TB_ytd_balance - s.PP_ytd_balance) < -.01)) -- 0 
+where (((s.TB_ytd_balance - s.ytd_balance) > .01) or ((s.TB_ytd_balance - s.ytd_balance) < -.01)) -- 2,933 - some big differences
+
+--where (s.TB_ytd_balance != s.ytd_balance) -- 4,116 - some big differences
+--where (s.PP_ytd_balance != s.ytd_balance) -- 2,872 - some big differences
+--where (s.PP_balance != s.balance) -- No differences
+order by s.account_no,s.period
+
+select b.pcn,b.account_no,b.period,b.ytd_balance,
+d.ytd_debit_credit TB_balance,
+p.Ytd_Debit - p.Ytd_Credit PP_balance
+from
+(
+	select ap.period_display,ap.begin_date,b.* 
+	-- select count(*)
+	from Plex.accounting_period_balance_low b  -- 37,970
+	--select * from Plex.accounting_period ap 
+	join Plex.accounting_period ap 
+	on b.pcn=ap.pcn
+	and b.period= ap.period -- 37,970
+	where b.pcn = 123681
+	and b.account_no = '20104-300-00000'
+	--	and b.period between 200812 and 201001 -- 1,043
+	--where b.period between 200812 and 201006  -- 1,567
+	--where b.period between 200812 and 201011 -- 2,182
+	--where b.period between 200812 and 202110 -- 37,549
+	--where b.period between 201012 and 201012 -- 131
+) b
+left outer join Plex.trial_balance_multi_level d 
+on b.pcn=d.pcn
+and b.account_no = d.account_no
+and b.period_display = d.period_display -- 38,345
+left outer join Plex.Account_Balances_by_Periods p 
+on b.pcn=p.pcn
+and b.account_no = p.[no]
+and b.period = p.period 
+order by b.account_no,b.period
+
+--where b.period between 200812 and 201001 -- 1,043
+--where b.period between 200812 and 201006  -- 1,567
+--where b.period between 200812 and 201011 -- 2,182
+--where b.period between 200812 and 202110 -- 37,549
+
+
+--where d.pcn =123681 
+--and d.period between 200812 and 202110 
+--and d.period between 200812 and 201001 
+
+
+-- 
+select 
+d.pcn,
+d.account_no,
+d.period,
+d.current_debit_credit TB_Debit_Credit, 
+b.balance,
+d.ytd_debit_credit TB_YTD,
+b.ytd_balance
+from Plex.trial_balance_multi_level d 
+join Plex.accounting_period_balance_low b
+on d.pcn=b.pcn
+and d.account_no = b.account_no
+and d.period = b.period 
+where d.pcn =123681 
+and d.period between 200812 and 200910 
+--and d.period between 200812 and 200901 
+and (d.current_debit_credit != b.balance) -- 0
+and ((d.current_debit_credit != b.balance) or (d.ytd_debit_credit != b.ytd_balance))  -- 0
+
+
+order by d.pcn,d.account_no,d.period -- 200812 to 202112
+
+from Plex.trial_balance_multi_level d 
+
+where d.pcn =123681
+
 select * from Scratch.ytd_problem
 
 	--drop view Scratch.accounting_period_balance_low

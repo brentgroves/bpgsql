@@ -141,8 +141,11 @@ where s.calc_debit_credit = s.current_debit_credit  -- 4,181
 select *
 --select count(*)
 from Plex.trial_balance_multi_level d 
-where d.pcn = 123681 and d.period between 200812 and 200912  -- 54,652
+where d.pcn = 123681 
+and account_no = '10220-000-00000' and period between 201603 and 201604
+and d.period between 200812 and 200912  -- 54,652
 
+select * from Plex.accounting_account where account_no = '10220-000-00000'
 select *
 --select count(*)
 from Plex.Account_Balances_by_Periods p 
