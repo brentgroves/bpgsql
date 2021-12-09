@@ -1,7 +1,7 @@
 
 
 	--drop view Plex.accounting_period_balance_low
-	create view Plex.accounting_period_balance_low(period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+	create view Plex.accounting_period_balance_low(pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
 	as
 	WITH fiscal_period(pcn,year,period)
 	as
@@ -43,7 +43,7 @@
 			--and a.start_period = 0  -- 1,323 accounts do not have any balance snapshot records in Plex 
 			and a.low_account =1  -- 661
 			and a.start_period != 0  -- 398
-			and a.account_no = '10220-000-00000'
+		--	and a.account_no = '10220-000-00000'
 		--	and left(a.account_no,1) < '4' 
 		--	and account_no = '10000-000-00000'	
 	),
@@ -192,11 +192,23 @@ AS
 	inner join max_fiscal_period n 
     on y.pcn=n.pcn
     and (y.next_period/100) = n.[year]
-    where y.next_period < 202111
+    where y.period < 202111
 )
 -- references expression name
 --SELECT count(*) FROM   calc_ytd_low OPTION (MAXRECURSION 210);  -- 37,138
-SELECT period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low order by period,account_no
+SELECT pcn, period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance 
+FROM calc_ytd_low 
+OPTION (MAXRECURSION 210)
+
+SELECT pcn, period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance 
+into Plex.accounting_period_balance_low 
+FROM Plex.calc_ytd_low_view 
+OPTION (MAXRECURSION 210)
+
+select * 
+--into Plex.accounting_period_balance_low_2021_10_Bak
+from Plex.accounting_period_balance_low
+order by period,account_no
 OPTION (MAXRECURSION 210); 
 
 select * 

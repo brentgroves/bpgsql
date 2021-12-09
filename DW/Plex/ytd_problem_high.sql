@@ -55,13 +55,13 @@ from
 	(
 		select ap.period_key,ap.period_display,ap.begin_date,b.* 
 		-- select count(*)
-		from Plex.accounting_period_balance_low b  -- 34,884, old value = 37,970
+		from Plex.accounting_period_balance_high b  -- 37,230
 		--select * from Plex.accounting_period ap 
 		join Plex.accounting_period ap 
 		on b.pcn=ap.pcn
-		and b.period= ap.period -- 37,970
+		and b.period= ap.period -- 37,230
 		where b.pcn = 123681
-		and b.period < 202111  -- 34,508
+		and b.period < 202111  -- 37,230
 		--and b.account_no = '20104-300-00000'
 		--and b.account_no = '30599-300-00000'
 	--	and b.period between 200812 and 201001 -- 1,043
@@ -72,7 +72,9 @@ from
 	) b
 	--where b.period between 201012 and 201013 -- 266
 	--where b.period between 200812 and 202110 -- 37,549
-	-- select count(*) from Plex.accounting_period_balance_low b where b.period = 201013  -- 135
+	-- select distinct pcn,period from Plex.accounting_period_balance_high b order by pcn,period --goes to 202110
+	-- select distinct period_display from Plex.trial_balance_multi_level d where right(period_display,2) = '21' order by period_display -- goes to 202112
+	-- select distinct period from Plex.Account_Balances_by_Periods p where p.period > 202012  -- goes to 202110
 	--select * from Plex.trial_balance_multi_level d where d.period = 201013  -- none
 	--select distinct period_display from Plex.trial_balance_multi_level d where d.period = 201012  -- none
 	--select distinct period,period_display from Plex.trial_balance_multi_level d where d.period = 201012  -- none
@@ -90,13 +92,13 @@ from
 	left outer join Plex.Account_Balances_by_Periods p 
 	on b.pcn=p.pcn
 	and b.account_no = p.[no]
-	and b.period = p.period 
-)s 	-- 37,970
-where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 1,172
---where (((s.TB_ytd_balance - s.PP_ytd_balance) > .01) or ((s.TB_ytd_balance - s.PP_ytd_balance) < -.01)) -- 0 
---where (((s.TB_ytd_balance - s.ytd_balance) > .01) or ((s.TB_ytd_balance - s.ytd_balance) < -.01)) -- 0
---where (s.PP_balance != s.balance) -- No differences
-where (s.TB_balance != s.balance) -- 266
+	and b.period = p.period   -- THIS IS A CONTROLLED SITUATION SO WE DON'T HAVE TO WORRY ABOUT MULTIPLE PERIODS PER MONTH 201012, 201603, ETC.
+)s 	-- 37,230
+ where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 9
+-- where (((s.TB_ytd_balance - s.PP_ytd_balance) > .01) or ((s.TB_ytd_balance - s.PP_ytd_balance) < -.01)) -- 
+-- where (((s.TB_ytd_balance - s.ytd_balance) > .01) or ((s.TB_ytd_balance - s.ytd_balance) < -.01)) -- 0
+-- where (s.PP_balance != s.balance) -- No differences
+-- where (s.TB_balance != s.balance) -- 6 -- 1 cent
 
 --and s.period between 200912 and 201101
 --order by s.pcn,s.account_no

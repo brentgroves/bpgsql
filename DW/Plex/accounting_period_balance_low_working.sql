@@ -33,7 +33,7 @@ select * from Plex.max_fiscal_period
 		    a.pcn,
 		    a.account_key,
 		    a.account_no,
-		    a.start_period period,
+			a.start_period period,
 		    case 
 		    when a.start_period < m.max_fiscal_period then a.start_period+1
 		    else ((a.start_period/100 + 1)*100) + 1 
@@ -46,11 +46,15 @@ select * from Plex.max_fiscal_period
 	   		join Plex.max_fiscal_period m 
 	        on a.pcn=m.pcn
 	        and (a.start_period/100) = m.[year]
-			
-			where a.pcn = 123681
+			where a.pcn = 123681 
+			--where a.pcn = 123681
 			--and a.start_period = 0  -- 1,323 accounts do not have any balance snapshot records in Plex 
 			and a.low_account =1  -- 661
 			and a.start_period != 0  -- 398
+			and a.account_no not in 
+			(
+				select account_no from Plex.Reset_YTD_balance_yearly r  -- 22
+			)  -- 376
 			--and a.start_period != 0  -- 398
 		--	and a.account_no = '10220-000-00000'
 		--	and left(a.account_no,1) < '4' 
@@ -167,7 +171,7 @@ SELECT *
 	--select count(*)
 	FROM   Plex.account_period_balance_low_view
 	--order by pcn,account_no,period
-	OPTION (MAXRECURSION 210);  -- 37,970
+	OPTION (MAXRECURSION 210);  -- 34,884, old value = 37,970
 --	SELECT count(*) FROM   Plex.account_period_balance_low OPTION (MAXRECURSION 210);  -- 37,970
 	--where account_no = '41100-000-0000'
 
@@ -191,7 +195,7 @@ AS
     b.balance,
     b.balance as ytd_balance
     --select count(*)
-	from Plex.account_period_balance_low b  -- 37,970
+	from Plex.account_period_balance_low b  -- 34,884, old value = 37,970
 	join Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
 	on b.pcn=a.pcn
 	and b.account_key=a.account_key
@@ -247,10 +251,12 @@ SELECT pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balan
 --order by period,account_no
 select * 
 --select count(*)
---into 
-from Plex.calc_ytd_low_view -- 37,970
+-- drop table Plex.accounting_period_balance_low
+into Plex.accounting_period_balance_low
+from Plex.calc_ytd_low_view -- 34,884, old value = 37,970
 OPTION (MAXRECURSION 210); 
 
+select count(*) from Plex.accounting_period_balance_low
 NEXT CHECK YTD_BALANCES AGAINST TB DOWNLOAD
 
 select * 

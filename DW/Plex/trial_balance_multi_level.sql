@@ -149,8 +149,17 @@ select * from Plex.accounting_account where account_no = '10220-000-00000'
 select *
 --select count(*)
 from Plex.Account_Balances_by_Periods p 
+where p.pcn = 123681 and p.period = 200812  -- 4204
 where p.pcn = 123681 and p.period between 200812 and 200912  -- 54,652
 
+select * 
+--select count(*)
+--into 
+from Plex.calc_ytd_low_view -- 37,970
+OPTION (MAXRECURSION 210); 
+
+select count(*)
+from Plex.trial_balance_multi_level d 
 
 select count(*)
 from Plex.trial_balance_multi_level d 
