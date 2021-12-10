@@ -94,7 +94,8 @@ from
 	and b.account_no = p.[no]
 	and b.period = p.period   -- THIS IS A CONTROLLED SITUATION SO WE DON'T HAVE TO WORRY ABOUT MULTIPLE PERIODS PER MONTH 201012, 201603, ETC.
 )s 	-- 37,230
- where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 9
+where s.ytd_debit != s.PP_ytd_debit  -- 10
+-- where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 9
 -- where (((s.TB_ytd_balance - s.PP_ytd_balance) > .01) or ((s.TB_ytd_balance - s.PP_ytd_balance) < -.01)) -- 
 -- where (((s.TB_ytd_balance - s.ytd_balance) > .01) or ((s.TB_ytd_balance - s.ytd_balance) < -.01)) -- 0
 -- where (s.PP_balance != s.balance) -- No differences
