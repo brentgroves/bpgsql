@@ -3,7 +3,9 @@
 	WITH fiscal_period(pcn,year,period)
 	as
 	(
-		select pcn,year(begin_date) year,period from Plex.accounting_period where pcn = 123681
+		select pcn,year(begin_date) year,period 
+		--select distinct pcn,period
+		from Plex.accounting_period where pcn = 123681  -- 200601 to > 204103
 	),
 	--select * from fiscal_period
 	max_fiscal_period(pcn,year,max_fiscal_period)
@@ -18,7 +20,7 @@
 	
 select *
 -- drop table Plex.max_fiscal_period
-into Plex.max_fiscal_period
+--into Plex.max_fiscal_period
 from Plex.max_fiscal_period_view	
 
 select * from Plex.max_fiscal_period
@@ -42,27 +44,27 @@ select * from Plex.max_fiscal_period
 		    
 			--select count(*) cnt
 		    --select *
-			from Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
-	   		join Plex.max_fiscal_period m 
+		    --select distinct a.pcn,a.start_period 
+			from Plex.accounting_account a  -- 18,015
+			--where a.pcn = 123681  -- 4,363 a low account was added 
+			--and a.account_no in 
+			--(
+			--	select account_no from Plex.Reset_YTD_balance_yearly r  -- 22
+			--)  -- 22
+			--where a.pcn = 123681  -- 4,363 a low account was added 
+			--and a.revenue_or_expense != 0 -- 3,723
+			--and a.revenue_or_expense = 0 -- 640 a low account was added 
+			--where a.pcn = 123681  -- 4,363 a low account was added 
+			--and a.start_period =0  -- 3,031, -- 4,363-3,031= 1,332
+	   		--left outer join Plex.max_fiscal_period m 
+	   		inner join Plex.max_fiscal_period m 
 	        on a.pcn=m.pcn
 	        and (a.start_period/100) = m.[year]
-			where a.pcn = 123681 
-			--where a.pcn = 123681
-			--and a.start_period = 0  -- 1,323 accounts do not have any balance snapshot records in Plex 
-			and a.low_account =1  -- 661
-			and a.start_period != 0  -- 398
-			and a.account_no not in 
-			(
-				select account_no from Plex.Reset_YTD_balance_yearly r  -- 22
-			)  -- 376
-			--and a.start_period != 0  -- 398
-		--	and a.account_no = '10220-000-00000'
-		--	and left(a.account_no,1) < '4' 
-		--	and account_no = '10000-000-00000'	
+			where a.pcn = 123681  -- 1,332 accounts have accounts have a balance snapshot 
+			and a.revenue_or_expense =0  -- 376  -- 22 low accounts will not be in this set because they have a category_type of revenue or expense
+			--and a.account_no = '10220-000-00000'
 	),
-	--select count(*) from anchor_member  -- 398
---	account_period_low (pcn,account_key,account_no,period,next_period,max_fiscal_period,max_fiscal_next_period)
---	account_period_low (pcn,account_key,account_no,period,next_period,max_fiscal_period)
+	--select count(*) from anchor_member  -- 376
 	account_period_low (pcn,account_key,account_no,period,next_period)
 	AS
 	(
@@ -77,7 +79,7 @@ select * from Plex.max_fiscal_period
 	--    m.max_fiscal_period max_fiscal_next_period
 		--select count(*) cnt
 	    --select *
-		from anchor_member a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+		from anchor_member a  -- low: 376
   --		join max_fiscal_period m 
   --      on a.pcn=m.pcn
  --       and (a.next_period/100) = m.[year]
@@ -106,16 +108,14 @@ select * from Plex.max_fiscal_period
    		join Plex.max_fiscal_period n 
         on p.pcn=n.pcn
         and (p.next_period/100) = n.[year]
-	    where p.period < 202111
-	   -- where p.period < 202110
+	    --where p.period < 202111
+	   where p.period < 202110
 	),
---	select count(*) from account_period_low -- low:37,970 
-	--select * from account_period_low --where period =201013
---	drop table Plex.accounting_period_low
-	--select * 
-	--into Plex.accounting_period_low
-	--from Plex.accounting_period_low_view
+	--select max(period),max(next_period)  -- 202110,202111
+	--select count(*) 
+	--from account_period_low -- low:34,508 
 	--OPTION (MAXRECURSION 210)
+	--select * from account_period_low --where period =201013
 
 	account_period_balance_low( pcn,account_key,account_no,period,next_period,debit,credit,balance)
 	as 
@@ -137,7 +137,7 @@ select * from Plex.max_fiscal_period
 		 * Join to a balance record if one exists for each account and period
 		 */
 		-- SELECT count(*)
-		FROM   account_period_low a -- 198,110
+		FROM account_period_low a -- 198,110
 		-- select * from Plex.accounting_balance b
 		left outer join Plex.accounting_balance b  
 		on a.pcn=b.pcn
@@ -145,9 +145,10 @@ select * from Plex.max_fiscal_period
 		and a.period=b.period
 		
 	)
-	-- references expression name
-	SELECT * FROM   account_period_balance_low; 
-
+	select *
+	--SELECT count(*) 
+	FROM   account_period_balance_low -- 34,508 
+	
 
 	SELECT distinct period FROM   Plex.account_period_balance_low order by period; 
 
@@ -164,10 +165,14 @@ CREATE TABLE Plex.account_period_balance_low(
 	PRIMARY KEY (pcn,account_key,period)
 );
 
-
-SELECT * 
+select *
+--SELECT count(*) -- 34,508
 -- drop table Plex.account_period_balance_low
-	into Plex.account_period_balance_low
+-- select count(*) from Plex.account_period_balance_low  -- 34,884
+-- select *
+-- into  Scratch.account_period_balance_low_12_15
+-- from Plex.account_period_balance_low  -- 34,884
+--	into Plex.account_period_balance_low
 	--select count(*)
 	FROM   Plex.account_period_balance_low_view
 	--order by pcn,account_no,period
@@ -175,8 +180,7 @@ SELECT *
 --	SELECT count(*) FROM   Plex.account_period_balance_low OPTION (MAXRECURSION 210);  -- 37,970
 	--where account_no = '41100-000-0000'
 
-	
---with calc_ytd_low (pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+-- drop view Plex.calc_ytd_low_view	
 create view Plex.calc_ytd_low_view(pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
 as
 with calc_ytd_low (pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
@@ -195,15 +199,12 @@ AS
     b.balance,
     b.balance as ytd_balance
     --select count(*)
-	from Plex.account_period_balance_low b  -- 34,884, old value = 37,970
-	join Plex.accounting_account a  -- low: 398 * 10 = 3,980 /// all: 4,362 X 10 = 43,620
+	from Plex.account_period_balance_low b  -- 34,508,
+	join Plex.accounting_account a  -- 34,508 
 	on b.pcn=a.pcn
 	and b.account_key=a.account_key
 	-- Only get 1 balance record for each account.  That is the balance record with the 1st period for the account.
-	where b.period = a.start_period  
-	--and debit > 0
-	--and account_no = '41100-000-0000'
-	--and left(account_no,1) < '7' --1,886
+	where b.period = a.start_period  -- 376  
     UNION ALL
     -- Recursive member that references expression_name.
     select 
@@ -229,10 +230,10 @@ AS
     -- create a new calc_ytd_low record for this next period.
     --select * from Plex.account_period_balance_low b  -- 37970
     --select count(*) from Plex.account_period_balance_low b  -- 37970
-    --select distinct next_period from Plex.account_period_balance_low b order by next_period  -- 37970
-    --select distinct period from Plex.account_period_balance_low b order by period  -- 37970
+    --select distinct next_period from Plex.account_period_balance_low b order by next_period  -- 200702 to 202111
+    --select distinct period from Plex.account_period_balance_low b order by period  -- 200701 to 202110
     inner join Plex.account_period_balance_low b 
---    inner join Plex.account_period_balance_low b 
+--    select dinner join Plex.account_period_balance_low b 
     on y.pcn=b.pcn
     and y.next_period=b.period 
     and y.account_no=b.account_no
@@ -243,42 +244,25 @@ AS
 	inner join Plex.max_fiscal_period n 
     on y.pcn=n.pcn
     and (y.next_period/100) = n.[year]
-    where y.period < 202111
+    where y.period < 202110
 )
 -- references expression name
---SELECT count(*) FROM   calc_ytd_low OPTION (MAXRECURSION 210);  -- 37,970
+--SELECT count(*) FROM   calc_ytd_low OPTION (MAXRECURSION 210);  -- 34,508
 SELECT pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low 
 --order by period,account_no
-select * 
---select count(*)
+Plex.account_period_balance_low
+
+select *
+--into Scratch.accounting_period_balance_low_12_15 
+--select count(*) -- old: 34,884
 -- drop table Plex.accounting_period_balance_low
+from Plex.accounting_period_balance_low 
+
+select *
+--select count(*) -- 34,508
 into Plex.accounting_period_balance_low
-from Plex.calc_ytd_low_view -- 34,884, old value = 37,970
-OPTION (MAXRECURSION 210); 
-
-select count(*) from Plex.accounting_period_balance_low
-NEXT CHECK YTD_BALANCES AGAINST TB DOWNLOAD
-
-select * 
---into Plex.accounting_period_balance_low_2021_10_Bak
-from Plex.accounting_period_balance_low_2021_10
--- drop table Plex.accounting_period_balance_low_2021_10
-select * 
-into Plex.accounting_period_balance_low_2021_10
-from Plex.accounting_period_balance_low -- where account_no = '20100-000-0000' OPTION (MAXRECURSION 210);
+from Plex.calc_ytd_low_view  
 OPTION (MAXRECURSION 210);
 
-select * from Plex.accounting_period_balance_low_2021_10 b where b.account_no like '27800-000%' and b.period = 202110 order by b.account_no
-select distinct pcn,period from Plex.Account_Balances_by_Periods 
-select * from Plex.Account_Balances_by_Periods p where p.pcn = 123681 and p.period=202110 and p.[no] like '27800-000%' order by p.[no]
-select * from Plex.accounting_account_ext where account_no = '27800-000-9806'
-/*
-asset/equity/expense/liability/revenue
-Assets naturally have debit balances, so they should normally appear as positive numbers
-Liabilities and Equity naturally have credit balances, so would normally appear as negative numbers
-Revenue accounts naturally have credit balances, so normally these would be negative
-Expense accounts naturally have debit balances, so normally would be positive numbers
-there are exceptions in every category for a variety of reasons (of course)
-*/
 
 

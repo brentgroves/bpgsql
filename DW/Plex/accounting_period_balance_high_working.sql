@@ -1,7 +1,8 @@
 
 
 --drop view Plex.accounting_period_balance_high_view
-	create view Plex.accounting_period_balance_high_view(pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+	create view Plex.account_period_balance_high_view(pcn,account_no,period,debit,credit,balance)
+--	create view Plex.accounting_period_balance_high_view(pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
 	as
 	WITH account(pcn,account_no)
 	as 
@@ -11,16 +12,12 @@
 	    a.account_no
 		--select count(*) cnt
 	    --select *
-		from Plex.accounting_account a  -- high: 3,701 * 10 = 37,010 /// all: 4,362 X 10 = 43,620
+		from Plex.accounting_account a  
 		
-		where pcn = 123681
-		and a.low_account = 0
-		union 
-		select r.pcn,r.account_no 
-		from Plex.Reset_YTD_balance_yearly r
-		where r.pcn = 123681
-		
+		where pcn = 123681 -- 4,363
+		and a.revenue_or_expense = 1  -- 3,723
 	),
+	-- select count(*) from account --3,723
 	-- select * from account
 	account_period(pcn,account_no,period)
 	AS
@@ -43,9 +40,9 @@
 	    from account_period p
 	    where p.period < 202110
 	),
---	select count(*) from account_period -- new count with addition of 22 low accounts=37,230, old,high:37,010 all:43,620
+	--select count(*) from account_period -- 37,230
 --	select * from account_period
-	account_period_balance( pcn,account_no,period,debit,credit,balance)
+	account_period_balance_high( pcn,account_no,period,debit,credit,balance)
 	as 
 	(
 		select a.pcn,a.account_no,a.period,
@@ -69,23 +66,25 @@
 		and a.account_no = b.account_no
 		and a.period=b.period
 		
-	),
-	-- select * from Plex.accounting_balance b
-		-- references expression name
-		--select *
-	--	SELECT count(*) FROM   account_period_balance;  -- new=37,230, old= 37,010
-	--select count(*) from Plex.accounting_period_balance_high  -- 37,010
-	--select * from Plex.accounting_period_balance_high  -- 37,010
-	--where account_no = '41100-000-0000'
-	/*
-select * 
---select count(*)
-from Plex.accounting_account
-where  
-pcn = 123681 -- 4,362
-select * from Plex.accounting_balance
-	 */
-calc_ytd_high (pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+	)
+	select *
+	--SELECT count(*) 
+	FROM   account_period_balance_high;  -- new=37,230
+	
+	select *
+	-- drop table Plex.accounting_period_balance_high
+	into Scratch.accounting_period_balance_high_12_15 
+	from Plex.accounting_period_balance_high 
+	
+	select *
+	--SELECT count(*) 
+	into Plex.account_period_balance_high 
+	FROM   Plex.account_period_balance_high_view;  -- new=37,230
+
+
+create view Plex.accounting_period_balance_high_view(pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
+as
+with calc_ytd_high (pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance)
 AS
 (
     -- Anchor member
@@ -99,13 +98,11 @@ AS
     credit as ytd_credit,
     balance,
     balance as ytd_balance
+    -- select distinct pcn,period -- 202101 to 202110
     --select count(*)
-	from account_period_balance
-	--where period between 202101 and 202102
-	where period = 202101
-	--and debit > 0
-	--and account_no = '41100-000-0000'
-	--and left(account_no,1) < '7' --1,886
+	from Plex.account_period_balance_high
+	--order by period
+	where period = 202101 -- 3,723
     UNION ALL
     -- join each calc_ytd_high record to the next account_period_balance record to
     -- add the previous credit,debit, and balance ytd values to the next periods account_period_balance records values.
@@ -120,19 +117,22 @@ AS
     b.balance,
     cast(y.ytd_balance+b.balance as decimal(19,5)) as ytd_balance
     from calc_ytd_high y
-    inner join account_period_balance b 
+    inner join Plex.account_period_balance_high b
     on y.period+1=b.period 
     and y.account_no=b.account_no
     where y.period < 202110
 )
 -- references expression name
---SELECT count(*) FROM   calc_ytd_high
+--SELECT count(*) FROM   calc_ytd_high  -- 37,230
 SELECT pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM   calc_ytd_high
 
+select *
+into Scratch.accounting_period_balance_high_12_15
+from Plex.accounting_period_balance_high
 
 select * 
 -- drop table Plex.accounting_period_balance_high
---into Plex.accounting_period_balance_high  -- 37,230
+into Plex.accounting_period_balance_high  -- 37,230
 from Plex.accounting_period_balance_high_view
 where account_no = '47100-000-0000'
 
