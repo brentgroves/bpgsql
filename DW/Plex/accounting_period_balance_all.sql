@@ -1,12 +1,14 @@
 select * 
+--into Scratch.accounting_period_balance_all_12_16  -- 40,940
+--from Plex.accounting_period_balance_all
 -- drop table Plex.accounting_period_balance_all
---into Plex.accounting_period_balance_all
+into Plex.accounting_period_balance_all
 from 
 (
 select l.pcn,l.period,l.account_no,l.debit,l.ytd_debit,l.credit,l.ytd_credit,l.balance,l.ytd_balance 
 -- select count(*)
-from Plex.accounting_period_balance_low l  -- 3,710
-where l.period between 202101 and 202110
+from Plex.accounting_period_balance_low l  -- 34,508
+where l.period between 202101 and 202110 -- 3,710
 union
 select * 
 -- select count(*)
@@ -14,6 +16,8 @@ from Plex.accounting_period_balance_high  -- 37,230 + 3,710 = 40,940
 )s  -- 40,940
 -- select distinct pcn,period from Plex.accounting_period_balance_low b order by pcn,period --goes from 200701 to 202111
 -- select distinct pcn,period from Plex.accounting_period_balance_high b order by pcn,period --goes from 202101 to 202110
+-- select distinct pcn,period from Plex.accounting_period_balance_all b order by pcn,period --goes from 202101 to 202110
+
 
 select p.period_display 
 --select count(*)
@@ -24,69 +28,7 @@ and b.period=p.period
 where p.period_display is NULL -- 0
 
 
-select *
--- select count(*)
-from 
-(
-	select
-	b.pcn,
-	b.account_no,
-	b.period,
-	b.period_display,
-	b.debit,
-	b.credit,
-	b.balance,
-	p.current_debit-p.current_credit PP_balance,
-	d.current_debit_credit TB_balance,
-	b.ytd_balance,
-	p.ytd_debit - p.ytd_credit PP_ytd_balance,
-	d.ytd_debit_credit TB_ytd_balance,
-	
-	--b.debit,
-	p.current_debit PP_Debit, 
-	--	b.credit,
-	p.current_credit PP_credit, 
-	b.ytd_debit,
-	p.ytd_debit PP_ytd_debit,
-	b.ytd_credit,
-	p.ytd_credit PP_ytd_credit
-	--select count(*)
-	from 
-	(
-		select b.pcn,b.period,p.period_display,b.account_no,b.debit,b.ytd_debit,b.credit,b.ytd_credit,b.balance,b.ytd_balance 
-		-- select distinct b.pcn,b.period
-		-- select count(*)
-		from Plex.accounting_period_balance_all b -- 40,940
-		inner join Plex.accounting_period p
-		on b.pcn=p.pcn
-		and b.period=p.period 
-		--order by b.pcn,b.period
-	)b 
-	left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
-	on b.pcn=d.pcn
-	and b.account_no = d.account_no
-	and b.period_display = d.period_display -- 38,345
-	left outer join Plex.Account_Balances_by_Periods p 
-	on b.pcn=p.pcn
-	and b.account_no = p.[no]
-	and b.period = p.period -- 40,940
-)s
---where s.debit != s.PP_debit  -- 0 
---where s.credit != s.PP_credit  -- 0 
---where s.balance != s.PP_balance  -- 0
---where (s.TB_balance != s.balance) -- 23 -- 1 cent
---where ((s.balance- s.TB_balance) > .01) 
--- where ((s.PP_balance- s.TB_balance) > .01) 
 
---where s.ytd_debit != s.PP_ytd_debit  -- 10 73100-000-0000 changed from a 'Revenue' or 'Expense' so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. Plex ticket.
---where s.ytd_credit != s.PP_ytd_credit  -- 10 73100-000-0000 changed from a 'Revenue' or 'Expense' so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. Plex ticket.
--- this did not affect ytd values because 202012 had 0 YTD_balance so no reset was needed.
-
--- where (s.TB_ytd_balance != s.PP_ytd_balance)  -- 137
---where ((s.PP_ytd_balance - s.TB_ytd_balance ) > .01) -- 0
---where ((s.ytd_balance - s.TB_ytd_balance) > .01)  -- 0
-
-order by s.account_no,s.period
 
 /*
  * Are we missing any account periods with activity?
@@ -163,18 +105,26 @@ order by b.account_no,b.period
 
 /*
  * What accounts in the accounting_v_balance snapshots do not show up on the Trial Balance report?
+ * See Plex.accounting_Accounts_Grid_by_Sub_Category_Get or the code in the Accounts_Grid_by_Sub_Category_Get customer data source.
+ * Which is the resource for the classic chart of accounts screen, for details of how these accounts don't have sub categories and
+ * the inner join filters them.
+ * There are 159 accounts that get filtered but only 96 show up here because not all accounts are in the Plex.accounting_period_balance_all b table
  */
 select a.*
+-- select count(*)
 from 
 (
-	select distinct b.pcn,b.account_no
+	select distinct b.pcn,b.account_no  -- 96
 	--select count(*)
 	from Plex.accounting_period_balance_all b -- 40,940
 	left outer join Plex.trial_balance_multi_level m
 	on b.pcn = m.pcn 
 	and b.account_no=m.account_no 
 	and b.period=m.period
-	where m.pcn is null  -- 96
+	where m.pcn is null  -- 922
+	and b.period between 202101 and 202110
+	--and ((b.debit !=0) or (b.credit!=0))  -- 33
+
 )s
 inner join Plex.accounting_account a 
 on s.pcn=a.pcn 
@@ -185,6 +135,7 @@ order by s.pcn,s.account_no  -- 96
  * Verify balances of accounts not shown on the TB report.
  * For the 33 account periods that have a debit/credit != 0 there is an Plex.GL_Account_Activity_Summary.
  * And the debit/credit values are equal. 
+ * The other 889 account periods have a 0 debit/credit value.
  */
 select b.*
 --select count(*)
@@ -212,8 +163,9 @@ left outer join
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  -- 922
-where s.pcn is NULL -- 889
---and ((b.debit!=0) or (b.credit!=0))--0
+--where s.pcn is NULL -- 889
+--and ((b.debit!=0) or (b.credit!=0))  -- 0
+where s.pcn is not NULL -- 889
 and ((b.debit!=s.debit) or (b.credit!=s.credit) or (b.balance!=s.balance))--0
 
 /*
@@ -328,21 +280,28 @@ and a.period=b.period
 select *
 --select count(*) 
 -- drop table Plex.account_period_balance
-into Plex.account_period_balance
-from Plex.account_period_balance_view -- 43,620
+--into Plex.account_period_balance
+from Plex.account_period_balance_view -- 43,630
 --where period_display is NULL 
 
 /*
  * Does the values in this view match with the CSV download and the TB PP?
  */
-select b.pcn,b.account_no,b.debit,b.credit,b.balance,d.current_debit_credit TB_balance,b.ytd_debit,p.ytd_debit PP_ytd_debit,
+select b.pcn,b.account_no,
+b.period,
+a.revenue_or_expense,
+b.debit,b.credit,b.balance,d.current_debit_credit TB_balance,b.ytd_debit,p.ytd_debit PP_ytd_debit,
 b.ytd_credit,p.ytd_credit PP_ytd_credit,
 b.ytd_balance,
-d.ytd_debit_credit,
+d.ytd_debit_credit TB_ytd_balance,
 p.ytd_debit-p.ytd_credit PP_ytd_balance
 --b.balance -d.current_debit_credit  diff
+-- select *
 --select count(*) 
-from Plex.account_period_balance b -- 43,620
+from Plex.account_period_balance b -- 43,630
+inner join Plex.accounting_account a 
+on b.pcn=a.pcn 
+and b.account_no=a.account_no -- 43,630 
 --from Plex.account_period_balance_view b -- 43,620  -- This view made the query non-responsive
 --inner join Plex.trial_balance_multi_level d -- 42,040, 43,620 - 42,040 = 1,580 account periods do not show up on TB CSV download. TB download does not show the plex period for a multi period month, you must link to period_display
 left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
@@ -366,7 +325,7 @@ left outer join
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  
-where p.pcn is null and s.pcn is not null  -- 33  account periods with activity not on the TB report.
+--where p.pcn is null and s.pcn is not null  -- 33  account periods with activity not on the TB report.
 --where s.pcn is not null  -- 2,462
 --where b.debit=s.debit -- 2,462
 --where b.credit = s.credit -- 2,462
@@ -375,45 +334,27 @@ where p.pcn is null and s.pcn is not null  -- 33  account periods with activity 
 --where b.balance != d.current_debit_credit  -- 23
 --where (b.balance - d.current_debit_credit) >  0.01 -- 0
 --where b.credit != p.current_credit  -- 0 
-where b.debit != p.current_debit  -- 0 
+--where b.debit != p.current_debit  -- 0 
 --where (b.balance != p.Current_Debit - p.Current_Credit)   -- 0
 
-
-
---where b.ytd_debit != p.ytd_debit  -- 10 73100-000-0000 changed from a 'Revenue' or 'Expense' so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. Plex ticket.
---where b.ytd_credit != p.ytd_credit  -- 10 73100-000-0000 changed from a 'Revenue' or 'Expense' so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. Plex ticket.
--- this did not affect ytd values because 202012 had 0 YTD_balance so no reset was needed.
-
+--where b.ytd_debit != p.ytd_debit  -- 10 73100-000-0000 changed to a 'Revenue' or 'Expense' after the beginning of the year so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. 
+-- but our code only saw the current category so it reset the YTD values.
+-- reset all Plex.account_period_balance for this account
+-- UPDATE Plex.account_period_balance !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+-- update Plex.account_period_balance set ytd_debit=18912.67,ytd_credit=18912.67 where account_no = '73100-000-0000'
+--where b.ytd_credit != p.ytd_credit  
+--order by b.account_no,b.period
 --where (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  -- 137
 --where ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01  -- 0
-where (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
---where ((s.PP_ytd_balance - s.TB_ytd_balance ) > .01) -- 0
+--where (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
+--where (s.credit = b.credit) -- 2,462
+--where (s.balance = b.balance) -- 0
+-- where (s.debit = b.debit) -- 2,462
+where (s.debit != b.debit) -- 0
 --where ((s.ytd_balance - s.TB_ytd_balance) > .01)  -- 0
 
 order by b.account_no,b.period
 
-/*
- * Verify accounts not shown on the TB report
- */
-select count(*) from Plex.account_period_balance b -- 4,362 * 10 
---where b.period=202101  -- 4,362
-where b.period=202110  -- 4,362
-select b.*
-from Plex.account_period_balance b
-left outer join 
-(
-	select s.pcn,s.period, s.account_no,s.debit,s.credit,s.debit-s.credit balance
-	--select count(*)
-	from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
-	where s.pcn = 123681 
-	and s.period between 202101 and 202110  -- 2,462
-) s
-on b.pcn=s.pcn 
-and b.account_no=s.account_no
-and b.period=s.period  -- 922
-where s.pcn is NULL -- 889
---and ((b.debit!=0) or (b.credit!=0))--0
-and ((b.debit!=s.debit) or (b.credit!=s.credit) or (b.balance!=s.balance))--0
 
 /*
  * Validate the non debit/credit fields
@@ -426,10 +367,34 @@ and ((b.debit!=s.debit) or (b.credit!=s.credit) or (b.balance!=s.balance))--0
  * balance as 'Current Debit/(Credit)'
  * ytd_balance as 'YTD Debit/(Credit)'
  */
-select * 
+select d.* 
+select b.pcn,b.period,b.period_display,b.account_no,
+b.category_type,d.category_type TB_category_type
+--b.debit,b.ytd_debit,b.credit,b.ytd_credit,b.balance,b.ytd_balance
 -- select count(*)
-from Plex.account_period_balance b -- 2,680 
-where b.period_display is NULL 
+from 
+(
+	select b.pcn,b.period,b.period_display,b.account_no,a.account_name, 
+	a.category_type,a.category_name_legacy,
+	a.sub_category_name_legacy 
+	from Plex.account_period_balance b -- 43,630 
+	inner join Plex.accounting_account a
+	on b.pcn=a.pcn 
+	and b.account_no=a.account_no 
+)b 
+-- select count(*) from Plex.trial_balance_multi_level d where pcn = 123681 and d.period between 202101 and 202110  -- 42,040
+-- select * from Plex.trial_balance_multi_level d where pcn = 123681 and d.period between 202101 and 202110  -- 42,040
+inner join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
+on b.pcn=d.pcn
+and b.account_no = d.account_no
+and b.period_display = d.period_display 
+--where b.period_display = d.period_display  -- 42,040
+--where b.period_display != d.period_display  -- 0
+where b.category_type != d.category_type  -- 40
+where b.category_type = d.category_type
+where b.category_name_legacy != d.category_name
+where b.sub_category_name_legacy != d.sub_category_name
+where b.account_name != d.account_name
 
 /*
  * Format to be like CSV download

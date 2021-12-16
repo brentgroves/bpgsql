@@ -250,17 +250,17 @@ AS
 --SELECT count(*) FROM   calc_ytd_low OPTION (MAXRECURSION 210);  -- 34,508
 SELECT pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM calc_ytd_low 
 --order by period,account_no
-Plex.account_period_balance_low
+
 
 select *
 --into Scratch.accounting_period_balance_low_12_15 
---select count(*) -- old: 34,884
+--select count(*) -- 34,508, old: 34,884
 -- drop table Plex.accounting_period_balance_low
 from Plex.accounting_period_balance_low 
 
 select *
 --select count(*) -- 34,508
-into Plex.accounting_period_balance_low
+--into Plex.accounting_period_balance_low
 from Plex.calc_ytd_low_view  
 OPTION (MAXRECURSION 210);
 

@@ -136,4 +136,4 @@ into Plex.accounting_period_balance_high  -- 37,230
 from Plex.accounting_period_balance_high_view
 where account_no = '47100-000-0000'
 
-select count(*) from Plex.accounting_period_balance_high
+select count(*) from Plex.accounting_period_balance_high  -- 37,230
