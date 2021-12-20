@@ -367,34 +367,67 @@ order by b.account_no,b.period
  * balance as 'Current Debit/(Credit)'
  * ytd_balance as 'YTD Debit/(Credit)'
  */
-select d.* 
-select b.pcn,b.period,b.period_display,b.account_no,
-b.category_type,d.category_type TB_category_type
+select 
+--b.pcn,b.period,
+b.period_display,
+b.category_type_legacy category_type,  -- use legacy category type for the report.
+b.category_name_legacy category_name,
+b.sub_category_name_legacy sub_category_name,
+b.account_no,
+b.account_name,
+b.balance current_debit_credit,
+b.ytd_balance ytd_debit_credit
+--d.category_type TB_category_type,
 --b.debit,b.ytd_debit,b.credit,b.ytd_credit,b.balance,b.ytd_balance
 -- select count(*)
+--select distinct b.account_no,b.category_type,d.category_type 
 from 
 (
 	select b.pcn,b.period,b.period_display,b.account_no,a.account_name, 
-	a.category_type,a.category_name_legacy,
-	a.sub_category_name_legacy 
+	a.category_type,
+	a.category_type_legacy, 
+	a.category_name_legacy,
+	a.sub_category_name_legacy,
+	b.balance,
+	b.ytd_balance
+	-- select count(*)
 	from Plex.account_period_balance b -- 43,630 
+	--select * from Plex.accounting_account a
 	inner join Plex.accounting_account a
 	on b.pcn=a.pcn 
 	and b.account_no=a.account_no 
+--	where category_type = ''  -- 0
+--	where category_type_legacy = ''  -- 1,590
+--	where category_name_legacy = ''  -- 1,590
+--	where sub_category_name_legacy = ''  -- 1,590
 )b 
+--order by b.pcn,b.period_display,b.account_no
+
 -- select count(*) from Plex.trial_balance_multi_level d where pcn = 123681 and d.period between 202101 and 202110  -- 42,040
 -- select * from Plex.trial_balance_multi_level d where pcn = 123681 and d.period between 202101 and 202110  -- 42,040
-inner join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
+left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
+--inner join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
 on b.pcn=d.pcn
 and b.account_no = d.account_no
 and b.period_display = d.period_display 
+--where b.category_name = ''
+--where b.category_type = ''
+--where d.pcn is null
+
 --where b.period_display = d.period_display  -- 42,040
 --where b.period_display != d.period_display  -- 0
-where b.category_type != d.category_type  -- 40
-where b.category_type = d.category_type
-where b.category_name_legacy != d.category_name
-where b.sub_category_name_legacy != d.sub_category_name
-where b.account_name != d.account_name
+--where b.category_type != d.category_type  -- 40  -- TB report uses the category type linked to the sub_category
+--where b.category_type_legacy = d.category_type  -- 42,040
+where b.category_type_legacy != d.category_type  -- 0
+--where b.category_name_legacy = d.category_name  -- 42,040
+--where b.sub_category_name_legacy != d.sub_category_name  -- 0
+--where b.sub_category_name_legacy = d.sub_category_name  -- 42,040
+--where b.account_name != d.account_name  -- 0
+--where b.account_name = d.account_name -- 42,040
+--where b.balance = d.current_debit_credit -- 42,017
+--where (b.balance - d.current_debit_credit) > 0.01 -- 0
+--where b.ytd_balance = d.ytd_debit_credit -- 41,903
+--where (b.ytd_balance - d.ytd_debit_credit) > 0.01 -- 0
 
 /*
  * Format to be like CSV download
@@ -404,6 +437,12 @@ select
 b.period,
 b.period_display,
 a.category_type,
+-- b.category_type_legacy category_type,  -- use legacy category type for the report.
+/*
+ * The Plex TB report uses the category type of the category linked to the account via the  category_account view. 
+ * I believe Plex now mostly uses the account category located directly on the accounting_v_account view so I used 
+ * this column instead of the one linked via the account_category view. 
+ */
 a.category_name_legacy category_name,
 --a.sub_category_name_legacy sub_category_name,
 a.account_no [no],
@@ -416,6 +455,7 @@ inner join Plex.accounting_account a -- 43,620
 on b.pcn=a.pcn 
 and b.account_no=a.account_no 
 --order by b.period_display,a.account_no 
+--where a.category_type != a.category_type_legacy 
 --where b.period_display is not NULL -- 40,940
 --where b.period_display is NULL -- 40,940
 where a.account_no = '10220-000-00000' 
