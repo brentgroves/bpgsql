@@ -37,6 +37,7 @@ select p.*
 -- select distinct pcn, period -- 200812 to 202110
 -- select count(*)
 from Plex.Account_Balances_by_Periods p -- 663,441
+-- where p.period = 202101  -- 4,204
 --order by pcn,period
 left outer join 
 (
@@ -141,6 +142,7 @@ select b.*
 --select count(*)
 from
 (
+-- 33 accounts that are not on the TB report.
 	select b.*
 	-- select distinct b.pcn,b.account_no
 	--select count(*)
@@ -165,7 +167,7 @@ and b.account_no=s.account_no
 and b.period=s.period  -- 922
 --where s.pcn is NULL -- 889
 --and ((b.debit!=0) or (b.credit!=0))  -- 0
-where s.pcn is not NULL -- 889
+where s.pcn is not NULL -- 33
 and ((b.debit!=s.debit) or (b.credit!=s.credit) or (b.balance!=s.balance))--0
 
 /*
@@ -336,7 +338,13 @@ and b.period=s.period
 --where b.credit != p.current_credit  -- 0 
 --where b.debit != p.current_debit  -- 0 
 --where (b.balance != p.Current_Debit - p.Current_Credit)   -- 0
-
+/*
+ * 'Revenue' or 'Expense' low accounts have no credit/debit values. 
+ */
+--where a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22
+--and ((b.credit = 0) and (b.debit = 0) and (b.balance =0))  -- 220
+--where a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22
+--and ((b.credit != 0) or (b.debit != 0) or (b.balance !=0))  -- 0
 --where b.ytd_debit != p.ytd_debit  -- 10 73100-000-0000 changed to a 'Revenue' or 'Expense' after the beginning of the year so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. 
 -- but our code only saw the current category so it reset the YTD values.
 -- reset all Plex.account_period_balance for this account
@@ -417,6 +425,7 @@ and b.period_display = d.period_display
 --where b.period_display = d.period_display  -- 42,040
 --where b.period_display != d.period_display  -- 0
 --where b.category_type != d.category_type  -- 40  -- TB report uses the category type linked to the sub_category
+
 --where b.category_type_legacy = d.category_type  -- 42,040
 where b.category_type_legacy != d.category_type  -- 0
 --where b.category_name_legacy = d.category_name  -- 42,040
@@ -428,6 +437,49 @@ where b.category_type_legacy != d.category_type  -- 0
 --where (b.balance - d.current_debit_credit) > 0.01 -- 0
 --where b.ytd_balance = d.ytd_debit_credit -- 41,903
 --where (b.ytd_balance - d.ytd_debit_credit) > 0.01 -- 0
+
+/*
+ * What category_type is being used on the new chart of accounts multiple level?
+ */
+select * from Plex.accounting_account a 
+where a.pcn = 123681 
+and a.category_type != a.category_type_legacy -- 163  -- 73100-000-0000,40591-300-00000 (5 digit old account)
+-- 73100-000-0000 category_type = Expense (ytd resets yearly), category_type_legacy=Liability
+/*
+ * How is the TB report treating 73100-000-0000
+ * In 2019 there were debits far exceeded credit values
+ * In 2020 debit/credit values where equal.
+ * TB is treating it as an Expense since it's YTD values match our procedures values.
+ * So TB is using the accounting_v_account category_type YTD reset purposes.
+ * But it seems to be using the category linked to the accounting_v_category_account view
+ * for the category_type in the CSV file download.
+ * Chart of Accounts plex screen lists this account as an Expense so it must
+ * also be using the accounting_v_account category_type column.
+ * The classic Chart of Accounts plex screen no longer works so I can't test 
+ * its category type for that account.
+ * So I decided to use the accounting_v_account category_type column for both the
+ * YTD reset condition and the CSV category name since I thought that would be 
+ * less confusing even though 40 account_period_balance records will have different category types 
+ * shown on our report compared to the actual Plex TB CSV download.
+ */
+
+select * 
+from Plex.accounting_balance b
+--from Plex.account_period_balance_high b
+where b.account_no = '73100-000-0000'
+order by b.period 
+
+
+select * from Plex.accounting_account a 
+where a.pcn = 123681 
+and left(a.account_no,1) < '4' 
+and a.category_type in ('Revenue','Expense')  -- 22
+
+select * from Plex.accounting_account a 
+where a.pcn = 123681 
+and left(a.account_no,1) > 3 
+and a.category_type not in ('Revenue','Expense')  -- 0
+
 
 /*
  * Format to be like CSV download

@@ -127,13 +127,25 @@ AS
 SELECT pcn,period,account_no,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance FROM   calc_ytd_high
 
 select *
-into Scratch.accounting_period_balance_high_12_15
+--into Scratch.accounting_period_balance_high_12_15
 from Plex.accounting_period_balance_high
 
-select * 
+select a.* 
 -- drop table Plex.accounting_period_balance_high
-into Plex.accounting_period_balance_high  -- 37,230
-from Plex.accounting_period_balance_high_view
+--into Plex.accounting_period_balance_high  -- 37,230
+from Plex.accounting_period_balance_high_view b
+inner join Plex.accounting_account a 
+on b.pcn=a.pcn 
+and b.account_no = a.account_no 
+--where b.account_no = '73100-000-0000'
 where account_no = '47100-000-0000'
 
 select count(*) from Plex.accounting_period_balance_high  -- 37,230
+
+select b.*
+from Plex.accounting_balance b
+inner join Plex.accounting_account a 
+on b.pcn=a.pcn 
+and b.account_no = a.account_no 
+where b.account_no = '73100-000-0000'
+order by b.period 

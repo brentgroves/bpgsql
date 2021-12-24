@@ -1,25 +1,113 @@
+-- mgdw.Plex.accounting_balance_update_period_range definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.accounting_balance_update_period_range;
+
+CREATE TABLE mgdw.Plex.accounting_balance_update_period_range (
+	id int IDENTITY(1,1) NOT NULL,
+	pcn int NULL,
+	period_start int NULL,
+	period_end int NULL,
+	PRIMARY KEY (id)
+);
+select * from Plex.accounting_balance_update_period_range
+
+select *
+--into Archive.accounting_balance 
+--select count(*) 
+from Plex.accounting_balance  -- 52,138
+
+select * 
+select distinct pcn,period
+from Archive.accounting_balance order by pcn,period
+
+
+update Plex.accounting_balance_update_period_range 
+set period_start = 202104,
+period_end = 202105
+where pcn = 123681
+
+update Plex.accounting_balance_update_period_range 
+set period_start = 202106,
+period_end = 202107
+where pcn = 300758
+
+/*
+ * Create accounting_balance_delete_period procedure to delete records
+ * which fall into the pcn ranges found in the Plex.accounting_balance_update_period_range records. 
+ */
+declare @start_id int;
+select @start_id = min(id) from Plex.accounting_balance_update_period_range
+declare @id int;
+set @id=@start_id;
+
+declare @end_id int;
+select @end_id = max(id) from Plex.accounting_balance_update_period_range;
+--select @start_id start_id,@end_id end_id
+
+declare @pcn int;
+declare @period_start int;
+declare @period_end int;
+--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 4
+while @id <=@end_id
+begin
+	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = @id
+	print N'pcn=' + cast(@pcn as varchar(6)) + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6))
+	--select distinct pcn,period from Archive.accounting_balance order by pcn,period
+	--delete from Archive.accounting_balance WHERE pcn = @pcn and period between @period_start and @period_end
+	set @id = @id+1;
+end 
+
+select 
+DECLARE @CursorTestID INT = 1;
+DECLARE @RunningTotal BIGINT = 0;
+DECLARE @RowCnt BIGINT = 0;
+
+-- get a count of total rows to process 
+SELECT @RowCnt = COUNT(0) FROM dbo.CursorTest;
+ 
+WHILE @CursorTestID <= @RowCnt
+BEGIN
+   UPDATE dbo.CursorTest 
+   SET RunningTotal = @RunningTotal  + @CursorTestID
+   WHERE CursorTestID = @CursorTestID;
+
+   SET @RunningTotal += @CursorTestID
+    
+   SET @CursorTestID = @CursorTestID + 1 
+ 
+END
+
+/*
+ * Create a procedure to record pcn,account_no, year, category, and revenue_or_expense value.
+ * What category do we use?  
+ */
+
 create procedure Plex.account_period_balance_create
 as
 begin
 /*
  * What will be the starting period? 3 periods ago.
  */
-declare @todays_date datetime;
-set @todays_date = getdate();
---select @todays_date;
 /*
- * What period is it today?
+ * What is the latest period in accounting _v_balance?
  */
-declare @current_period int;
+declare @latest_period int;
 
-select @current_period = period 
---select pcn,year(begin_date) year,period,* 
---select distinct pcn,period
-from Plex.accounting_period p
-where pcn = 123681  -- 200601 to > 204103
-and @todays_date between p.begin_date and p.end_date 
+select @latest_period = max(period) 
 
---select @current_period
+from Plex.accounting_balance b
+where b.pcn = 123681
+--select @current_period current_period, @latest_period latest_period
+/*
+ * How many records in the last 6 periods
+ */
+select count(*)
+from Plex.accounting_balance b
+where b.pcn = 123681
+and b.period between 202106 and 202110 -- 1,278
+
 /*
 select 
 @current_period current_period,
@@ -296,3 +384,20 @@ SELECT pcn,period,next_period,account_no,debit,ytd_debit,credit,ytd_credit,balan
 end
 
 exec Plex.calc_ytd
+
+/*
+ * Make backup of Plex.accounting_balance before appending records to it 
+ */
+
+create schema Archive
+
+select *
+--select distinct pcn,period -- 200812 to 202110
+--select count(*)  -- 52,138
+from Archive.account_balance_12_21 b
+--from Plex.accounting_balance b
+where b.pcn = 123681  -- 40,698
+and b.period = 202110
+order by period 
+
+

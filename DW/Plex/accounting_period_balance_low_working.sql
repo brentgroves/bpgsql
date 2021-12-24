@@ -256,8 +256,8 @@ select *
 --into Scratch.accounting_period_balance_low_12_15 
 --select count(*) -- 34,508, old: 34,884
 -- drop table Plex.accounting_period_balance_low
-from Plex.accounting_period_balance_low 
-
+from Plex.accounting_period_balance_low b
+--where b.account_no = '73100-000-0000' -- 0
 select *
 --select count(*) -- 34,508
 --into Plex.accounting_period_balance_low
