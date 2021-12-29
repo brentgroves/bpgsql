@@ -64,27 +64,10 @@ begin
 	end 
 end 
 
-select distinct pcn,period from Plex.accounting_balance ab order by pcn,period
+select distinct pcn,period from Archive.accounting_balance ab order by pcn,period
+--select distinct pcn,period from Plex.accounting_balance ab order by pcn,period
 
-select 
-DECLARE @CursorTestID INT = 1;
-DECLARE @RunningTotal BIGINT = 0;
-DECLARE @RowCnt BIGINT = 0;
 
--- get a count of total rows to process 
-SELECT @RowCnt = COUNT(0) FROM dbo.CursorTest;
- 
-WHILE @CursorTestID <= @RowCnt
-BEGIN
-   UPDATE dbo.CursorTest 
-   SET RunningTotal = @RunningTotal  + @CursorTestID
-   WHERE CursorTestID = @CursorTestID;
-
-   SET @RunningTotal += @CursorTestID
-    
-   SET @CursorTestID = @CursorTestID + 1 
- 
-END
 
 /*
  * Create a procedure to record pcn,account_no, year, category, and revenue_or_expense value.
