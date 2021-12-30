@@ -1,6 +1,7 @@
 select * 
+--into Scratch.accounting_period_balance_all_12_30  -- 40,940
 --into Scratch.accounting_period_balance_all_12_16  -- 40,940
---from Plex.accounting_period_balance_all
+from Plex.accounting_period_balance_all
 -- drop table Plex.accounting_period_balance_all
 into Plex.accounting_period_balance_all
 from 
@@ -17,7 +18,11 @@ from Plex.accounting_period_balance_high  -- 37,230 + 3,710 = 40,940
 -- select distinct pcn,period from Plex.accounting_period_balance_low b order by pcn,period --goes from 200701 to 202111
 -- select distinct pcn,period from Plex.accounting_period_balance_high b order by pcn,period --goes from 202101 to 202110
 -- select distinct pcn,period from Plex.accounting_period_balance_all b order by pcn,period --goes from 202101 to 202110
-
+select distinct pcn,period  -- 123,681 (202101-202110)
+--select count(*) -- 40,940
+from Plex.accounting_period_balance_all
+order by pcn,period
+--select count(*) from Scratch.accounting_period_balance_all_12_16  -- 40,940
 
 select p.period_display 
 --select count(*)
@@ -285,7 +290,12 @@ select *
 --into Plex.account_period_balance
 from Plex.account_period_balance_view -- 43,630
 --where period_display is NULL 
-
+/*
+ * Backup
+ */
+select * 
+--into Archive.account_period_balance_12_30
+from Plex.account_period_balance b -- 43,630
 /*
  * Does the values in this view match with the CSV download and the TB PP?
  */
@@ -511,3 +521,11 @@ and b.account_no=a.account_no
 --where b.period_display is not NULL -- 40,940
 --where b.period_display is NULL -- 40,940
 where a.account_no = '10220-000-00000' 
+
+/*
+ * Backup
+ */
+select * 
+-- select count(*) from Archive.account_period_balance_12_30  -- 43,630
+--into Archive.account_period_balance_12_30
+from Plex.account_period_balance b -- 43,630

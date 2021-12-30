@@ -67,7 +67,7 @@ DECLARE @pcn_period_range TABLE
 )
 insert into @pcn_period_range
 exec sproc300758_11728751_1999565 @PCNList;
-select * from @pcn_period_range
+--select * from @pcn_period_range
 
 declare @accounting_balance TABLE
 (
@@ -75,7 +75,7 @@ declare @accounting_balance TABLE
 	account_key int,
 	account_no varchar(20),
 	period int,
-	tb_period int,
+--	tb_period int,
 	debit decimal(19,5),
 	credit decimal(19,5),
 	balance decimal(19,5)
@@ -88,7 +88,7 @@ declare @accounting_balance TABLE
 	select @start_id = min(id),@end_id = max(id) from @pcn_period_range
 	declare @id int;
 	set @id=@start_id;
-	select @start_id start_id,@end_id end_id,@id id
+--	select @start_id start_id,@end_id end_id,@id id
 	-- select * from Plex.accounting_balance_update_period_range
 	declare @pcn int;
 	declare @string_pcn varchar(6);
@@ -105,8 +105,8 @@ declare @accounting_balance TABLE
 	--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 4
 	while @id <=@end_id
 	begin
-		select @pcn=pcn,@string_pcn=cast(@pcn as varchar),@period_start=period_start,@period_end=period_end from @pcn_period_range where id = @id
-		select N'pcn=' + @string_pcn + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6));
+		select @pcn=pcn,@string_pcn=cast(@pcn as varchar),@period_start=period_start,@period_end=period_end from @pcn_period_range where id = @id;
+--		select N'pcn=' + @string_pcn + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6));
 -- /*
     with accounting_balance
     as 
@@ -114,10 +114,10 @@ declare @accounting_balance TABLE
       select b.plexus_customer_no pcn,b.account_key,b.account_no,
       --a.start_period,
       b.period,
-      case
-        when b.plexus_customer_no in (300578) then cast(left(p.period_display,4) + right(p.period_display,2) as int)
-        when b.plexus_customer_no in (123681) then cast(right(p.period_display,4) + left(p.period_display,2) as int) 
-      end tb_period,
+--      case
+  --      when b.plexus_customer_no in (300578) then cast(left(p.period_display,4) + right(p.period_display,2) as int)
+    --    when b.plexus_customer_no in (123681) then cast(right(p.period_display,4) + left(p.period_display,2) as int) 
+      --end tb_period,
       b.debit,b.credit,
       b.debit-b.credit balance
      --THIS IS WRONG YOU ALWAY TAKE p.current_debit-p.current_credit
@@ -145,6 +145,9 @@ declare @accounting_balance TABLE
       --and b.account_no=a.account_no
       where b.plexus_customer_no=@pcn
       and b.period between @period_start and @period_end
+      -- In Albion there was a 202201 balance record but no 202112 and 
+      -- I decided to include 202201 although we were only in December
+      -- for no particular reason.
     )
     --select pcn,account_key,account_no,period,tb_period from accounting_balance;  -- 40698/783
     --select count(*) from accounting_balance;  -- 40698/783
@@ -156,36 +159,12 @@ declare @accounting_balance TABLE
 --		delete from Archive.accounting_balance WHERE pcn = @pcn and period between @period_start and @period_end
 		set @id = @id+1;
 	end; 
---select count(*) from @accounting_balance;  -- 2963
+--select count(*) from @accounting_balance;  -- 7290 @PCNList varchar(max) = '123681,300758'
 --select distinct pcn,period from @accounting_balance  order by pcn,period-- 2963
 select * from @accounting_balance  order by pcn,period,account_no-- 2963
 -- @PCNList varchar(max) = '123681,300758'
 --where period = 202111  --256
 --where period = 202112  --0
-
-/*
-select distinct period,add_date,update_date
---select *
---select count(*)
-from accounting_v_balance_e b  -- 263:all, 45 : <4 and in same period
-where b.plexus_customer_no = 123681
---order by period
-and period = 202001  --256
-where period = 202111  --256
-where period = 202112  --0
-
-select distinct period
-from accounting_v_balance_e b
-where b.plexus_customer_no = 123681
-order by b.period
-*/
---select distinct period_status
---select *
---from accounting_v_period_e p
---where p.plexus_customer_no = 123681
---and period in (202110,202111,202112)  --3
---and period = 201812  --8
---order by pcn,period,account_no
 
 /*
 -- mgdw.Plex.accounting_balance definition
@@ -206,28 +185,3 @@ CREATE TABLE mgdw.Plex.accounting_balance (
 );
 */
 
-/*
-!!!!!!!!!!!!!!!!!!DELETE THIS IF NOT USED
-
-
-	declare @start_id int;
-	declare @end_id int;
-	select @start_id = min(id),@end_id = max(id) from @pcn_period_range
-	declare @id int;
-	set @id=@start_id;
---	select @start_id start_id,@end_id end_id,@id id
-	-- select * from Plex.accounting_balance_update_period_range
-	declare @pcn int;
-	declare @period_start int;
-	declare @period_end int;
-	--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 4
-	while @id <=@end_id
-	begin
-		select @pcn=pcn,@period_start=period_start,@period_end=period_end from @pcn_period_range where id = @id
-		select N'pcn=' + cast(@pcn as varchar(6)) + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6))
-		--select distinct pcn,period from Archive.accounting_balance order by pcn,period
---		delete from Archive.accounting_balance WHERE pcn = @pcn and period between @period_start and @period_end
-		set @id = @id+1;
-	end; 
-
-*/

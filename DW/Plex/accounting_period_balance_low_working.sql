@@ -57,6 +57,7 @@ select * from Plex.max_fiscal_period
 			--where a.pcn = 123681  -- 4,363 a low account was added 
 			--and a.start_period =0  -- 3,031, -- 4,363-3,031= 1,332
 	   		--left outer join Plex.max_fiscal_period m 
+			-- select * from Plex.max_fiscal_period m
 	   		inner join Plex.max_fiscal_period m 
 	        on a.pcn=m.pcn
 	        and (a.start_period/100) = m.[year]
