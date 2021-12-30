@@ -138,7 +138,7 @@ as
  * What is the first period to be appended?
  * ?
  */
-next_period(pcn,ending_period,next_period)
+next_period(pcn,ending_period,next_period,first_period)
 as 
 (
 	select e.pcn,
@@ -147,7 +147,11 @@ as
     when e.ending_period < m.max_fiscal_period then e.ending_period+1
  --   when y.period%100 < 12 then y.period+1
     else ((e.ending_period/100 + 1)*100) + 1 
-    end next_period
+    end next_period,
+    case 
+    when e.ending_period < m.max_fiscal_period then 0
+    else 1 
+    end first_period
 	from  ending_period e
 	inner join Plex.max_fiscal_period m 
     on e.pcn=m.pcn
@@ -155,8 +159,8 @@ as
 ),
 --select * from next_period;
 -- select * from Plex.account_period_balance apb 
-anchor_member(pcn,account_no,period,period_display,debit,ytd_debit,
-ending_period,ending_ytd_debit,ending_ytd_credit,ending_ytd_balance,next_period,credit,balance)
+anchor_member(pcn,account_no,period,period_display,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance,
+ending_period,ending_ytd_debit,ending_ytd_credit,ending_ytd_balance,next_period)
 as 
 (	
 --select * from Plex.accounting_period ap where pcn = 300758
@@ -166,13 +170,45 @@ as
 	else b.debit
 	end debit,
 	case 
-	when (a.revenue_or_expense = 1) and (b.debit is null) then 0
-	when (a.revenue_or_expense = 1) and (b.debit is not null) then b.debit 
-	when (a.revenue_or_expense = 0) and (b.debit is null) then p.ytd_debit 
-	when (a.revenue_or_expense = 0) and (b.debit is not null) then p.ytd_debit + b.debit 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.debit is null) then p.ytd_debit 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.debit is not null) then p.ytd_debit + b.debit 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.debit is null) then p.ytd_debit 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.debit is not null) then p.ytd_debit + b.debit
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.debit is null) then 0 
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.debit is not null) then b.debit 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.debit is null) then p.ytd_debit 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.debit is not null) then p.ytd_debit + b.debit 
 	end ytd_debit, 
+	case 
+	when b.credit is null then 0
+	else b.credit
+	end credit,
+	case 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.credit is null) then p.ytd_credit 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.credit is not null) then p.ytd_credit + b.credit 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.credit is null) then p.ytd_credit 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.credit is not null) then p.ytd_credit + b.credit
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.credit is null) then 0 
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.credit is not null) then b.credit 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.credit is null) then p.ytd_credit 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.credit is not null) then p.ytd_credit + b.credit 
+	end ytd_credit, 	
+	case 
+	when b.balance is null then 0
+	else b.balance
+	end balance,
+	case 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.balance is null) then p.ytd_balance 
+	when (n.first_period=0) and (a.revenue_or_expense = 1) and (b.balance is not null) then p.ytd_balance + b.balance 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.balance is null) then p.ytd_balance 
+	when (n.first_period=0) and (a.revenue_or_expense = 0) and (b.balance is not null) then p.ytd_balance + b.balance
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.balance is null) then 0 
+	when (n.first_period=1) and (a.revenue_or_expense = 1) and (b.balance is not null) then b.balance 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.balance is null) then p.ytd_balance 
+	when (n.first_period=1) and (a.revenue_or_expense = 0) and (b.balance is not null) then p.ytd_balance + b.balance 
+	end ytd_balance, 	
 	n.ending_period,p.ytd_debit ending_ytd_debit,p.ytd_credit ending_ytd_credit, p.balance ending_ytd_balance,
-	n.next_period,b.credit,b.balance 
+	n.next_period
 	--select *
 	from Plex.account_period_balance p
 	-- select * from Plex.accounting_account aa 
