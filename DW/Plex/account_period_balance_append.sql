@@ -212,9 +212,8 @@ as
 	--select *
 	from Plex.account_period_balance p
 	-- select * from Plex.accounting_account aa 
-	inner join Plex.accounting_account a
-	on p.pcn = a.pcn 
-	and p.account_no =a.account_no 
+	-- select * from Plex.accounting_account_year_category_type aayct 
+	-- select distinct pcn,year from Plex.accounting_account_year_category_type aayct 
 	inner join next_period n 
 	on p.pcn=n.pcn 
 	and p.period = n.ending_period
@@ -225,8 +224,14 @@ as
 	inner join Plex.accounting_period ap 
 	on n.pcn=ap.pcn 
 	and n.next_period=ap.period 
+	inner join Plex.accounting_account_year_category_type a
+	on p.pcn = a.pcn 
+	and p.account_no =a.account_no
+	and (n.ending_period/100)=a.[year]
+	
+	
 )
---select count(*) from anchor_member -- 4,363
+select count(*) from anchor_member -- 4,363
 
 select * from anchor_member
 
