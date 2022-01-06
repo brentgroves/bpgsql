@@ -37,14 +37,13 @@ and (r.period_start/100) = m.[year]
 where id = @min_id;
 
 
---select count(*) from Plex.account_period_balance b --4,363/51,407
---select distinct pcn,period from Plex.account_period_balance b order by pcn,period
+--select count(*) from Plex.account_period_balance b
+--select distinct pcn,period from Plex.account_period_balance b
 --select distinct pcn,period from Archive.account_period_balance_01_03_2022 b order by pcn,period -- 202101 - 202110
 --select count(*) from Archive.account_period_balance_01_03_2022 -- 43,630
 --select distinct pcn,period from Archive.account_period_balance_12_30 b order by pcn,period -- 202101 - 202110
 --select count(*) from Archive.account_period_balance_12_30 -- 43,630
--- delete Plex.account_period_balance where  period between 202102 and 202111
--- delete Plex.account_period_balance where  pcn = 300758
+-- delete Plex.account_period_balance where pcn=123681 and period between 202102 and 202111
 /*
 select * 
 into Plex.account_period_balance_anchor  -- 4,363 Edon only
@@ -74,21 +73,54 @@ end
 select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_period_display,@prev_period prev_period,@period_start period_start,
 @first_period first_period,@period_end period_end,@period period,@max_fiscal_period max_fiscal_period,@min_id min_id,@max_id max_id,@id id
 
- print '@pcn=' + cast(@pcn as varchar(6)) 
- + ',@period_start=' + cast(@period_start as varchar(6))
- + ',@period_end=' + cast(@period_end as varchar(6)) 
- + ',@period=' + cast(@period as varchar(6))
- + ',@prev_period=' + cast(@prev_period as varchar(6))     
- + ',@anchor_period=' + cast(@anchor_period as varchar(6))     
- + ',@first_period=' + cast(@first_period as varchar(1))
- + ',@max_fiscal_period=' + cast(@max_fiscal_period as varchar(6))
- + ',@min_id=' + cast(@min_id as varchar(2))
- + ',@max_id=' + cast(@max_id as varchar(2))
- + ',@id=' + cast(@id as varchar(2));
+/*
+ 
+    set @id=@id+1;
+ 	select @pcn=r.pcn,@period_start=r.period_start,
+ 	@period=r.period_start,
+ 	@period_end=r.period_end,
+ 	@max_fiscal_period=m.max_fiscal_period 
+	from Plex.accounting_balance_update_period_range r
+	inner join Plex.max_fiscal_period_view m 
+	on r.pcn=m.pcn
+	and (r.period_start/100) = m.[year]
+	where id = @id;
+
+	select @prev_period=max(b.period)
+	from Plex.account_period_balance b
+	where b.pcn = @pcn	
+
+	set @anchor_period = @prev_period;		
+
+	select @anchor_period_display=p.period_display 
+	from Plex.accounting_period p 
+	where p.pcn = @pcn
+	and p.period = @anchor_period
+
+	if @period%100 = 1 
+	begin
+		set @first_period=1;
+	end 
+	else 
+	begin 
+		set @first_period=0;
+	end		
+	
+*/
 
 
 while @id <= @max_id
 begin
+     print '@pcn=' + cast(@pcn as varchar(6)) 
+     + ',@period_start=' + cast(@period_start as varchar(6))
+     + ',@period_end=' + cast(@period_end as varchar(6)) 
+     + ',@period=' + cast(@period as varchar(6))
+     + ',@anchor_period=' + cast(@anchor_period as varchar(6))     
+     + ',@first_period=' + cast(@first_period as varchar(1))
+     + ',@max_fiscal_period=' + cast(@max_fiscal_period as varchar(6))
+     --+ ',@min_id=' + cast(@min_id as varchar(2))
+     --+ ',@max_id=' + cast(@max_id as varchar(2))
+     + ',@id=' + cast(@id as varchar(2));
     /*
      * Update the anchor period. Add records for new accounts.
      * select * from Plex.account_period_balance_anchor
@@ -121,9 +153,7 @@ begin
     while @period <= @period_end
     begin
 	    print '@period=' + cast(@period as varchar(6) )
-	   	+ ', @first_period=' + cast(@first_period as varchar(1))
-	   	+ ', @prev_period=' + cast(@prev_period as varchar(6))
-	   	+ ', @max_fiscal_period=' + cast(@max_fiscal_period as varchar(6));
+	   	+ '@first_period=' + cast(@first_period as varchar(1));
 		with period_balance(pcn,account_no,period,debit,credit,balance)
 --		with account_period(pcn,account_no,period)
 		as 
@@ -235,8 +265,6 @@ begin
 
 		print '@cnt=' + cast(@cnt as varchar(4));
 		
-		set @prev_period = @period
-		
 	    if @period < @max_fiscal_period 
 	    begin 
 		    set @period=@period+1
@@ -245,7 +273,6 @@ begin
 		begin 
 			set @period=((@period/100 + 1)*100) + 1 
 		end 
-		
 		select @max_fiscal_period=m.max_fiscal_period
 		from Plex.max_fiscal_period_view m 
 		where m.pcn = @pcn 
@@ -260,62 +287,39 @@ begin
 			set @first_period=0;
 		end
 		
+		
 	end 
 
-   	set @id=@id+1;
-	if @id <= @max_id
-	begin
-	 	select @pcn=r.pcn,@period_start=r.period_start,
-	 	@period=r.period_start,
-	 	@period_end=r.period_end,
-	 	@max_fiscal_period=m.max_fiscal_period 
-		from Plex.accounting_balance_update_period_range r
-		inner join Plex.max_fiscal_period_view m 
-		on r.pcn=m.pcn
-		and (r.period_start/100) = m.[year]
-		where id = @id;
-	
-		select @prev_period=max(b.period)
-		from Plex.account_period_balance b
-		where b.pcn = @pcn	
-		
-		-- if pcn has no account_period_balance records.
-		if @prev_period is null 
-		begin
-			set @prev_period=202101
-		end 
-		set @anchor_period = @prev_period;		
-		
-	
-		select @anchor_period_display=p.period_display 
-		from Plex.accounting_period p 
-		where p.pcn = @pcn
-		and p.period = @anchor_period
-	
-		if @period%100 = 1 
-		begin
-			set @first_period=1;
-		end 
-		else 
-		begin 
-			set @first_period=0;
-		end		
-		select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_period_display,@prev_period prev_period,@period_start period_start,
-		@first_period first_period,@period_end period_end,@period period,@max_fiscal_period max_fiscal_period,@min_id min_id,@max_id max_id,@id id
-		
-		 print '@pcn=' + cast(@pcn as varchar(6)) 
-		 + ',@period_start=' + cast(@period_start as varchar(6))
-		 + ',@period_end=' + cast(@period_end as varchar(6)) 
-		 + ',@period=' + cast(@period as varchar(6))
-		 + ',@prev_period=' + cast(@prev_period as varchar(6))     
-		 + ',@anchor_period=' + cast(@anchor_period as varchar(6))     
-		 + ',@first_period=' + cast(@first_period as varchar(1))
-		 + ',@max_fiscal_period=' + cast(@max_fiscal_period as varchar(6))
-		 + ',@min_id=' + cast(@min_id as varchar(2))
-		 + ',@max_id=' + cast(@max_id as varchar(2))
-		 + ',@id=' + cast(@id as varchar(2));
+    set @id=@id+1;
+ 	select @pcn=r.pcn,@period_start=r.period_start,
+ 	@period=r.period_start,
+ 	@period_end=r.period_end,
+ 	@max_fiscal_period=m.max_fiscal_period 
+	from Plex.accounting_balance_update_period_range r
+	inner join Plex.max_fiscal_period_view m 
+	on r.pcn=m.pcn
+	and (r.period_start/100) = m.[year]
+	where id = @id;
 
-	end	
+	select @prev_period=max(b.period)
+	from Plex.account_period_balance b
+	where b.pcn = @pcn	
+
+	set @anchor_period = @prev_period;		
+
+	select @anchor_period_display=p.period_display 
+	from Plex.accounting_period p 
+	where p.pcn = @pcn
+	and p.period = @anchor_period
+
+	if @period%100 = 1 
+	begin
+		set @first_period=1;
+	end 
+	else 
+	begin 
+		set @first_period=0;
+	end		
 	
 	
 end 
