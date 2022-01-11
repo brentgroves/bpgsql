@@ -15,14 +15,20 @@ create table Plex.trial_balance_multi_level
  ytd_debit_credit DECIMAL(18,2)
  primary key (period_display,account_no)  -- when this gets imported there is a period_display but no period.
 )
-select distinct pcn,period from Plex.trial_balance_multi_level
-select count(*) from Plex.trial_balance_multi_level  -- 58,856
+select distinct pcn,period 
+from Plex.trial_balance_multi_level order by pcn,period 
+select count(*) from Plex.trial_balance_multi_level  -- 668,436/664,232
+where period = 202111
 
 select * 
 -- select count(*)
+--select count(*) from Archive.trial_balance_multi_level_01_02_2022  -- 668,436 (200812-202112) -- I deleted 202112 because this period did not close as of 01-07-2022.
+--into Archive.trial_balance_multi_level_01_02_2022
 from Plex.trial_balance_multi_level  -- 58,856
 where account_no = '10220-000-00000'
 where period_display like '%Total%'  -- 4204  
+
+-- 
 /*
  * The last account_no record contains a total record with a YTD debit_credit value 
  * which is the same as that found in the last periods ytd_debit_credit column
@@ -39,6 +45,9 @@ and s1.period_display='12-2009'  -- 4,204
 order by s1.account_no
 
 /*
+ * Must delete ending comma from each line before running TrialBalance ETL script.  regular expression is ',$'
+ */
+/*
  * Must cleanup Total lines when importing CSV
  */
 --delete from Plex.trial_balance_multi_level
@@ -53,7 +62,8 @@ where pcn is null
 select *
 --select count(*)
 from Plex.trial_balance_multi_level
-where pcn=123681 and period=202112  -- 4204
+where pcn=123681 and period=202112  -- 0 -- has not closed so did not import.
+--where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201801  -- 4204
 --where pcn=123681 and period=201712  -- 4204
 --where pcn=123681 and period=201401  -- 4204

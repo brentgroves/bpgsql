@@ -42,10 +42,19 @@ CREATE TABLE Plex.GL_Account_Activity_Summary
 	'' subtotal_name -- Albion has all zeros.
 
  */
-select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
---select count(*)
+/*
+ * Make a backup
+ */
+select *
+--into Archive.GL_Account_Activity_Summary_01_07_2022  -- 38,208
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
-where s.period = 202001
+
+select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
+-- select distinct pcn,period
+--select count(*)
+from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377
+where s.period = 202111  --87/256
+order by pcn,period
 
 -- join select * from Plex.accounting_account as the primary set
 select s.pcn,s.period, s.account_no,s.account_name,s.debit,s.credit,s.debit-credit period_diff,

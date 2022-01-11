@@ -44,11 +44,31 @@ CREATE TABLE mgdw.Plex.accounting_account (
 		from Plex.Reset_YTD_balance_yearly r
 		where r.pcn = 123681
 		order by r.pcn,r.account_no 
+/*
+ * What are the new accounts?
+ */		
+select a.* 
+-- select count(*)
+--into Scratch.accounting_account_12_15
+-- select count(*) from Archive.accounting_account_pre_additions_01_07
+-- select * from Archive.accounting_new_accounts_01_07
+--into Archive.accounting_account_pre_additions_01_07
+-- into Archive.accounting_new_accounts_01_07
+from Plex.accounting_account a -- 18,015
+left outer join Archive.accounting_account_pre_additions_01_07 o
+on a.pcn = o.pcn 
+and a.account_no = o.account_no 
+where a.pcn = 123681 -- 4,362/4,595 -- one more has been added since 12/15
+and o.pcn is null  -- 232 new accounts
+
+		
 select * 
 -- select count(*)
 --into Scratch.accounting_account_12_15
+-- select count(*) from Archive.accounting_account_pre_additions_01_07
+--into Archive.accounting_account_pre_additions_01_07
 from Plex.accounting_account aa -- 18,015
-where pcn = 123681 -- 4,362 -- one more has been added since 12/15
+where pcn = 123681 -- 4,362/4,595 -- one more has been added since 12/15
 and category_type in ('Revenue','Expense') -- 3,723
 and left(account_no,1) < '4'  -- 22
 order by aa.account_no -- 20104-300-00000 to 30600-300-00000
