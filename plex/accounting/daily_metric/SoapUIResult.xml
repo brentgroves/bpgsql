@@ -1,0 +1,53 @@
+
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Body><ExecuteDataSourceResponse xmlns="http://www.plexus-online.com/DataSource">
+<ExecuteDataSourceResult><StatusNo>0</StatusNo><Error>false</Error><ErrorNo>0</ErrorNo><Message>Success</Message>
+<InstanceNo>1490693</InstanceNo><DataSourceKey>9726</DataSourceKey><QuarantinedForDevelopment xsi:nil="true" />
+<LastPrimaryDeployment xsi:nil="true" /><LastTestDeployment xsi:nil="true" /><Version xsi:nil="true" />
+<DataSourceName>Daily_Shift_Report_Get</DataSourceName><ResultSets><ResultSet><RowCount>76</RowCount>
+<Rows>
+<Row>
+<Columns>
+<Column><Value>2963</Value><Name>Department_No</Name></Column>
+<Column><Value>100 - Mfg</Value><Name>Department_Code</Name></Column>
+<Column><Value>Jake</Value><Name>Manager_First_Name</Name></Column>
+<Column><Value /><Name>Manager_Middle_Name</Name></Column>
+<Column><Value>Kunkel</Value><Name>Manager_Last_Name</Name></Column>
+<Column><Value>58321</Value><Name>Workcenter_Key</Name></Column>
+<Column><Value>CD4 RH Pack</Value><Name>Workcenter_Code</Name></Column>
+<Column><Value>2684942</Value><Name>Part_Key</Name></Column>
+<Column><Value>H2GC 5K651 AB</Value><Name>Part_No</Name></Column>
+<Column><Value /><Name>Part_Revision</Name></Column>
+<Column><Value>CD4.2 RH</Value><Name>Part_Name</Name></Column>
+<Column><Value>120</Value><Name>Operation_No</Name></Column>
+<Column><Value>Final</Value><Name>Operation_Code</Name></Column>
+<Column><Value>0</Value><Name>Downtime_Hours</Name></Column>
+<Column><Value>5.6</Value><Name>Planned_Production_Hours</Name></Column>
+<Column><Value>288</Value><Name>Parts_Produced</Name></Column>
+<Column><Value>0</Value><Name>Parts_Scrapped</Name></Column>
+<Column><Value>0</Value><Name>Scrap_Rate</Name></Column>
+<Column><Value>1</Value><Name>Utilization</Name></Column>
+<Column><Value>0.803571</Value><Name>Efficiency</Name></Column>
+<Column><Value>0.803571</Value><Name>OEE</Name></Column><Column>
+<Value>0</Value><Name>Earned_Hours</Name></Column>
+<Column><Value>2.43433</Value><Name>Actual_Hours</Name></Column>
+<Column><Value>0</Value><Name>Labor_Efficiency</Name></Column>
+<Column><Value>4.5</Value><Name>Earned_Machine_Hours</Name></Column>
+<Column><Value>5.6</Value><Name>Actual_Machine_Hours</Name></Column>
+<Column><Value>7471212</Value><Name>Part_Operation_Key</Name></Column>
+<Column><Value>288</Value><Name>Quantity_Produced</Name></Column>
+<Column><Value>64</Value><Name>Workcenter_Rate</Name></Column>
+<Column><Value>0</Value><Name>Labor_Rate</Name></Column>
+<Column><Value>0.5</Value><Name>Crew_Size</Name></Column>
+<Column><Value /><Name>Department_Unassigned_Hours</Name></Column>
+<Column><Value>1</Value><Name>Child_Part_Count</Name></Column>
+<Column><Value /><Name>Operators</Name></Column>
+<Column><Value /><Name>Note</Name></Column>
+<Column><Value /><Name>Accounting_Job_Nos</Name></Column>
+</Columns>
+</Row>
+<Row>
+<Columns>
+<Column><Value>2963</Value><Name>Department_No</Name></Column>
+<Column><Value>100 - Mfg</Value><Name>Department_Code</Name></Column><Column><Value>Jake</Value><Name>Manager_First_Name</Name></Column><Column><Value /><Name>Manager_Middle_Name</Name></Column><Column><Value>Kunkel</Value><Name>Manager_Last_Name</Name></Column><Column><Value>60740</Value><Name>Workcenter_Key</Name></Column><Column><Value>Honda RDX CNC- 103</Value><Name>Workcenter_Code</Name></Column><Column><Value>2960018</Value><Name>Part_Key</Name></Column><Column><Value>51393TJB A040M1</Value><Name>Part_No</Name></Column><Column><Value>40-M1-</Value><Name>Part_Revision</Name></Column><Column><Value>RDX Right Hand</Value><Name>Part_Name</Name></Column><Column><Value>120</Value><Name>Operation_No</Name></Column><Column><Value>Final</Value><Name>Operation_Code</Name></Column><Column><Value>0.85</Value><Name>Downtime_Hours</Name></Column><Column><Value>4.83333</Value><Name>Planned_Production_Hours</Name></Column><Column><Value>89</Value><Name>Parts_Produced</Name></Column><Column><Value>0</Value><Name>Parts_Scrapped</Name></Column><Column><Value>0</Value><Name>Scrap_Rate</Name></Column><Column><Value>0.824137</Value><Name>Utilization</Name></Column><Column><Value>0.993027</Value><Name>Efficiency</Name></Column><Column><Value>0.81839</Value><Name>OEE</Name></Column><Column><Value>0</Value><Name>Earned_Hours</Name></Column><Column><Value>4.35</Value><Name>Actual_Hours</Name></Column><Column><Value>0</Value><Name>Labor_Efficiency</Name></Column><Column><Value>3.955555</Value><Name>Earned_Machine_Hours</Name></Column><Column><Value>3.98333</Value><Name>Actual_Machine_Hours</Name></Column><Column><Value>8568181</Value><Name>Part_Operation_Key</Name></Column><Column><Value>89</Value><Name>Quantity_Produced</Name></Column><Column><Value>22.5</Value><Name>Workcenter_Rate</Name></Column><Column><Value>0</Value><Name>Labor_Rate</Name></Column><Column><Value>1</Value><Name>Crew_Size</Name></Column><Column><Value /><Name>Department_Unassigned_Hours</Name></Column><Column><Value>1</Value><Name>Child_Part_Count</Name></Column><Column><Value /><Name>Operators</Name></Column><Column><Value /><Name>Note</Name></Column><Column><Value /><Name>Accounting_Job_Nos</Name></Column></Columns></Row><Row><Columns><Column><Value>2963</Value><Name>Department_No</Name></Column><Column><Value>100 - Mfg</Value><Name>Department_Code</Name></Column><Column><Value>Jake</Value><Name>Manager_First_Name</Name></Column><Column><Value /><Name>Manager_Middle_Name</Name></Column><Column><Value>Kunkel</Value><Name>Manager_Last_Name</Name></Column><Column><Value>60741</Value><Name>Workcenter_Key</Name></Column><Column><Value>Honda RDX CNC- 150</Value><Name>Workcenter_Code</Name></Column><Column><Value>2960020</Value><Name>Part_Key</Name></Column><Column><Value>51394TJB A040M1</Value><Name>Part_No</Name></Column><Column><Value>40-M1-</Value><Name>Part_Revision</Name></Column><Column><Value>RDX Left Hand</Value><Name>Part_Name</Name></Column><Column><Value>120</Value><Name>Operation_No</Name></Column><Column><Value>Final</Value><Name>Operation_Code</Name></Column><Column><Value>0</Value><Name>Downtime_Hours</Name></Column><Column><Value>4.85</Value><Name>Planned_Production_Hours</Name></Column><Column><Value>95</Value><Name>Parts_Produced</Name></Column><Column><Value>0</Value><Name>Parts_Scrapped</Name></Column><Column><Value>0</Value><Name>Scrap_Rate</Name></Column><Column><Value>1</Value><Name>Utilization</Name></Column><Column><Value>0.851635</Value><Name>Efficiency</Name></Column><Column><Value>0.851635</Value><Name>OEE</Name></Column><Column><Value>0</Value><Name>Earned_Hours</Name></Column><Column><Value>0</Value><Name>Actual_Hours</Name></Column><Column><Value>0</Value><Name>Labor_Efficiency</Name></Column><Column><Value>4.130434</Value><Name>Earned_Machine_Hours</Name></Column><Column><Value>4.85</Value><Name>Actual_Machine_Hours</Name></Column><Column><Value>8568187</Value><Name>Part_Operation_Key</Name></Column><Column><Value>95</Value><Name>Quantity_Produced</Name></Column><Column><Value>23</Value><Name>Workcenter_Rate</Name></Column><Column><Value>0</Value><Name>Labor_Rate</Name></Column><Column><Value>1</Value><Name>Crew_Size</Name></Column><Column><Value /><Name>Department_Unassigned_Hours</Name></Column><Column><Value>1</Value><Name>Child_Part_Count</Name></Column><Column><Value /><Name>Operators</Name></Column><Column><Value /><Name>Note</Name></Column><Column><Value /><Name>Accounting_Job_Nos</Name></Column></Columns></Row><Row><Columns><Column><Value>2963</Value><Name>Department_No</Name></Column><Column><Value>100 - Mfg</Value><Name>Department_Code</Name></Column><Column><Value>Jake</Value><Name>Manager_First_Name</Name></Column><Column><Value /><Name>Manager_Middle_Name</Name></Column><Column><Value>Kunkel</Value><Name>Manager_Last_Name</Name></Column><Column><Value>60902</Value><Name>Workcenter_Key</Name></Column><Column><Value>J.D Twin Spindle BE 23</Value><Name>Workcenter_Code</Name></Column><Column><Value>2795067</Value><Name>Part_Key</Name></Column><Column><Value>HXE104002</Value><Name>Part_No</Name></Column><Column><Value>A</Value><Name>Part_Revision</Name></Column><Column><Value>Spreader Hub Pump</Value><Name>Part_Name</Name></Column><Column><Value>120</Value><Name>Operation_No</Name></Column><Column><Value>Final</Value><Name>Operation_Code</Name></Column><Column><Value>0</Value><Name>Downtime_Hours</Name></Column><Column><Value>0</Value><Name>Planned_Production_Hours</Name></Column><Column><Value>0</Value><Name>Parts_Produced</Name></Column><Column><Value>1</Value><Name>Parts_Scrapped</Name></Column><Column><Value>0</Value><Name>Scrap_Rate</Name></Column><Column><Value>0</Value><Name>Utilization</Name></Column><Column><Value>0</Value><Name>Efficiency</Name></Column><Column><Value>0</Value><Name>OEE</Name></Column><Column><Value>0</Value><Name>Earned_Hours</Name></Column><Column><Value>0</Value><Name>Actual_Hours</Name></Column><Column><Value>0</Value><Name>Labor_Efficiency</Name></Column><Column><Value>0</Value><Name>Earned_Machine_Hours</Name></Column><Column><Value>0</Value><Name>Actual_Machine_Hours</Name></Column><Column><Value>7868765</Value><Name>Part_Operation_Key</Name></Column><Column><Value>0</Value><Name>Quantity_Produced</Name></Column><Column><Value>0</Value><Name>Workcenter_Rate</Name></Column><Column><Value>0</Value><Name>Labor_Rate</Name></Column><Column><Value>0</Value><Name>Crew_Size</Name></Column><Column><Value /><Name>Department_Unassigned_Hours</Name></Column><Column><Value>1</Value><Name>Child_Part_Count</Name></Column><Column><Value /><Name>Operators</Name></Column><Column><Value /><Name>Note</Name></Column><Column><Value /><Name>Accounting_Job_Nos</Name></Column></Columns></Row><Row><

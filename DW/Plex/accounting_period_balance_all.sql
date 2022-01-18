@@ -316,11 +316,15 @@ on b.pcn=a.pcn
 and b.account_no=a.account_no -- 43,630 
 --from Plex.account_period_balance_view b -- 43,620  -- This view made the query non-responsive
 --inner join Plex.trial_balance_multi_level d -- 42,040, 43,620 - 42,040 = 1,580 account periods do not show up on TB CSV download. TB download does not show the plex period for a multi period month, you must link to period_display
+--select distinct pcn,period from Plex.trial_balance_multi_level d order by pcn,period 
+--select * from Plex.trial_balance_multi_level d where pcn=123681 and period=202112 -- all 0 since imported in november
 left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
 on b.pcn=d.pcn
 and b.account_no = d.account_no
 and b.period_display = d.period_display 
 -- select * from Plex.Account_Balances_by_Periods p 
+--select distinct pcn,period from Plex.Account_Balances_by_Periods p order by pcn,period -- 123,681 (200812-202110)
+--select * from Plex.Account_Balances_by_Periods p where pcn=123681 
 left outer join Plex.Account_Balances_by_Periods p -- 43,620
 on b.pcn=p.pcn
 and b.account_no = p.[no]
@@ -330,6 +334,8 @@ left outer join
 (
 	select s.pcn,s.period, s.account_no,s.debit,s.credit,s.debit-s.credit balance
 	--select count(*)
+--select distinct pcn,period from Plex.GL_Account_Activity_Summary s order by pcn,period -- 123,681 (200812-202111)
+--select * from Plex.GL_Account_Activity_Summary s where pcn=123681 and period = 202111  -- dont know when this was imported probably in early december
 	from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
 	where s.pcn = 123681 
 	and s.period between 202101 and 202110  -- 2,462
@@ -337,6 +343,7 @@ left outer join
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  
+
 --where p.pcn is null and s.pcn is not null  -- 33  account periods with activity not on the TB report.
 --where s.pcn is not null  -- 2,462
 --where b.debit=s.debit -- 2,462

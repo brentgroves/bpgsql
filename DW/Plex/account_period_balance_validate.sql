@@ -43,6 +43,11 @@ and b.period_display = d.period_display
 --select distinct pcn,period from Plex.Account_Balances_by_Periods p order by pcn,period -- 123,681 (200812-202110)
 --select * from Plex.Account_Balances_by_Periods p where pcn=123681
 -- select  
+--select top(10) *
+--into Scratch.Account_Balances_by_Periods
+--select *
+--into Archive.Account_Balances_by_Periods_2022_01_11  -- 667,645
+--from Plex.Account_Balances_by_Periods p
 left outer join Plex.Account_Balances_by_Periods p -- 43,620
 on b.pcn=p.pcn
 and b.account_no = p.[no]
