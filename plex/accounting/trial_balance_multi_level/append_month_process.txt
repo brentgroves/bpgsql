@@ -1,0 +1,28 @@
+/*
+Make a backup of Plex.account_period_balance
+select count(*) from Plex.account_period_balance  -- 170,863
+select *
+into Archive.account_period_balance_01_24_2022 
+from Plex.account_period_balance  -- 170,863
+select count(*) from Archive.account_period_balance_01_24_2022 -- 170,863
+
+
+Set the period range to be calculated.
+Start from 2021-02 since 2021-01 is the anchor period.
+In case any of the period snap shots have changed always start from 2021-02
+until 2022-02 then we will have a years worth of values so the anchor 
+can be increased to 2021-02. And an ETL script can be written to update this 
+period range to be 1 year back.
+
+update Plex.accounting_balance_update_period_range
+set period_start=202102,period_end=202112
+where pcn=123681 -- southfield
+
+update Plex.accounting_balance_update_period_range
+set period_start=202002,period_end=202112
+where pcn=300758 -- albion
+
+
+Add a new period to the Plex.account_period_balance table.
+
+**/

@@ -42,6 +42,19 @@ where id = @min_id;
 --into Archive.account_period_balance_01_07_2022 -- 160,655 
 --from Plex.account_period_balance b order by pcn,period
 
+/*
+Make a backup of Plex.account_period_balance
+select count(*) from Plex.account_period_balance  -- 170,863
+select *
+into Archive.account_period_balance_01_24_2022 
+from Plex.account_period_balance  -- 170,863
+select count(*) from Archive.account_period_balance_01_24_2022 -- 170,863
+
+
+Add a new period to the Plex.account_period_balance table.
+
+**/
+
 --select count(*) from Plex.account_period_balance b --4,363/160,655
 --select distinct pcn,period from Plex.account_period_balance b order by pcn,period
 --select distinct pcn,period from Archive.account_period_balance_01_03_2022 b order by pcn,period -- 202101 - 202110

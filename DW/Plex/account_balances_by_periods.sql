@@ -61,7 +61,8 @@ set pcn = 123681 where pcn is null
 
 select count(*)
 from Plex.Account_Balances_by_Periods
-where pcn=123681 and period=202111  -- 4204
+where pcn=123681 and period=202112  -- 4204
+--where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201811  -- 4204
 --where pcn=123681 and period=201001  -- 4204
 --where pcn=123681 and period=200912  -- 4204

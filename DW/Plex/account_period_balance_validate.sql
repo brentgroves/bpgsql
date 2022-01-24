@@ -1,4 +1,32 @@
 /*
+ * Definitions
+ */
+AccountingYearCategoryType: Run this ETL Script in late December.  
+It is used to add account category records for each year.  
+This is needed in YTD calculations which rely on if an account 
+is a revenue/expense to determine whether to reset YTD values to 0 for every year. 
+select distinct (year) from Plex.accounting_account_year_category_type aayct 
+
+AccountBalancesByPeriod: Procedure that calls a Plex authored SPROC. Cannot 
+create a Plex SQL SPROC for this because we don’t have the code for many of the sub-procedures.  
+Can only call this procedure for the Albion PCN from an ETL script, but 
+we can download a CSV and import that with an ETL script for any PCN. 
+select distinct pcn,period from plex.Account_Balances_by_Periods order by pcn,period desc
+
+TrialBalance ETL script that takes as input the Plex Trial Balance CSV file.   
+select distinct pcn,period from Plex.trial_balance_multi_level order by pcn,period desc
+
+The computed trial_balance multi level report table 
+select distinct pcn,period from Plex.account_period_balance b order by pcn, period desc
+ 
+Add a new period to the Plex.account_period_balance table.
+select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period
+select *
+--into Archive.Account_Balances_by_Periods_2022_01_24
+--select count(*)
+from Plex.Account_Balances_by_Periods -- 667,645
+select count(*) from Archive.Account_Balances_by_Periods_2022_01_24  -- 667,645
+/*
  * Backup
  */
 --select * 

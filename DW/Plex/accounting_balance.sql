@@ -12,7 +12,13 @@ CREATE TABLE Plex.accounting_balance (
 	PRIMARY KEY (pcn,account_key,period)
 );
 select distinct pcn,period from Plex.accounting_balance ab order by pcn,period
-select * from Plex.accounting_balance ab 
+select count(*) from Plex.accounting_balance ab -- 52,749
+
+select count(*) from Plex.accounting_balance_ ab -- 52,749
+select * 
+--into Archive.accounting_balance_2022_01_24
+from Plex.accounting_balance ab 
+select count(*) from Archive.accounting_balance_2022_01_24 -- 52,749
 */
 /*
 Are there the same number of accounts returned by Accounting_p_Account_Balances_by_Periods_Get
