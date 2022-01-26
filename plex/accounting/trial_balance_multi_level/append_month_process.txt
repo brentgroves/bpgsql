@@ -6,7 +6,10 @@ into Archive.account_period_balance_01_24_2022
 from Plex.account_period_balance  -- 170,863
 select count(*) from Archive.account_period_balance_01_24_2022 -- 170,863
 
+Run AccountingPeriod ETL script to update the Plex.accounting_period table with the most current periods. 
 
+Run accounting_balance_last_full_period ETL script to determine the last full period with a balance snapshot.
+ 
 Set the period range to be calculated.
 Start from 2021-02 since 2021-01 is the anchor period.
 In case any of the period snap shots have changed always start from 2021-02
@@ -14,15 +17,43 @@ until 2022-02 then we will have a years worth of values so the anchor
 can be increased to 2021-02. And an ETL script can be written to update this 
 period range to be 1 year back.
 
+Set the period range to be calculated. 
+Should be 1 years worth eventually.
 update Plex.accounting_balance_update_period_range
 set period_start=202102,period_end=202112
 where pcn=123681 -- southfield
+
 
 update Plex.accounting_balance_update_period_range
 set period_start=202002,period_end=202112
 where pcn=300758 -- albion
 
+Run the AccountBalanceUpdate ETL Script.
+1. Call the Plex.set_accounting_balance_update_period_range procedure.
+1. create procedure Plex.accounting_balance_delete_period_range
+1. Delete the periods that are to be recalculated.
+delete from 
+Plex.account_period_balance b
+where pcn=123681
+and period between period_start and period_end
+
+Albion has no valid data yet.
+delete Plex.account_period_balance where  pcn = 300758
+
+Run AccountBalanceUpdate ETL script to delete/re-add account_balance snapshot records.
+ Plex.accounting_balance b 
+
+Run AccountBalanceByPeriod ETL Script to validate account_period_balance calculation.
+
+Run ETL Script to refresh the accounting_balance snapshots.
 
 Add a new period to the Plex.account_period_balance table.
 
 **/
+Actually I would like to know if we will be able to run the SSIS projects that use ZappySys components, 
+such as the ZS XML Source component from with Visual Studio, SQL Server, and Azure Data Factory after the license has expired.
+
+
+So If we deploy the SSIS projects to Azure Data Factory we will not be able to run them after the license has expired?
+One more question please. If we delete our existing Azure Data Factory for some reason. And then recreate a new 
+Azure Data Factory to is it possible to transfer the license to the new data factory?

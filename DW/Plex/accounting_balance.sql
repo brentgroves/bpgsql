@@ -19,6 +19,7 @@ select *
 --into Archive.accounting_balance_2022_01_24
 from Plex.accounting_balance ab 
 select count(*) from Archive.accounting_balance_2022_01_24 -- 52,749
+select distinct pcn,period from Archive.accounting_balance_2022_01_24 order by pcn,period
 */
 /*
 Are there the same number of accounts returned by Accounting_p_Account_Balances_by_Periods_Get

@@ -36,7 +36,14 @@ select * from Plex.accounting_balance_update_period_range
 
 select * from Archive.accounting_balance ab -- 52,138
 select count(*) from Archive.accounting_balance ab -- 52,138/45,459/52,749
-select distinct pcn,period from Archive.accounting_balance ab order by pcn,period
+select distinct pcn,period from Archive.accounting_balance_2022_01_25 order by pcn,period
+select distinct pcn,period from Plex.accounting_balance order by pcn,period
+select * from Plex.accounting_balance order by pcn,period
+
+select * 
+into Archive.accounting_balance_2022_01_25 
+from Plex.accounting_balance ab -- 52,138
+
 select * from Plex.accounting_balance ab -- 52,138
 u--46,681/52,749
 select distinct pcn,period from Archive.accounting_balance ab order by pcn,period
