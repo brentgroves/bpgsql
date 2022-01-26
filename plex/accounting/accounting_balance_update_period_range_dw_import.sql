@@ -17,75 +17,75 @@ BEGIN
     SET @in_string = stuff(@in_string, 1, charindex(@delimiter, @in_string + @delimiter), '')
 end
 --select tuple from #list
---select @Period_Min period_min,@Period_Max period_max
+
+--declare @today datetime
+--select @today=getdate()
+declare @prev_year datetime
+SELECT @prev_year = DATEADD(year,-1,GETDATE())
+declare @start_period int;
+declare @end_period int;
+--select @start_period = 202102;
+	
+--/*
+--	select @start_period =min(period) from accounting_v_period_e ap 
+--*/
+
+declare @last_day_prev_month datetime;
+declare @first_day_prev_month datetime;
+--SELECT @last_day_prev_month = EOMONTH (GETDATE(), -1);   
+
+declare @t datetime
+select @t=DATEADD(day, 1,EOMONTH (GETDATE(), -1)); 
+SELECT @last_day_prev_month = DATEADD(ss, -1, @t);
+SELECT @first_day_prev_month = DATEADD(day, 1,EOMONTH (GETDATE(), -2));   
 
 
-declare @year_start int
-declare @month_start int
-declare @date datetime
-declare @start_date datetime
-declare @end_date datetime
 
-declare @period_start int 
-declare @period_end int
+--select @prev_year prev_year,@start_period start_period,@first_day_prev_month first_day_prev_month,@last_day_prev_month last_day_prev_month;
 
-
-set @year_start = year(dateadd("Month",-12,getdate()))
-set @month_start = month(dateadd("Month",-12,getdate()))
-set @date = dateadd("Month",-12,getdate())
-set @start_date = DATEADD(mm, DATEDIFF(mm, 0, @date), 0)
-set @end_date = EOMONTH(@date); 
-
-
-
-/*
-There can be multiple periods in a month so
-this should ensure we have the correct period that
-was in affect 6 months ago
-*/
-with pcn_period(pcn,period)
-as
+with start_period
+as 
 (
-  select plexus_customer_no pcn,period  -- the period number that we are going to start from.
-  from accounting_v_period_e p 
-  where p.plexus_customer_no in
+  select plexus_customer_no pcn,period start_period from accounting_v_period_e ap 
+--	where @prev_year between ap.begin_date and ap.end_date 
+  where ap.plexus_customer_no in 
   (
-   select tuple from #list
-  )
-  and p.begin_date between @start_date and @end_date
-),
-start_period(pcn,period)
-as
-(
-select pp.pcn, max(period) period_start  -- the period number that we are going to start from.
-from pcn_period pp
-group by pp.pcn
+    select tuple from #list
+  )	
+  and @prev_year between ap.begin_date and ap.end_date
 ),
 --select * from start_period
-balance_pcn_period(pcn,period)
-as
+balance
+as 
 (
-  select b.plexus_customer_no pcn,b.period -- each pcn can have a different max value.
-  from accounting_v_balance_e b
---group by b.plexus_customer_no
---order by b.plexus_customer_no
-  where b.plexus_customer_no in
+  select distinct plexus_customer_no pcn, period  from accounting_v_balance_e b
+  where b.plexus_customer_no in 
   (
-   select tuple from #list
+    select tuple from #list
   )
 ),
-end_period(pcn,period)
+add_dates
+as 
+(
+select b.pcn,b.period,p.begin_date,p.end_date
+from accounting_v_period_e p 
+inner join balance b
+on p.plexus_customer_no=b.pcn 
+and p.period=b.period
+where p.end_date between @first_day_prev_month and @last_day_prev_month
+
+),
+--select * from add_dates;
+last_full_period
 as
 (
-  select b.pcn,max(b.period) period -- the last period that has balance records.
-  from balance_pcn_period b
-  group by b.pcn  
+  select pcn,max(period) last_full_period from add_dates group by pcn
 )
---select * from end_period
-select s.pcn,s.period start_period,e.period end_period
-from start_period s 
-inner join end_period e 
-on s.pcn=e.pcn
+--select * from last_full_period;
+-- After 202202 use this code
+--select s.pcn,s.start_period,l.last_full_period end_period
+select s.pcn,202102 start_period,l.last_full_period end_period
+from start_period s
+inner join last_full_period l
+on s.pcn=l.pcn;
 
---select @date prior_date,@start_date start_date,@end_date end_date;
---select @period_start period_start,@period_end period_end;

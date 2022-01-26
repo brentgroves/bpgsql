@@ -28,10 +28,19 @@ update Plex.accounting_balance_update_period_range
 set period_start=202002,period_end=202112
 where pcn=300758 -- albion
 
-Run the AccountBalanceUpdate ETL Script.
-1. Call the Plex.set_accounting_balance_update_period_range procedure.
-1. create procedure Plex.accounting_balance_delete_period_range
-1. Delete the periods that are to be recalculated.
+AccountingPeriodBalance update process
+
+-1. Run the Accounting_account ETL script 
+0. Run the Accounting_period ETL script
+1. Run the AccountingBalanceUpdatePeriodRange ETL script to update the Plex.accounting_balance_update_period_range table
+with the period range to update the Plex.accounting_period_balance table for.
+2. Run the AccountingBalanceAppendPeriodRange ETL script.
+a. run the Plex.accounting_balance_delete_period_range
+b. run the Plex.accounting_balance_append_period_range_DW_Import procedure to refresh/add Plex.accounting_balance records with current values.
+3. run the AccountPeriodBalanceDeletePeriodRange ETL Script to delete the periods that are to be recalculated 
+from Plex.account_period_balance_delete_period_range.  
+4. Run the AccountPeriodBalancePeriodRangeUpdate ETL Script.
+
 delete from 
 Plex.account_period_balance b
 where pcn=123681

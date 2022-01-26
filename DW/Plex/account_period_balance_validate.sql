@@ -134,7 +134,7 @@ and b.period=s.period
 
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 46,093
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 151
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
+where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
 
 /*
  * 'Revenue' or 'Expense' low accounts have no credit/debit values. 
@@ -214,8 +214,8 @@ from
 	b.balance,
 	b.ytd_balance
 	-- select count(*)
---	from Archive.account_period_balance_01_03_2022 b -- 43,630 
-	from Plex.account_period_balance b -- 43,630 
+	--from Archive.account_period_balance_01_03_2022 b -- 43,630 
+	from Plex.account_period_balance b -- 4,595 
 	--select * from Plex.accounting_account a
 	inner join Plex.accounting_account a
 	on b.pcn=a.pcn 

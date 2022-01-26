@@ -1,3 +1,11 @@
+/*
+ * Make a backup
+ */
+--select *
+--into Archive.account_period_balance_01_07_2022 -- 160,655 
+--from Plex.account_period_balance b order by pcn,period
+-- select count(*) from Archive.account_period_balance_01_26_2022 
+
 declare @pcn int;
 declare @period_start int;
 declare @period_end int;
@@ -18,13 +26,20 @@ declare @cnt int
 select * 
 --into Scratch.accounting_balance_update_period_range
 from Plex.accounting_balance_update_period_range r
+
 update Plex.accounting_balance_update_period_range
-set period_start=202002 
-where id=20
+set period_start=202102,period_end=202112
+where pcn=123681 -- southfield
+
+update Plex.accounting_balance_update_period_range
+set period_start=202002,period_end=202112
+where pcn=300758 -- albion
+select * from Plex.accounting_balance_update_period_range r
  */
 -- select * from Plex.accounting_balance_update_period_range r
 
 -- select * from Scratch.accounting_balance_update_period_range r
+--select * from Plex.accounting_balance_update_period_range r 
 select @min_id = min(id),@max_id=max(id) from Plex.accounting_balance_update_period_range r 
 set @id = @min_id;
 
@@ -35,25 +50,15 @@ inner join Plex.max_fiscal_period_view m
 on r.pcn=m.pcn
 and (r.period_start/100) = m.[year]
 where id = @min_id;
-/*
- * Make a backup
- */
---select *
---into Archive.account_period_balance_01_07_2022 -- 160,655 
---from Plex.account_period_balance b order by pcn,period
+/* Don't automate this until 2022-02 when we have 1 years worth of valid periods
+delete from 
+Plex.account_period_balance 
+where pcn=@pcn
+and period between @period_start and @period_end
 
-/*
-Make a backup of Plex.account_period_balance
-select count(*) from Plex.account_period_balance  -- 170,863
-select *
-into Archive.account_period_balance_01_24_2022 
-from Plex.account_period_balance  -- 170,863
-select count(*) from Archive.account_period_balance_01_24_2022 -- 170,863
+delete Plex.account_period_balance where  pcn = 300758
+*/
 
-
-Add a new period to the Plex.account_period_balance table.
-
-**/
 
 --select count(*) from Plex.account_period_balance b --4,363/160,655
 --select distinct pcn,period from Plex.account_period_balance b order by pcn,period
@@ -88,8 +93,21 @@ else
 begin 
 	set @first_period=0;
 end
-
-select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_period_display,@prev_period prev_period,@period_start period_start,
+/*
+are there any new accounts to add?
+		select count(*)
+		from Plex.accounting_account a   
+		left outer join Plex.account_period_balance b 
+		on a.pcn=b.pcn 
+		and a.account_no=b.account_no 
+		and b.period = @anchor_period
+		where a.pcn = @pcn 
+		and b.pcn is null
+*/
+/*
+select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_period_display,
+@period period,
+@prev_period prev_period,@period_start period_start,
 @first_period first_period,@period_end period_end,@period period,@max_fiscal_period max_fiscal_period,@min_id min_id,@max_id max_id,@id id
 
  print '@pcn=' + cast(@pcn as varchar(6)) 
@@ -103,7 +121,7 @@ select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_perio
  + ',@min_id=' + cast(@min_id as varchar(2))
  + ',@max_id=' + cast(@max_id as varchar(2))
  + ',@id=' + cast(@id as varchar(2));
-
+*/
 
 while @id <= @max_id
 begin
@@ -127,7 +145,8 @@ begin
 	    0 ytd_credit,
 	    0 balance,
 	    0 ytd_balance
-	    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363
+	    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363/4,595
+	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202101  -- 4,595
 		from Plex.accounting_account a   
 		left outer join Plex.account_period_balance b 
 		on a.pcn=b.pcn 
@@ -162,7 +181,7 @@ begin
 			when b.balance is null then 0 
 			else b.balance 
 			end balance
-		    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363
+		    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,595/4,363
 			from Plex.accounting_account a   
 			left outer join Plex.accounting_balance b 
 			on a.pcn=b.pcn 
@@ -340,7 +359,10 @@ end
 
 -- pcn,account_no,period,period_display,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance
 --select * from account_period_balance;  -- 4,363
-select count(*) from Plex.account_period_balance apb -- 47,993
+select count(*) from Plex.account_period_balance b -- 4,595*12=     45950+9190
+where b.pcn=123681 
+--and b.period = 202101 -- 4,595
+and b.period = 202112 -- 4,595
 -- 813-704-1772
 -- 
 select * from Plex.account_period_balance apb where period = 202111
@@ -379,7 +401,7 @@ from Plex.account_period_balance b -- 43,620
 inner join Plex.accounting_account a -- 43,620
 on b.pcn=a.pcn 
 and b.account_no=a.account_no 
-where b.pcn = 123681  -- 50,545
+where b.pcn = 123681  -- 50,545,55,140
 order by b.period_display,a.account_no 
 --where a.category_type != a.category_type_legacy 
 --where b.period_display is not NULL -- 40,940

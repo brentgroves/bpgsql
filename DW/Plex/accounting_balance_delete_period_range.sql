@@ -25,7 +25,8 @@ begin
 	begin
 		select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = @id
 	--	print N'pcn=' + cast(@pcn as varchar(6)) + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6))
-		--select distinct pcn,period from Archive.accounting_balance order by pcn,period
+		--select distinct pcn,period from Archive.accounting_balance_2022_01_25 order by pcn,period
+		--select distinct pcn,period from Plex.accounting_balance order by pcn,period
 		-- select * from Archive.accounting_balance where pcn= 300758 and period= 202201 order by pcn,period
 		delete from Plex.accounting_balance WHERE pcn = @pcn and period between @period_start and @period_end
 --		delete from Archive.accounting_balance WHERE pcn = @pcn and period between @period_start and @period_end
@@ -35,7 +36,8 @@ end
 select * from Plex.accounting_balance_update_period_range
 
 select * from Archive.accounting_balance ab -- 52,138
-select count(*) from Archive.accounting_balance ab -- 52,138/45,459/52,749
+select count(*) from Archive.accounting_balance ab -- 46,055
+select count(*) from Plex.accounting_balance ab -- 49,503/46,055
 select distinct pcn,period from Archive.accounting_balance_2022_01_25 order by pcn,period
 select distinct pcn,period from Plex.accounting_balance order by pcn,period
 select * from Plex.accounting_balance order by pcn,period

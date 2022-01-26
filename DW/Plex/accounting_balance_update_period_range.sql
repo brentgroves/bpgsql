@@ -1,3 +1,5 @@
+-- populate from accounting_balance_update_period_range_dw_import
+-- drop table Plex.accounting_balance_update_period_range
 CREATE TABLE mgdw.Plex.accounting_balance_update_period_range (
 	id int IDENTITY(1,1) NOT NULL,
 	pcn int NULL,
@@ -6,3 +8,7 @@ CREATE TABLE mgdw.Plex.accounting_balance_update_period_range (
 	PRIMARY KEY (id)
 );
 select * from Plex.accounting_balance_update_period_range
+-- delete from Plex.accounting_balance_update_period_range
+--CREATE USER campfire FROM EXTERNAL PROVIDER;
+
+

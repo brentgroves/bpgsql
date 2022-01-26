@@ -19,3 +19,6 @@ create view Plex.max_fiscal_period_view(pcn,year,max_fiscal_period)
 	select * from max_fiscal_period;
 
 select * from Plex.max_fiscal_period_view order by pcn,year
+
+select * from Plex.accounting_period order by pcn,period
+select distinct pcn from Plex.accounting_period
