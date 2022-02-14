@@ -43,24 +43,47 @@ CREATE TABLE mgdw.Plex.daily_shift_report_get (
 );
 select * from Plex.daily_shift_report_get  -- 86
 where actual_hours is null
+
+-- select * from Plex.daily_shift_report_get_view
 -- drop view Plex.daily_shift_report_get_view
 create view Plex.daily_shift_report_get_view
 as 
 
-select pcn,department_no,department_code,manager_first_name,manager_middle_name,manager_last_name,
-workcenter_key,workcenter_code,part_key,part_no,part_name,
-case 
-when part_revision is null then ''
-else part_revision 
-end revision,
-operation_no,operation_code,downtime_hours,planned_production_hours,
-parts_produced,parts_scrapped,scrap_rate,utilization,efficiency,oee,
-earned_hours,actual_hours,labor_efficiency,
-earned_machine_hours,actual_machine_hours,
-part_operation_key,quantity_produced,workcenter_rate,labor_rate,crew_size,
-department_unassigned_hours,child_part_count,operators,note,accounting_job_nos
+
+-- select * from Plex.daily_shift_report_get_aggregate_view
+-- drop view Plex.daily_shift_report_get_aggregate_view
+create view Plex.daily_shift_report_get_aggregate_view
+as 
+select 
+5 id, sum(parts_produced) total
 --select count(*) 
-from Plex.daily_shift_report_get  -- 86
+from Plex.daily_shift_report_get_view  -- 86
+group by pcn 
+union 
+select 
+10 id, sum(parts_scrapped) total 
+--select count(*) 
+from Plex.daily_shift_report_get_view  -- 86
+group by pcn 
+union 
+select 
+15 id, sum(quantity_produced) total 
+--select count(*) 
+from Plex.daily_shift_report_get_view  -- 86
+group by pcn 
+union 
+select 
+40 id, sum(earned_hours) total 
+--select count(*) 
+from Plex.daily_shift_report_get_view  -- 86
+group by pcn 
+union 
+select 
+45 id, sum(actual_hours) total 
+--select count(*) 
+from Plex.daily_shift_report_get_view  -- 86
+group by pcn 
+
 
 select * from Plex.daily_shift_report_get_view
 
@@ -123,6 +146,58 @@ as
 	and o.revision = g.revision 
 	and o.operation_no = g.operation_no 
 	group by o.pcn,g.part_name,o.part_no,o.revision,o.operation_no  
+),
+-- select count(*) from last_op_parts_produced -- 51 
+-- select * from last_op_parts_produced  
+part_revision_sums 
+as 
+(  
+	select pcn,part_no,
+	revision,
+	sum(parts_scrapped) parts_scrapped,
+	sum(earned_hours) earned_hours,
+	sum(actual_hours) actual_hours
+	from Plex.daily_shift_report_get_view g 
+	group by g.pcn,g.part_no,g.revision  --51
+	--having part_no = 'H2GC 5K652 AB'
+),
+produced_minus_scrapped 
+as 
+(
+	
+	select pp.pcn,pp.part_no,pp.revision, 
+	case 
+	when ps.parts_scrapped is null then pp.parts_produced  
+	else pp.parts_produced - ps.parts_scrapped 
+	end produced_minus_scrapped 
+	from last_op_parts_produced pp 
+	left outer join part_revision_sums ps 
+	on pp.pcn=ps.pcn 
+	and pp.part_no = ps.part_no 
+	and pp.revision = ps.revision
+),
+--select count(*) from parts_scrapped -- 51
+-- select * from parts_scrapped 
+daily_shift_report_get_daily_metrics
+as 
+( 
+	select pp.*,ps.parts_scrapped,ms.produced_minus_scrapped,ps.earned_hours,ps.actual_hours  
+	from last_op_parts_produced pp 
+	left outer join part_revision_sums ps 
+	on pp.pcn=ps.pcn 
+	and pp.part_no = ps.part_no 
+	and pp.revision = ps.revision
+	left outer join produced_minus_scrapped ms 
+	on pp.pcn=ms.pcn 
+	and pp.part_no = ms.part_no 
+	and pp.revision = ms.revision
+) 
+--select count(*) from daily_shift_report_get_daily_metrics  -- 2601
+select * from daily_shift_report_get_daily_metrics
+where part_no = '10103353'
+
+select * from Plex.daily_shift_report_get_daily_metrics_view dsrgdmv 	
+	
 )
 select * from last_op_parts_produced  
 select count(*) from last_op_parts_produced  -- 51
