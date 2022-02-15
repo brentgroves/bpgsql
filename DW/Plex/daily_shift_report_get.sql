@@ -1,6 +1,7 @@
 -- DROP TABLE mgdw.Plex.daily_shift_report_get;
 -- TRUNCATE TABLE mgdw.Plex.daily_shift_report_get;
 -- drop table Plex.daily_shift_report_get
+--select * from Plex.daily_shift_report_get
 CREATE TABLE mgdw.Plex.daily_shift_report_get (
 	pcn int null,
 	department_no int NULL,
@@ -84,9 +85,12 @@ select
 from Plex.daily_shift_report_get_view  -- 86
 group by pcn 
 
-
-select * from Plex.daily_shift_report_get_view
-
+select * 
+from Plex.daily_shift_report_get
+where parts_produced != quantity_produced 
+select * 
+from Plex.daily_shift_report_get_view
+where parts_produced != quantity_produced 
 --where operation_no is null -- 0
 select *
 --select count(*)
