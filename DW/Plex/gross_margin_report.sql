@@ -38,4 +38,6 @@ CREATE TABLE mgdw.Plex.gross_margin_report (
 	master_no varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL
 );u
 
-select * from Plex.gross_margin_report gmr 
+select * from Plex.gross_margin_report 
+where part_no = '10103355'
+

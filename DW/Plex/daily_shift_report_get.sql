@@ -2,88 +2,131 @@
 -- TRUNCATE TABLE mgdw.Plex.daily_shift_report_get;
 -- drop table Plex.daily_shift_report_get
 --select * from Plex.daily_shift_report_get
+-- mgdw.Plex.daily_shift_report_get definition
+-- mgdw.Plex.daily_shift_report_get definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.daily_shift_report_get;
+
 CREATE TABLE mgdw.Plex.daily_shift_report_get (
-	pcn int null,
+	pcn int NOT NULL,
+	plexus_customer_code varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	report_date datetime NULL,
 	department_no int NULL,
-	department_code varchar(60) NULL,
-	manager_first_name varchar(50) null,
-	manager_middle_name varchar(50) null,
-	manager_last_name varchar(50) null,
-	workcenter_key int null,
-	workcenter_code varchar(50) NULL,  -- Plex schema says the part_v_workcenter_code is only 50 characters
---	workcenter_code varchar(200) NULL,  -- According to ZappySys the Workcenter code has > 150 characters. I don't think ZappySys is correct.
-	part_key int null,
-	part_no varchar(100) null,
-	part_revision varchar(8) null,
-	part_name varchar(100) null,
-	operation_no int null,
-	operation_code varchar(30) null,
-	downtime_hours decimal(18,6) null,
-	planned_production_hours decimal(18,6) null,  -- DT-R8 , double precision float changed to DT_DECIMAL in ZappySys
-	parts_produced int null,
-	parts_scrapped int null,
-	scrap_rate decimal(18,6) null,
-	utilization decimal(18,6) null,
-	efficiency decimal(18,6) null,
-	oee decimal(18,6) null,
-	earned_hours decimal(18,6) null,
-	actual_hours decimal(18,6) null,
-	labor_efficiency decimal(18,6) null,
-	earned_machine_hours decimal(18,6) null,
-	actual_machine_hours decimal(18,6) null,
-	part_operation_key int null,
-	quantity_produced int null,
-	workcenter_rate decimal(18,6) null,
-	labor_rate decimal(18,6) null,
-	crew_size decimal(18,6) null,
-	department_unassigned_hours varchar(1020) null,
-	child_part_count int null,
-	operators varchar(1020) null,
-	note varchar(1020) null,
-	accounting_job_nos varchar(1020) null
+	department_code varchar(60) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	manager_first_name varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	manager_middle_name varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	manager_last_name varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	workcenter_key int NULL,
+	workcenter_code varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	part_key int NULL,
+	part_no varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	part_revision varchar(8) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	part_name varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	operation_no int NULL,
+	operation_code varchar(30) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	downtime_hours decimal(18,6) NULL,
+	planned_production_hours decimal(18,6) NULL,
+	parts_produced int NULL,
+	parts_scrapped int NULL,
+	scrap_rate decimal(18,6) NULL,
+	utilization decimal(18,6) NULL,
+	efficiency decimal(18,6) NULL,
+	oee decimal(18,6) NULL,
+	earned_hours decimal(18,6) NULL,
+	actual_hours decimal(18,6) NULL,
+	labor_efficiency decimal(18,6) NULL,
+	earned_machine_hours decimal(18,6) NULL,
+	actual_machine_hours decimal(18,6) NULL,
+	part_operation_key int NULL,
+	quantity_produced int NULL,
+	workcenter_rate decimal(18,6) NULL,
+	labor_rate decimal(18,6) NULL,
+	crew_size decimal(18,6) NULL,
+	department_unassigned_hours varchar(1020) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	child_part_count int NULL,
+	operators varchar(1020) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	note varchar(1020) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	accounting_job_nos varchar(1020) COLLATE SQL_Latin1_General_CP1_CI_AS NULL
 );
+ CREATE CLUSTERED INDEX IX_plex_daily_shift_report_get ON Plex.daily_shift_report_get (  pcn ASC  , report_date ASC  , workcenter_key ASC  , part_key ASC  , part_operation_key ASC  )  
+	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 100  ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
+	 ON [PRIMARY ] ;
+	
 select * from Plex.daily_shift_report_get  -- 86
 where actual_hours is null
 
+SELECT count (column_name) as Number FROM information_schema.columns WHERE table_name='daily_shift_report_get'  -- 39
+select * from Plex.daily_shift_report_get_view
 -- select * from Plex.daily_shift_report_get_view
 -- drop view Plex.daily_shift_report_get_view
 create view Plex.daily_shift_report_get_view
 as 
+select 
+pcn,
+plexus_customer_code,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
+department_no,department_code,manager_first_name,manager_middle_name,manager_last_name,
+workcenter_key,workcenter_code,part_key,part_no,part_name,
+case 
+when part_revision is null then ''
+else part_revision 
+end revision,
+operation_no,operation_code,downtime_hours,planned_production_hours,
+parts_produced,parts_scrapped,scrap_rate,utilization,efficiency,oee,
+earned_hours,actual_hours,labor_efficiency,
+earned_machine_hours,actual_machine_hours,
+part_operation_key,quantity_produced,workcenter_rate,labor_rate,crew_size,
+department_unassigned_hours,child_part_count,operators,note,accounting_job_nos
+--select count(*) 
+from Plex.daily_shift_report_get  -- 86;
 
 
+declare @report_date datetime 
+set @report_date = '2022-02-14 13:07:27.053'
+
+SELECT DATEADD(dd, 0, DATEDIFF(dd, 0, @report_date))
+
+/*
+ * WRONG HAS MULTIPLE OPERATION
+ * quantity_produced should be for final operation only.
+ */
 -- select * from Plex.daily_shift_report_get_aggregate_view
 -- drop view Plex.daily_shift_report_get_aggregate_view
 create view Plex.daily_shift_report_get_aggregate_view
 as 
-select 
-5 id, sum(parts_produced) total
+select pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
+5 id, sum(quantity_produced) + sum(parts_scrapped) total  
+-- The Fruitport standard says you can use the parts_produced column of the daily_shift_report_get web service
+-- but in the Albion PCN parts_produced equals the quantity_produced so this total must be calculated
+-- as sum(quantity_produced) + sum(parts_scrapped). 
 --select count(*) 
 from Plex.daily_shift_report_get_view  -- 86
-group by pcn 
+group by pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) 
 union 
-select 
+select pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
 10 id, sum(parts_scrapped) total 
 --select count(*) 
 from Plex.daily_shift_report_get_view  -- 86
-group by pcn 
+group by pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) 
 union 
-select 
+select pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
 15 id, sum(quantity_produced) total 
 --select count(*) 
 from Plex.daily_shift_report_get_view  -- 86
-group by pcn 
+group by pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) 
 union 
-select 
+select pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
 40 id, sum(earned_hours) total 
 --select count(*) 
 from Plex.daily_shift_report_get_view  -- 86
-group by pcn 
+group by pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) 
 union 
-select 
+select pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
 45 id, sum(actual_hours) total 
 --select count(*) 
 from Plex.daily_shift_report_get_view  -- 86
-group by pcn 
+group by pcn,DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) 
 
 select * 
 from Plex.daily_shift_report_get
@@ -198,14 +241,18 @@ as
 ) 
 --select count(*) from daily_shift_report_get_daily_metrics  -- 2601
 select * from daily_shift_report_get_daily_metrics
-where part_no = '10103353'
-
+--select * from Plex.daily_shift_report_get_daily_metrics_view
+where part_no = '10103355'
+-- parts_produced = 524+289 = 813
 select * from Plex.daily_shift_report_get_daily_metrics_view dsrgdmv 	
 	
 )
 select * from last_op_parts_produced  
 select count(*) from last_op_parts_produced  -- 51
-select count(*) from Plex.daily_shift_report_get  -- 86
+select parts_produced,parts_scrapped,quantity_produced,  * from Plex.daily_shift_report_get  -- 86
+where pcn = 30078
+parts_scrapped > 0
+where part_no = '10103353'
 
 select * from last_op_parts_produced  
 where part_no in ('10103353','10103355')

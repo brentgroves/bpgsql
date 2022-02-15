@@ -63,15 +63,15 @@ create table
 )
 
 
-create procedure Report.daily_metrics_pivot
+create procedure Report.daily_metrics_pcn_date_pivot
 as 
-select * from Report.daily_metrics_pivot_view
+select * from Report.daily_metrics_pcn_date_pivot
 order by id
 
 --drop view Report.daily_metrics_pivot_view
 select * from Report.daily_metrics
 select * from Report.daily_metrics_pivot_view
-create view Report.daily_metrics_pivot_view
+create view Report.daily_metrics_pcn_date_pivot_view
 as 
 	with part_pivot
 	as 

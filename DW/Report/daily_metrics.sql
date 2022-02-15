@@ -31,6 +31,9 @@ where c.pcn is null
 
 -- select * from Report.daily_metrics 
 -- truncate table Report.daily_metrics 
+declare @pcn int 
+create view Report.daily_metrics_view 
+as
 --insert into Report.daily_metrics 
 select 
 c.pcn,
