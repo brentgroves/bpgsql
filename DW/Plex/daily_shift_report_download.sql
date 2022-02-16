@@ -1,0 +1,45 @@
+-- DROP TABLE mgdw.Plex.daily_shift_report_download;
+-- TRUNCATE TABLE mgdw.Plex.daily_shift_report_download;
+-- drop table Plex.daily_shift_report_download
+CREATE TABLE mgdw.Plex.daily_shift_report_download (
+	pcn int null,
+	department varchar(60) NULL,
+	workcenter varchar(60) NULL,
+	part_name varchar(100) null,
+	operation varchar(30) null,
+	operators varchar(1020) null,
+	note varchar(1020) null,
+	planned_production_hours decimal(18,6) null,  
+	parts_produced int null,
+	parts_scrapped int null,
+	scrap_rate decimal(18,6) null,
+	earned_machine_hours decimal(18,6) null,
+	actual_machine_hours decimal(18,6) null,
+	efficiency decimal(18,6) null,
+	utilization decimal(18,6) null,
+	oee decimal(18,6) null,
+	earned_labor_hours decimal(18,6) null,
+	actual_labor_hours decimal(18,6) null,
+	labor_efficiency decimal(18,6) null,
+	downtime_hours decimal(18,6) null,
+	workcenter_rate decimal(18,6) null,
+	labor_rate decimal(18,6) null,
+	child_part_count int null,
+	accounting_job varchar(1020) null,
+	department_no int NULL,
+	manager_first_name varchar(50) null,
+	manager_middle_name varchar(50) null,
+	manager_last_name varchar(50) null,
+	workcenter_key int null,
+	part_key int null,
+	part_no varchar(100) null,
+	part_revision varchar(8) null,
+	operation_no int null,
+	part_operation_key int null,
+	quantity_produced int null,
+	crew_size decimal(18,6) null,
+	department_unassigned_hours varchar(1020) null,
+);
+
+select count(*) from Plex.daily_shift_report_download  -- 86
+select * from Plex.daily_shift_report_download  -- 86

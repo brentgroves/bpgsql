@@ -1,13 +1,13 @@
 --https://www.mssqltips.com/sqlservertip/1019/crosstab-queries-using-pivot-in-sql-server/
 
-USE tempdb;
-CREATE TABLE ProductSales
+
+CREATE TABLE Scratch.ProductSales
 ( SalesPerson varchar(20),
   Product varchar(20),
   SalesAmount money )
 
 
-INSERT INTO ProductSales
+INSERT INTO Scratch.ProductSales
 SELECT 'Bob','Pickles',100.00
 UNION
 SELECT 'Sue','Oranges',50.00
@@ -18,10 +18,11 @@ SELECT 'Bob','Oranges',300.00
 UNION
 SELECT 'Sue','Oranges',500.00  
 
+-- select * from Scratch.ProductSales
 SELECT SalesPerson, [Oranges] AS Oranges, [Pickles] AS Pickles
 FROM 
    ( SELECT SalesPerson, Product, SalesAmount
-     FROM ProductSales 
+     FROM Scratch.ProductSales 
    ) ps
 PIVOT
    ( SUM (SalesAmount)
@@ -31,22 +32,22 @@ PIVOT
 
 -- Dynamic CrossTab
 
-USE tempdb;
-CREATE TABLE dbo.Products
+Scratch.
+CREATE TABLE Scratch.Products
 (
   ProductID INT PRIMARY KEY,
   Name      NVARCHAR(255) NOT NULL UNIQUE
   /* other columns */
 );
-INSERT dbo.Products VALUES
+INSERT Scratch.Products VALUES
 (1, N'foo'),
 (2, N'bar'),
 (3, N'kin');
-CREATE TABLE dbo.OrderDetails
+CREATE TABLE Scratch.OrderDetails
 (
   OrderID INT,
   ProductID INT NOT NULL
-    FOREIGN KEY REFERENCES dbo.Products(ProductID),
+    FOREIGN KEY REFERENCES Scratch.Products(ProductID),
   Quantity INT
   /* other columns */
 );
