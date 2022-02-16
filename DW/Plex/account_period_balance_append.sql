@@ -1,3 +1,6 @@
+create procedure Plex.account_period_balance_recreate_period_range
+as 
+begin
 /*
  * Make a backup
  */
@@ -356,7 +359,7 @@ begin
 	
 	
 end 
-
+end
 -- pcn,account_no,period,period_display,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance
 --select * from account_period_balance;  -- 4,363
 select count(*) from Plex.account_period_balance b -- 4,595*12=     45950+9190

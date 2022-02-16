@@ -49,18 +49,18 @@ select * from Plex.trial_balance_2020_01
  * Make a backup
  */
 select * 
---into Archive.Account_Balances_by_Periods_01_07_2022  -- 663,441
+--into Archive.Account_Balances_by_Periods_01_27_2022  -- 671,849/663,441
 from Plex.Account_Balances_by_Periods
 /*
  * Must cleanup Total lines when importing CSV
  */
 --delete from Plex.Account_Balances_by_Periods
-where period in (999999,0)  --4,206
+where period in (999999,0)  --4204/4,206
 update Plex.Account_Balances_by_Periods
 set pcn = 123681 where pcn is null
 
 select count(*)
-from Plex.Account_Balances_by_Periods
+from Plex.Account_Balances_by_Periods 
 where pcn=123681 and period=202112  -- 4204
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201811  -- 4204

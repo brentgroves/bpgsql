@@ -30,16 +30,24 @@ where pcn=300758 -- albion
 
 AccountingPeriodBalance update process
 
+
 -1. Run the Accounting_account ETL script 
 0. Run the Accounting_period ETL script
 1. Run the AccountingBalanceUpdatePeriodRange ETL script to update the Plex.accounting_balance_update_period_range table
-with the period range to update the Plex.accounting_period_balance table for.
-2. Run the AccountingBalanceAppendPeriodRange ETL script.
+with the period range to update the Plex.accounting_period_balance table for.  The start and end values are computed in 
+the Plex accounting_balance_update_period_range_dw_import procedure and will normally be the past years worth of periods.
+2. Run the AccountingBalanceAppendPeriodRange ETL script which uses the values in the the Plex.accounting_balance_update_period_range table
+to determine what range of Plex.accounting_balance records to update.
 a. run the Plex.accounting_balance_delete_period_range
 b. run the Plex.accounting_balance_append_period_range_DW_Import procedure to refresh/add Plex.accounting_balance records with current values.
 3. run the AccountPeriodBalanceDeletePeriodRange ETL Script to delete the periods that are to be recalculated 
 from Plex.account_period_balance_delete_period_range.  
-4. Run the AccountPeriodBalancePeriodRangeUpdate ETL Script.
+4. Run the AccountPeriodBalanceRecreatePeriodRange ETL Script to run the Plex.account_period_balance_recreate_period_range procedure
+that will recreate Plex.account_period_balance table records within the range found in the Plex.accounting_balance_update_period_range table.
+5. To verify run the TrialBalanceMultiLevel ETL script to add new periods to the Plex.trial_balance_multi_level table.
+6. Also run the GLAccountActivitySummary ETL script to verify missing accounts not on the TB report.
+7. Also run the AccountBalancesByPeriod ETL script to call the Plex Authored Procedure used for the TB report.  It will also be
+missing the same accounts as the TrialBalanceMultiLevel report but it has no rounding issue.
 
 delete from 
 Plex.account_period_balance b

@@ -10,22 +10,34 @@ begin
 	declare @id int;
 	set @id=@start_id;
 	--select @start_id start_id,@end_id end_id,@id id
-	-- select * from Plex.accounting_balance_update_period_range
+	--select * from Plex.accounting_balance_update_period_range
 	declare @pcn int;
 	declare @period_start int;
 	declare @period_end int;
-	--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 4
+--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 6
+--	select @id id,@pcn pcn,@period_start period_start,@period_end period_end
+--	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 7
+--	select @end_id end_id,@pcn pcn,@period_start period_start,@period_end period_end
+	
 	while @id <=@end_id
 	begin
 		select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = @id
 		--print N'pcn=' + cast(@pcn as varchar(6)) + N',period_start=' + cast(@period_start as varchar(6)) + N', period_end=' + cast(@period_end as varchar(6))
-		--select distinct pcn,period from Archive.account_period_balance_01_03_2022 order by pcn,period
+		--select distinct pcn,period from Archive.account_period_balance_01_26_2022 order by pcn,period
+		--select distinct pcn,period from Plex.account_period_balance order by pcn,period
+		-- select count(*) from Plex.account_period_balance --4,595
 		delete from Plex.account_period_balance WHERE pcn = @pcn and period between @period_start and @period_end
 --		delete from Archive.account_period_balance WHERE pcn = @pcn and period between @period_start and @period_end
 		set @id = @id+1;
 	end 
 end 
 select * from Plex.accounting_balance_update_period_range
+/*
+ * Make backup
+ */
+select *
+--into Archive.account_period_balance_01_26_2022 -- 4,595
+from Plex.account_period_balance
 
 declare @pcn int;
 set @pcn = 123681

@@ -52,8 +52,10 @@ from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
 select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
 -- select distinct pcn,period
 --select count(*)
-from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377
-where s.period = 202111  --87/256
+--select *
+--into Archive.GL_Account_Activity_Summary_01_27_2022 38,377
+from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377/38,634
+--where s.period = 202111  --87/256
 order by pcn,period
 
 -- join select * from Plex.accounting_account as the primary set

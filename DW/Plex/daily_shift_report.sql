@@ -56,6 +56,9 @@ earned_hours,actual_hours,labor_efficiency,
 earned_machine_hours,actual_machine_hours,
 part_operation_key,quantity_produced,workcenter_rate,labor_rate,crew_size,
 department_unassigned_hours,child_part_count,operators,note,accounting_job_nos
+--select *
+--into Archive.daily_shift_report_01_28_2022  -- 74
+-- delete from Plex.daily_shift_report
 from Plex.daily_shift_report  -- 78
 --where workcenter_code like '%CD 4 Control Arm LH CNC 450 455%'
 --where part_name like '%CD4.2 LH%'
