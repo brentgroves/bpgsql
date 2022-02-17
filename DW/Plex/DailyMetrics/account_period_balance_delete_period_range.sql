@@ -6,7 +6,7 @@ begin
 	declare @start_id int;
 	declare @end_id int;
 	select @start_id = min(id),@end_id = max(id) from Plex.accounting_balance_update_period_range
-	-- select * from Plex.accounting_balance_update_period_range
+	--select * from Plex.accounting_balance_update_period_range
 	declare @id int;
 	set @id=@start_id;
 	--select @start_id start_id,@end_id end_id,@id id
@@ -14,10 +14,10 @@ begin
 	declare @pcn int;
 	declare @period_start int;
 	declare @period_end int;
---	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 6
+	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = @id
 --	select @id id,@pcn pcn,@period_start period_start,@period_end period_end
 --	select @pcn=pcn,@period_start=period_start,@period_end=period_end from Plex.accounting_balance_update_period_range where id = 7
---	select @end_id end_id,@pcn pcn,@period_start period_start,@period_end period_end
+	--select @pcn pcn, @id id, @start_id start_id,@end_id end_id, @period_start period_start,@period_end period_end 
 	
 	while @id <=@end_id
 	begin

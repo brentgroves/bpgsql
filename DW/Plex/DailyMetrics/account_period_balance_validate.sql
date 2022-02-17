@@ -64,7 +64,35 @@ This script will need to be run manually until febuary when 12 months worth of p
 2. Run the AccountingBalanceAppendPeriodRange ETL script which uses the values in the the Plex.accounting_balance_update_period_range table 
 to determine what range of Plex.accounting_balance records to update. 
 a. run the Plex.accounting_balance_delete_period_range 
+-- SELECT distinct pcn,period FROM Plex.accounting_balance order by pcn,period 
+--delete from Plex.accounting_balance where pcn = 300758
 b. run the Plex.accounting_balance_append_period_range_DW_Import procedure to refresh/add Plex.accounting_balance records with current values. 
+
+
+3. run the AccountPeriodBalanceDeletePeriodRange ETL Script to delete the periods that are to be recalculated 
+--using start and end period in the Plex.accounting_balance_update_period_range table. 
+
+4. Run the AccountPeriodBalanceRecreatePeriodRange ETL Script to run the Plex.account_period_balance_recreate_period_range procedure 
+
+5. Validate from Plex.account_period_balance_validate  
+-- mgdw.Plex.accounting_balance definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.accounting_balance;
+
+CREATE TABLE mgdw.Plex.accounting_balance (
+	pcn int NOT NULL,
+	account_key int NOT NULL,
+	account_no varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	period int NOT NULL,
+	debit decimal(19,5) NULL,
+	credit decimal(19,5) NULL,
+	balance decimal(19,5) NULL,
+	CONSTRAINT PK__accounti__34E7554F34C584AF PRIMARY KEY (pcn,account_key,period)
+);
+
+
 
 The computed trial_balance multi level report table 
 select distinct pcn,period from Plex.account_period_balance b order by pcn, period desc
@@ -150,58 +178,55 @@ left outer join
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  
-
---where b.pcn=@pcn and b.period between @period_start and @period_end  -- 55,140/50,545
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 50,448/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and d.pcn is not null -- 50,448/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 38/33/36  account periods with activity not on the TB report.
---where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  -- 2,975/2,462/2,718
+--where b.pcn=@pcn and b.period between @period_start and @period_end  -- 55,140/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
+--where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  -- 2,975/2021-01 to 2021-12
 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit -- 2,975/2,462/2,718
---where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 2,975/2,462/2,718
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 2,975/2,462/2,718
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- debug only
 --AND b.account_no = '21000-000-0000'
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 2,462/2,718
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance !=s.balance -- 0
 
 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  -- 50,423/46,220
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 25/23/24
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  -- 50,423/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 25/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 50,448/46,244
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/0 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 50,448/46,244
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit != p.current_debit  -- 0 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)   -- 50,448/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)   -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 50,448/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  -- 50,448/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  -- 50,286/46,093
---where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  -- 162/137/151
---where b.pcn=@pcn and b.period between @period_start and @period_end and ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01  -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  -- 162/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01  -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 50,286/46,093
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 162/151
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 162/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
 
 /*
  * 'Revenue' or 'Expense' low accounts have no credit/debit values. 
  */
---where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*10/242
---and ((b.credit = 0) and (b.debit = 0) and (b.balance =0))  -- 220/242
---where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*10/242
+--where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*12-264/2021-01 to 2021-12
+--and ((b.credit = 0) and (b.debit = 0) and (b.balance =0))  -- 264/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*12/2021-01 to 2021-12
 --and ((b.credit != 0) or (b.debit != 0) or (b.balance !=0))  -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 0
 -- 10 73100-000-0000 changed to a 'Revenue' or 'Expense' after the beginning of the year so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. 
 -- but our code only saw the current category so it reset the YTD values.
 -- reset all Plex.account_period_balance for this account
@@ -228,26 +253,6 @@ and a.account_no = d.account_no
  * balance as 'Current Debit/(Credit)'
  * ytd_balance as 'YTD Debit/(Credit)'
  */
-declare @pcn int;
-set @pcn= 123681;
-declare @period_start int;
-set @period_start = 202101;
-declare @period_end int;
-set @period_end = 202111;
-
-select 
---b.pcn,b.period,
-b.period_display,
-b.category_type_legacy category_type,  -- use legacy category type for the report.
-b.category_name_legacy category_name,
-b.sub_category_name_legacy sub_category_name,
-b.account_no,
-b.account_name,
-b.balance current_debit_credit,
-b.ytd_balance ytd_debit_credit
---d.category_type TB_category_type,
---b.debit,b.ytd_debit,b.credit,b.ytd_credit,b.balance,b.ytd_balance
-
 
 declare @pcn int;
 set @pcn= 123681;
@@ -297,30 +302,24 @@ left outer join Plex.accounting_account a
 on b.pcn = a.pcn 
 and b.account_no=a.account_no 
 -- select * from Plex.missing_accounts_2021_09  -- 158
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = ''  -- 4,692/4,301 -- all periods
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = ''  -- 4,692/4,301 -- all periods
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = ''  -- 4,692/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = ''  -- 4,692/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type = ''  -- 0
 
---??? what is this for?
---where b.pcn=@pcn and b.period between @period_start and @period_end -- 55,140
 --where b.pcn=@pcn and d.pcn is null and b.period between @period_start and @period_end --    4,692
---where b.pcn=@pcn and d.pcn is not null and b.period between @period_start and @period_end -- 50,448
+--where b.pcn=@pcn and d.pcn is not null and b.period between @period_start and @period_end -- 50,448/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display = d.period_display  -- 50,448/42,244/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display != d.period_display  -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type != d.category_type  -- 48/40/44  -- TB report uses the category type linked to the sub_category
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = d.category_type  -- 50,448/42,040/46,244
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display = d.period_display  -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display != d.period_display  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type != d.category_type  -- 48/2021-01 to 2021-12  -- TB report uses the category type linked to the sub_category
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = d.category_type  -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy != d.category_type  -- 0
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = d.category_name  -- 50,448/42,040/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy != d.sub_category_name  -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy = d.sub_category_name  -- 50,448/42,040/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name != d.account_name  -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name = d.account_name -- 50,448/42,040/46,244
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit -- 50,423/42,017/46,220
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) > 0.01 -- 0
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_balance = d.ytd_debit_credit -- 50,286/41,903/46,093
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance - d.ytd_debit_credit) > 0.01 -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = d.category_name  -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy != d.sub_category_name  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy = d.sub_category_name  -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name != d.account_name  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name = d.account_name -- 50,448/2021-01 to 2021-12
 
 /*
  * What category_type is being used on the new chart of accounts multiple level?
@@ -369,6 +368,14 @@ and a.category_type not in ('Revenue','Expense')  -- 0
  * Format to be like CSV download
  */
 --select * from Plex.accounting_account a where a.account_no = '10220-000-00000' 
+declare @pcn int;
+set @pcn= 123681;
+declare @period_start int;
+set @period_start = 202101;
+declare @period_end int;
+--set @period_end = 202101;
+set @period_end = 202112;
+
 select 
 b.period,
 b.period_display,
@@ -394,7 +401,10 @@ and b.account_no=a.account_no
 --where a.category_type != a.category_type_legacy 
 --where b.period_display is not NULL -- 40,940
 --where b.period_display is NULL -- 40,940
-where a.account_no = '10220-000-00000' 
+where b.pcn = @pcn 
+AND b.period BETWEEN @period_start AND @period_end 
+
+a.account_no = '10220-000-00000' 
 
 /*
  * Backup
