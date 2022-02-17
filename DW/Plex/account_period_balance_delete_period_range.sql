@@ -36,7 +36,8 @@ select * from Plex.accounting_balance_update_period_range
  * Make backup
  */
 select *
---into Archive.account_period_balance_01_26_2022 -- 4,595
+--into Archive.account_period_balance_2022_02_16 -- 98,892
+--select count(*)
 from Plex.account_period_balance
 
 declare @pcn int;

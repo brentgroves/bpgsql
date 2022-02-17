@@ -1,11 +1,33 @@
 /*
  * Definitions
  */
+
+Accounting_account: AccountingAccount ETL Script 
+select * 
+into Archive.accounting_account_2022_02_16
+from Plex.accounting_account aa 
+select count(*) from Plex.accounting_account aa -- 19,176
+--select count(*) from Archive.accounting_account_2022_02_16
+where pcn = 123681  -- 4,595
+
 AccountingYearCategoryType: Run this ETL Script in late December.  
 It is used to add account category records for each year.  
 This is needed in YTD calculations which rely on if an account 
 is a revenue/expense to determine whether to reset YTD values to 0 for every year. 
 select distinct (year) from Plex.accounting_account_year_category_type aayct 
+select count(*) from Plex.accounting_account_year_category_type aayct  -- 24,723
+select * 
+--into Archive.accounting_account_year_category_type_2022_02_16
+-- select count(*) from Archive.accounting_account_year_category_type_2022_02_16  -- 24,723
+-- select count(*)
+from Plex.accounting_account_year_category_type aayct  -- 24,723
+--where pcn = 123681 -- 13,785  
+where [year] = 2021 -- 8,241
+
+-- delete from Plex.accounting_account_year_category_type
+where [year] = 2021 -- 4,595
+
+
 
 AccountBalancesByPeriod: Procedure that calls a Plex authored SPROC. Cannot 
 create a Plex SQL SPROC for this because we don’t have the code for many of the sub-procedures.  
@@ -15,6 +37,34 @@ select distinct pcn,period from plex.Account_Balances_by_Periods order by pcn,pe
 
 TrialBalance ETL script that takes as input the Plex Trial Balance CSV file.   
 select distinct pcn,period from Plex.trial_balance_multi_level order by pcn,period desc
+
+GL_Account_Activity_Summary ETL script is used to validate accounts no longer showing in 
+the Trial Balance Multi level report.
+
+ Accounting_period ETL script is used to refresh the DW accounting_period table containing 
+ start and end period dates and fiscal order info 
+ select *
+ -- select count(*)
+ -- select distinct pcn from Archive.accounting_period_2022_02_16 -- 1,274 -- 123681 (204612)
+ -- select distinct pcn,period from Archive.accounting_period_2022_02_16 -- 1,274 -- 123681 (204612)
+ -- select distinct pcn,period from Archive.accounting_period -- 123681 (204612)
+ -- select distinct pcn from Archive.accounting_period
+ -- select count(*) from Archive.accounting_period_2022_02_16 -- 1,274
+ --into Archive.accounting_period_2022_02_16 
+ from Plex.accounting_period p  -- 1,346
+ left outer join Archive.accounting_period_2022_02_16 a 
+ on p.pcn = a.pcn 
+ and p.period_key = a.period_key 
+ where a.pcn is null 
+
+AccountingBalanceUpdatePeriodRange ETL script to update the Plex.accounting_balance_update_period_range table  
+select * from Plex.accounting_balance_update_period_range abupr  
+This script will need to be run manually until febuary when 12 months worth of periods since our anchor period 2021-01.
+
+2. Run the AccountingBalanceAppendPeriodRange ETL script which uses the values in the the Plex.accounting_balance_update_period_range table 
+to determine what range of Plex.accounting_balance records to update. 
+a. run the Plex.accounting_balance_delete_period_range 
+b. run the Plex.accounting_balance_append_period_range_DW_Import procedure to refresh/add Plex.accounting_balance records with current values. 
 
 The computed trial_balance multi level report table 
 select distinct pcn,period from Plex.account_period_balance b order by pcn, period desc

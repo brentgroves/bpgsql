@@ -42,6 +42,8 @@ select distinct pcn,period from Archive.accounting_balance_2022_01_25 order by p
 select distinct pcn,period from Plex.accounting_balance order by pcn,period
 select * from Plex.accounting_balance order by pcn,period
 
+
+
 select * 
 into Archive.accounting_balance_2022_01_25 
 from Plex.accounting_balance ab -- 52,138
