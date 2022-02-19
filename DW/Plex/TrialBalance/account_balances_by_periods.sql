@@ -51,7 +51,8 @@ select * from Plex.trial_balance_2020_01
 select * 
 --into Archive.Account_Balances_by_Periods_01_27_2022  -- 671,849/663,441
 from Plex.Account_Balances_by_Periods
-/*
+/* 
+ * Must delete final comma in CSV file before running ETL script.
  * Must cleanup Total lines when importing CSV
  */
 --delete from Plex.Account_Balances_by_Periods
@@ -61,7 +62,8 @@ set pcn = 123681 where pcn is null
 
 select count(*)
 from Plex.Account_Balances_by_Periods 
-where pcn=123681 and period=202112  -- 4204
+where pcn=123681 and period=202201  -- 4204
+--where pcn=123681 and period=202112  -- 4204
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201811  -- 4204
 --where pcn=123681 and period=201001  -- 4204

@@ -57,9 +57,22 @@ the Trial Balance Multi level report.
  and p.period_key = a.period_key 
  where a.pcn is null 
 
-AccountingBalanceUpdatePeriodRange ETL script to update the Plex.accounting_balance_update_period_range table  
+-2. Run the Accounting_account ETL script.  
+Issue: This is used to generate records in account_period_balance. Since the previous 12 months account_period_balance gets  regenerated 
+when a new period gets appended if the category type changes or an account somehow gets removed the previous 12 months worth of records get be affected.  
+
+-1: AccountingYearCategoryType: Run this ETL Script in late December.   
+It is used to add account category records for each year.  up 
+This is needed in YTD calculations which rely on if an account  
+is a revenue/expense to determine whether to reset YTD values to 0 for every year. 
+
+0. Run the Accounting_period ETL script 
+Accounting_period ETL script is used to refresh the DW accounting_period table containing  
+start and end period dates and fiscal order info. I think period in the distant future get added periodically. 
+ 
+1. AccountingBalanceUpdatePeriodRange ETL script to update the Plex.accounting_balance_update_period_range table  
 select * from Plex.accounting_balance_update_period_range abupr  
-This script will need to be run manually until febuary when 12 months worth of periods since our anchor period 2021-01.
+Validated: 2022-02-18
 
 2. Run the AccountingBalanceAppendPeriodRange ETL script which uses the values in the the Plex.accounting_balance_update_period_range table 
 to determine what range of Plex.accounting_balance records to update. 
@@ -67,14 +80,31 @@ a. run the Plex.accounting_balance_delete_period_range
 -- SELECT distinct pcn,period FROM Plex.accounting_balance order by pcn,period 
 --delete from Plex.accounting_balance where pcn = 300758
 b. run the Plex.accounting_balance_append_period_range_DW_Import procedure to refresh/add Plex.accounting_balance records with current values. 
+Validated: 2022-02-18
 
 
 3. run the AccountPeriodBalanceDeletePeriodRange ETL Script to delete the periods that are to be recalculated 
+-- select distinct pcn,period from Plex.account_period_balance apb order by pcn,period
 --using start and end period in the Plex.accounting_balance_update_period_range table. 
+Validated: 2022-02-18
 
 4. Run the AccountPeriodBalanceRecreatePeriodRange ETL Script to run the Plex.account_period_balance_recreate_period_range procedure 
+-- select distinct pcn,period from Plex.account_period_balance order by pcn,period
+Validated: 2022-02-18
 
-5. Validate from Plex.account_period_balance_validate  
+5. Add or update Plex.trial_balance_multi_level records using the TrialBalance ETL script.  If you are sure there have been no changes 
+to previous period values then just run the script for the current period. 
+select distinct pcn,period from Plex.trial_balance_multi_level order by pcn,period
+
+6. Add or update Plex.Account_Balances_by_Periods using the AccountBalancesByPeriod  ETL script.  If you are sure there have been no changes 
+to previous period values then just run the script for the current period. 
+select distinct pcn,period from Plex.Account_Balances_by_Periods order by pcn,period
+
+7. Add or update Plex.GL_Account_Activity_Summary using the GLAccountActivitySummary  ETL script.  If you are sure there have been no changes 
+to previous period values then just run the script for the current period. 
+select distinct pcn,period from Plex.GL_Account_Activity_Summary order by pcn,period
+
+8. Validate period balance calculations from Plex.account_period_balance_validate  
 -- mgdw.Plex.accounting_balance definition
 
 -- Drop table
@@ -118,8 +148,8 @@ set @pcn= 123681;
 declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
-set @period_end = 202112;
-/*
+set @period_end = 202201;
+--/*
 select b.pcn,b.account_no,
 b.period,
 a.revenue_or_expense,
@@ -131,11 +161,11 @@ b.ytd_credit,p.ytd_credit PP_ytd_credit,
 b.ytd_balance,
 d.ytd_debit_credit TB_ytd_balance,
 p.ytd_debit-p.ytd_credit PP_ytd_balance
-*/
+--*/
 --b.balance -d.current_debit_credit  diff
 -- select *
-select count(*) 
-from Plex.account_period_balance b -- 43,630/170,863
+--select count(*) 
+from Plex.account_period_balance b -- 107,133
 inner join Plex.accounting_account a 
 on b.pcn=a.pcn 
 and b.account_no=a.account_no -- 43,630 /170,863
@@ -173,42 +203,44 @@ left outer join
 --select * from Plex.GL_Account_Activity_Summary s where pcn=123681 and period = 202111  -- dont know when this was imported probably in early december
 	from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
 	where s.pcn = 123681 
-	and s.period between 202101 and 202112  -- 2,462/2,718/2,975
+	and s.period between 202101 and 202201  -- 2,462/2,718/2,975
 ) s
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  
---where b.pcn=@pcn and b.period between @period_start and @period_end  -- 55,140/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
---where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end  -- 59,735/2021-01 to 2022-01 -- 55,140/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
+--where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit -- 2,975/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != s.credit -- 1/2021-01 to 2022-01 
+--39100-000-0000 - Retained Earnings -Year End Close Credit	1,826,771.83, 2022-01 was last updated on 2/11/2022 4:45:00 PM
+-- but this Year End Close transaction has a date of 2/18/2022 9:30:50 AM
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- debug only
 --AND b.account_no = '21000-000-0000'
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance !=s.balance -- 0
 
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  -- 54,624/2021-01 to 2022-01 --50,423/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 28/2021-01 to 2022-01 -- 25/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 54,652/2021-01 to 2022-01 --50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/2021-01 to 2022-01 --0/0 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  -- 50,423/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 25/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit != p.current_debit  -- 0/2021-01 to 2022-01 -- 0 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/0 
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)   -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0/2021-01 to 2022-01 --0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit != p.current_debit  -- 0 
-
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)   -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0/2021-01 to 2021-12
-
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 54,651/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 0/2021-01 to 2021-12
+ISSUE: 1 ACCOUNT IS NOT THE SAME
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 0/2021-01 to 2021-12
 
@@ -329,7 +361,7 @@ where a.pcn = 123681
 and a.category_type != a.category_type_legacy -- 163  -- 73100-000-0000,40591-300-00000 (5 digit old account)
 -- 73100-000-0000 category_type = Expense (ytd resets yearly), category_type_legacy=Liability
 /*
- * How is the TB report treating 73100-000-0000
+ * How is the TB Itreport treating 73100-000-0000
  * In 2019 there were debits far exceeded credit values
  * In 2020 debit/credit values where equal.
  * TB is treating it as an Expense since it's YTD values match our procedures values.

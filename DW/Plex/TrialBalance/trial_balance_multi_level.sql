@@ -15,8 +15,8 @@ create table Plex.trial_balance_multi_level
  ytd_debit_credit DECIMAL(18,2)
  primary key (period_display,account_no)  -- when this gets imported there is a period_display but no period.
 )
-select distinct pcn,period 
-from Plex.trial_balance_multi_level order by pcn,period 
+select distinct pcn,period_display  
+from Plex.trial_balance_multi_level order by pcn,period_display  
 select count(*) from Plex.trial_balance_multi_level  -- 668,436/664,232
 where period = 202111
 
@@ -57,11 +57,15 @@ update Plex.trial_balance_multi_level
 set period = cast (right(period_display,4) + left(period_display,2) as int),
 pcn = 123681
 where pcn is null
-
+,
 
 select *
+--SELECT DISTINCT pcn,period
+--SELECT DISTINCT pcn,period_display 
 --select count(*)
 from Plex.trial_balance_multi_level
+--order by pcn,period_display  
+where pcn=123681 and period=202201  -- 4204.
 --where pcn=123681 and period=202112  -- 4204.
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201801  -- 4204
