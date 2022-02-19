@@ -357,7 +357,7 @@ and b.account_no=a.account_no
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display != d.period_display  --0/2021-01 to 2022-01 --  0/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type != d.category_type  -- 52/2021-01 to 2022-01 -- 48/2021-01 to 2021-12  -- TB report uses the category type linked to the sub_category
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = d.category_type  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy != d.category_type  -- 5,083/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy != d.category_type  -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = d.category_name  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy != d.sub_category_name  -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
@@ -418,10 +418,10 @@ declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
 --set @period_end = 202101;
-set @period_end = 202112;
+set @period_end = 202201;
 
 select 
-b.period,
+--b.period,
 b.period_display,
 a.category_type,
 -- b.category_type_legacy category_type,  -- use legacy category type for the report.
@@ -430,9 +430,10 @@ a.category_type,
  * I believe Plex now mostly uses the account category located directly on the accounting_v_account view so I used 
  * this column instead of the one linked via the account_category view. 
  */
+-- select category_name from Plex.accounting_account aa -- no category_name 
 a.category_name_legacy category_name,
---a.sub_category_name_legacy sub_category_name,
-a.account_no [no],
+a.sub_category_name_legacy sub_category_name,
+a.account_no,
 a.account_name,
 b.balance current_debit_credit,
 b.ytd_balance ytd_debit_credit
@@ -447,7 +448,7 @@ and b.account_no=a.account_no
 --where b.period_display is NULL -- 40,940
 where b.pcn = @pcn 
 AND b.period BETWEEN @period_start AND @period_end 
-
+order by b.period,b.account_no 
 a.account_no = '10220-000-00000' 
 
 /*
