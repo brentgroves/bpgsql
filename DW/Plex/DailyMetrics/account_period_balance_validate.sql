@@ -149,22 +149,24 @@ declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
 set @period_end = 202201;
---/*
+/*
 select b.pcn,b.account_no,
 b.period,
 a.revenue_or_expense,
-b.debit snapshot_debit,s.debit GL_debit,p.current_debit p_debit,
-b.credit snapshot_credit,s.credit GL_credit,p.current_credit p_credit,
-b.balance,(p.Current_Debit - p.Current_Credit) P_debit_credit, d.current_debit_credit TB_balance,
+b.debit snapshot_debit,s.debit GL_debit,p.current_debit PP_debit,
+b.credit snapshot_credit,s.credit GL_credit,p.current_credit PP_credit,
+b.balance,(p.Current_Debit - p.Current_Credit) PP_debit_credit, d.current_debit_credit TB_balance,
 b.ytd_debit,p.ytd_debit PP_ytd_debit,
 b.ytd_credit,p.ytd_credit PP_ytd_credit,
 b.ytd_balance,
 d.ytd_debit_credit TB_ytd_balance,
-p.ytd_debit-p.ytd_credit PP_ytd_balance
---*/
+p.ytd_debit-p.ytd_credit PP_ytd_balance,
+(b.ytd_balance - d.ytd_debit_credit) Diff_of_ytd_balances
+
+*/
 --b.balance -d.current_debit_credit  diff
 -- select *
---select count(*) 
+select count(*) 
 from Plex.account_period_balance b -- 107,133
 inner join Plex.accounting_account a 
 on b.pcn=a.pcn 
@@ -208,6 +210,8 @@ left outer join
 on b.pcn=s.pcn 
 and b.account_no=s.account_no
 and b.period=s.period  
+--where b.pcn=@pcn and b.period=202201 and b.account_no = '73100-000-0000'
+--DEBUG ONLY where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_no like '4%' and b.period = 202201 and b.credit  > 0
 --where b.pcn=@pcn and b.period between @period_start and @period_end  -- 59,735/2021-01 to 2022-01 -- 55,140/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
@@ -218,10 +222,9 @@ and b.period=s.period
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != s.credit -- 1/2021-01 to 2022-01 
+--select b.credit, * from Plex.accounting_balance b where pcn= 123681 and period = 202201 and account_no = '39100-000-0000'
 --39100-000-0000 - Retained Earnings -Year End Close Credit	1,826,771.83, 2022-01 was last updated on 2/11/2022 4:45:00 PM
 -- but this Year End Close transaction has a date of 2/18/2022 9:30:50 AM
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- debug only
---AND b.account_no = '21000-000-0000'
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance !=s.balance -- 0
 
@@ -239,28 +242,36 @@ and b.period=s.period
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0/2021-01 to 2022-01 --0/2021-01 to 2021-12
 
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 54,651/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
-where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 0/2021-01 to 2021-12
-ISSUE: 1 ACCOUNT IS NOT THE SAME
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 1/2021-01 to 2021-12
+-- ISSUE: 1 ACCOUNT IS NOT THE SAME
+-- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
+-- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
+-- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  --54,651/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 1/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
+-- ISSUE: 1 ACCOUNT IS NOT THE SAME
+-- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
+-- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
+-- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  --54,478/2021-01 to 2022-01 -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  --174/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01 or ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) < -0.01)   -- 0/2021-01 to 2022-01 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  -- 50,286/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  -- 162/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01  -- 0/2021-01 to 2021-12
-
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 50,286/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 162/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance - d.ytd_debit_credit) > 0.01  -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 54,477/2021-01 to 2022-01 -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 175/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and ((b.ytd_balance - d.ytd_debit_credit) > 0.01 or (b.ytd_balance - d.ytd_debit_credit) < -0.01) -- 1/2021-01 to 2022-01
 
 /*
  * 'Revenue' or 'Expense' low accounts have no credit/debit values. 
  */
---where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*12-264/2021-01 to 2021-12
---and ((b.credit = 0) and (b.debit = 0) and (b.balance =0))  -- 264/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*12/2021-01 to 2021-12
---and ((b.credit != 0) or (b.debit != 0) or (b.balance !=0))  -- 0
--- 10 73100-000-0000 changed to a 'Revenue' or 'Expense' after the beginning of the year so PP_ytd_debit and PP_ytd_credit did not get reset on 2021-01. 
--- but our code only saw the current category so it reset the YTD values.
+--where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*13=286/2021-01 to 2022-01  -- 22*12=264/2021-01 to 2021-12
+--and ((b.credit = 0) and (b.debit = 0) and (b.balance =0))  -- 22*13=286/2021-01 to 2022-01  -- 264/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and a.category_type in ('Revenue','Expense') and left(b.account_no,1) < 4  -- 22*13=286/2021-01 to 2022-01  -- 22*12/2021-01 to 2021-12
+--and ((b.credit != 0) or (b.debit != 0) or (b.balance !=0))  -- 0/2021-01 to 2022-01  --0/2021-01 to 2021-12
+-- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
+-- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
+
+
 -- reset all Plex.account_period_balance for this account
 -- UPDATE Plex.account_period_balance !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 -- update Plex.account_period_balance set ytd_debit=18912.67,ytd_credit=18912.67 where account_no = '73100-000-0000'
@@ -292,7 +303,7 @@ declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
 --set @period_end = 202101;
-set @period_end = 202112;
+set @period_end = 202201;
 
 
 
@@ -329,29 +340,30 @@ left outer join Plex.trial_balance_multi_level d -- TB download does not show th
 on b.pcn=d.pcn
 and b.account_no = d.account_no
 and b.period_display = d.period_display 
-
+-- select * from Plex.accounting_account a where a.account_no = '73100-000-0000'
 left outer join Plex.accounting_account a
 on b.pcn = a.pcn 
 and b.account_no=a.account_no 
+--where b.account_no = '73100-000-0000'
 -- select * from Plex.missing_accounts_2021_09  -- 158
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = ''  -- 4,692/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = ''  -- 4,692/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type = ''  -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = ''  --5,083/2021-01 to 2022-01 -- 4,692/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = ''  --5,083/2021-01 to 2022-01 -- 4,692/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type = ''  -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and d.pcn is null and b.period between @period_start and @period_end --    4,692
---where b.pcn=@pcn and d.pcn is not null and b.period between @period_start and @period_end -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and d.pcn is null and b.period between @period_start and @period_end --    5,083/2021-01 to 2022-01 -- 4,692/2021-01 to 2021-12
+--where b.pcn=@pcn and d.pcn is not null and b.period between @period_start and @period_end -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display = d.period_display  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display != d.period_display  -- 0/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type != d.category_type  -- 48/2021-01 to 2021-12  -- TB report uses the category type linked to the sub_category
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = d.category_type  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy != d.category_type  -- 0
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display = d.period_display  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.period_display != d.period_display  --0/2021-01 to 2022-01 --  0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type != d.category_type  -- 52/2021-01 to 2022-01 -- 48/2021-01 to 2021-12  -- TB report uses the category type linked to the sub_category
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy = d.category_type  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_type_legacy != d.category_type  -- 5,083/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = d.category_name  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy != d.sub_category_name  -- 0/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy = d.sub_category_name  -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name != d.account_name  -- 0/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name = d.account_name -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.category_name_legacy = d.category_name  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy != d.sub_category_name  -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.sub_category_name_legacy = d.sub_category_name  -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name != d.account_name  -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
+where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_name = d.account_name -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
 
 /*
  * What category_type is being used on the new chart of accounts multiple level?
@@ -445,3 +457,189 @@ select *
 -- select count(*) from Archive.account_period_balance_12_30  -- 43,630
 --into Archive.account_period_balance_12_30
 from Plex.account_period_balance b -- 43,630
+
+
+/* ISSUE SECTION
+ * 
+Question: Why is Plex and Mobex Authored procedures differ in YTD. Credit/Debit/Balance values in 2022-01 for 73100-000-0000 only? 
+Note: 73100-000-0000 changed to a 'Revenue' or 'Expense' but the Plex Authored procedure is still not resetting this value in 2022-01.  
+It was a liability account before it changed. 
+Account Details: Plexus_customer_no=123681/Southfield and account_no = '73100-000-0000' 
+Name: Freight - In Machining-General-General 
+Created: 1/16/2019 12:23:28 PM 
+Update: 2/18/2020 11:53:42 AM 
+Testing Details: Mobex authored procedure: accounting_year_category_type_issue 
+Research: Shows that account 73100-000-0000 has different category_types. 
+In accounting_v_account it is an Expense and in accounting_v_category_type it is a liability.  
+There are 4 accounts with this same issue but none of the others had any activity.  
+Conclusion: Since this account is an Expense account and not a liability account, we should go with the YTD calculation of the Mobex authored procedure 
+
+ 
+select 
+a.plexus_customer_no pcn,a.account_key,a.account_no,a.account_name,a.active,
+a.category_type category_type,  --  This is new way of identifying the category type.  The old method used the following views category_account->category->category_type
+
+case 
+when c.plexus_customer_no is null then 0
+else c.category_no
+end category_no_legacy, -- legacy method of categorizing accounts
+case
+when c.plexus_customer_no is null then ''
+else c.category_name
+end category_name_legacy, -- legacy method of categorizing accounts
+case
+when t.category_type is null then ''
+else t.category_type 
+end category_type_legacy, -- legacy method of categorizing accounts
+case
+when sc.sub_category_no is null then 0
+else sc.sub_category_no
+end sub_category_no_legacy, -- legacy method of categorizing accounts
+case
+when sc.sub_category_name is null then ''
+else sc.sub_category_name
+end sub_category_name_legacy, -- legacy method of categorizing accounts
+
+case
+when t2.category_type is null then ''
+else t2.category_type 
+end sub_category_type_legacy, -- legacy method of categorizing accounts
+-- select distinct [in] from accounting_v_category_type -- Credit/Debit
+-- select count(*) from accounting_v_category_type where [in] = 'Credit' -- 3
+-- select count(*) from accounting_v_category_type where [in] = 'Debit' -- 2
+case
+when a.category_type in ('Revenue','Expense') then 1
+else 0
+end revenue_or_expense
+
+--ca.*,
+--ca.category_name,
+--b.*,
+--sa.*,
+--cc.*,
+--t.*,
+--a.*
+-- select count(*)
+-- select *
+from accounting_v_account_e  a -- 36,636
+--where a.plexus_customer_no=123681  -- 4362 
+join accounting_v_category_type act -- This is the value used by the new method of configuring plex accounts. 
+on a.category_type=act.category_type  -- 36,636
+
+-- Category numbers linked to an account by the a category_account record will no longer be supported by Plex
+left outer join accounting_v_category_account_e ca  --
+on a.plexus_customer_no=ca.plexus_customer_no
+and a.account_no=ca.account_no
+--where a.plexus_customer_no=123681  -- 4204 
+
+left outer join accounting_v_category_e c  --
+on ca.plexus_customer_no=c.plexus_customer_no
+and ca.category_no=c.category_no
+
+left outer join accounting_v_category_type t -- This is the value used by the old method of configuring plex accounts. 
+on c.category_type=t.category_type
+--where a.plexus_customer_no=123681  -- 4204
+--and t.[in] = 'Debit' -- 3998
+--and t.[in] = 'Credit' -- 206
+
+-- sub category numbers linked to an account by the sub category_account record will no longer be supported by Plex
+left outer JOIN accounting_v_sub_category_account_e AS sca
+--JOIN accounting_v_Sub_Category_Account_e AS SCA -- 4,204 for 123681
+ON a.plexus_customer_no = sca.plexus_customer_no
+and a.account_no = sca.account_no
+
+left outer join accounting_v_sub_category_e sc  --
+on sca.plexus_customer_no=sc.plexus_customer_no
+and sca.sub_category_no=sc.sub_category_no
+
+left outer join accounting_v_category_e c2  --
+on sc.plexus_customer_no=c2.plexus_customer_no
+and sc.category_no=c2.category_no
+
+left outer join accounting_v_category_type t2 -- This is another value used by the old method of configuring plex accounts. 
+on c2.category_type=t2.category_type
+
+
+where a.plexus_customer_no = 123681
+and a.account_no = '73100-000-0000'
+
+select b.pcn,b.period,b.account_no,
+d.category_type DL_category_type,p.category_type PP_category_type,a.category_type MP_category_type,
+p.current_credit,b.credit, 
+p.ytd_credit PP_ytd_credit,b.ytd_credit,
+b.* 
+from Plex.account_period_balance b 
+join Plex.accounting_account a 
+on b.pcn=a.pcn
+and b.account_no=a.account_no
+join Plex.Account_Balances_by_Periods p -- 43,620
+on b.pcn=p.pcn
+and b.account_no = p.[no]
+and b.period = p.period 
+join Plex.trial_balance_multi_level d 
+on b.pcn=d.pcn
+and b.account_no = d.account_no
+and b.period_display = d.period_display 
+where b.period in (202112,202201) and b.account_no = '73100-000-0000'
+*/
+
+
+/*
+ * Archive
+For 2022-01 PP current_credit is 0 but PP_YTD_credit is 18,912.67 
+In this procedure the account is shown to be a revenue_or_expense type.
+And in our procedure we would reset the YTD_credit to zero at the beginning of the year.
+What is PP_YTD_credit and account_period_balance ytd_credit in 2021-12? 18,912.67
+select d.*,p.current_credit,b.credit, 
+p.ytd_credit PP_ytd_credit,b.ytd_credit,
+b.* 
+from Plex.account_period_balance b 
+join Plex.Account_Balances_by_Periods p -- 43,620
+on b.pcn=p.pcn
+and b.account_no = p.[no]
+and b.period = p.period 
+join Plex.trial_balance_multi_level d 
+on b.pcn=d.pcn
+and b.account_no = d.account_no
+and b.period_display = d.period_display 
+where b.period = 202112 and b.account_no = '73100-000-0000'
+
+The Plex Authored procedure treated this account as a non revenue_or_expense and did NOT reset the YTD_credit on 2022-01.
+Why?
+How does our Mobex authored procedure determine if an account is a revenue_or_expense? 
+Looks at the account category_type value from the end of the previous year.
+
+--From the Plex.accounting_account_year_category_type account record for the previous year. 
+
+How does the Plex.accounting_account_year_category_type account determine if the account is a revenue_or_expense?
+From the our Plex procedure accounting_year_category_type_dw_import?
+How? a.category_type in ('Revenue','Expense') then 1
+
+Did the category_type change from previous years? Yes. 73100-000-0000 changed to a 'Revenue' or 'Expense'
+Created: 1/16/2019 12:23:28 PM
+Update: 2/18/2020 11:53:42 AM - I believe this was when the category_type was changed to an Expense.
+
+Plexus_customer_no=123681 and account_no = '73100-000-0000'
+Created: 1/16/2019 12:23:28 PM
+Update: 2/18/2020 11:53:42 AM
+
+Are there any diffences between 73100-000-0000 and another expense category_type account that would cause 
+Plex authored stored procedure to not treat it as other revenue_or_expense accounts and reset it's 
+YTD values at the beginning of each year? Compare to an account which has a current credit 
+value in 2022-01: 47100-000-0000	Chip and Scrap Sales
+Differences: Price_Component	is True for 47100-000-0000 and false for 73100-000-0000
+Conclusion: The price_component differenced does not appear to be significant.  
+where plexus_customer_no = 123681
+--and Price_Component = 0 and left(account_no,1) > '3'  -- 991
+--and Price_Component = 0 and left(account_no,1) < '4'  -- 358
+
+--and Price_Component = 1 and category_type in ('Revenue','Expense') -- 2942
+--and Price_Component = 0 and category_type in ('Revenue','Expense') -- 1013
+--and Price_Component = 0 and category_type in ('Revenue','Expense') and left(account_no,1) > '3'  -- 991
+--and Price_Component = 1 and category_type in ('Revenue','Expense') and left(account_no,1) > '3'  -- 2,942
+--and Price_Component = 0 and category_type in ('Revenue','Expense') and left(account_no,1) < '4'  -- 22
+--and Price_Component = 1 and category_type in ('Revenue','Expense') and left(account_no,1) < '4'  -- 0
+
+select * from Plex.accounting_account_year_category_type
+where pcn=123681 and account_no = '73100-000-0000'/73100-000-0000
+*/
