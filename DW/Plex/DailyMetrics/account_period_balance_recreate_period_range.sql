@@ -1,8 +1,8 @@
-/*
+-- drop procedure Plex.account_period_balance_recreate_period_range
 create procedure Plex.account_period_balance_recreate_period_range
 as 
 begin
-*/
+
 /*
  * Make a backup
  */
@@ -57,7 +57,7 @@ inner join Plex.max_fiscal_period_view m
 on r.pcn=m.pcn
 and (r.period_start/100) = m.[year]
 where id = @min_id;
-select @pcn pcn,@period period,@period_start period_start,@period period ,@period_end period_end  
+--select @pcn pcn,@period period,@period_start period_start,@period period ,@period_end period_end  
 /* Don't automate this until 2022-02 when we have 1 years worth of valid periods
 delete from 
 Plex.account_period_balance 
