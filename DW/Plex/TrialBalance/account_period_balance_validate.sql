@@ -418,7 +418,7 @@ declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
 --set @period_end = 202101;
-set @period_end = 202201;
+set @period_end = 202112;
 
 select 
 --b.period,
