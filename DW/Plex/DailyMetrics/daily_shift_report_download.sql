@@ -3,6 +3,7 @@
 -- drop table Plex.daily_shift_report_download
 CREATE TABLE mgdw.Plex.daily_shift_report_download (
 	pcn int null,
+	report_date datetime NULL,
 	department varchar(60) NULL,
 	workcenter varchar(60) NULL,
 	part_name varchar(100) null,
@@ -42,4 +43,73 @@ CREATE TABLE mgdw.Plex.daily_shift_report_download (
 );
 
 select count(*) from Plex.daily_shift_report_download  -- 86
-select * from Plex.daily_shift_report_download  -- 86
+where report_date = '2022-02-21'  -- 86
+--where report_date = '2022-02-20'  -- 32-
+--where report_date = '2022-02-19'  -- 67
+--where report_date = '2022-02-18'  -- 88
+--where report_date = '2022-02-17'  -- 86
+--where report_date = '2022-02-16'  -- 90
+--where report_date = '2022-02-15'  -- 94
+--where report_date = '2022-02-14'  -- 93
+
+select count(*)
+from Plex.daily_shift_report_get_view s 
+--where pcn = 300758 and  report_date = '2022-02-14'  -- 93
+--where pcn = 300758 and  report_date = '2022-02-15'  -- 94
+--where pcn = 300758 and  report_date = '2022-02-16'  -- 90
+where pcn = 300758 and  report_date = '2022-02-18'  -- 88
+
+--where pcn = 300758 and  report_date = '2022-02-17'  -- 82
+
+where pcn = 300758 and report_date = '2022-02-21'  -- 86
+where pcn = 300758 and  report_date = '2022-02-20'  -- 32-
+where pcn = 300758 and  report_date = '2022-02-19'  -- 67
+
+select DISTINCT pcn,report_date from Plex.daily_shift_report_download  -- 300758,02-20,32
+--delete from Plex.daily_shift_report_download  
+
+-- drop view Plex.daily_shift_report_download_view
+create view Plex.daily_shift_report_download_view
+as 
+select 
+	pcn,
+	report_date,
+	department,
+	workcenter,
+	part_name,
+	operation,
+	operators,
+	note,
+	planned_production_hours,  
+	parts_produced,
+	parts_scrapped,
+	scrap_rate,
+	earned_machine_hours,
+	actual_machine_hours,
+	efficiency,
+	utilization,
+	oee,
+	earned_labor_hours,
+	actual_labor_hours,
+	labor_efficiency,
+	downtime_hours,
+	workcenter_rate,
+	labor_rate,
+	child_part_count,
+	accounting_job,
+	department_no,
+	manager_first_name,
+	manager_middle_name,
+	manager_last_name,
+	workcenter_key,
+	part_key,
+	part_no,
+	part_revision revision,
+	operation_no,
+	part_operation_key,
+	quantity_produced,
+	crew_size,
+	department_unassigned_hours
+	FROM Plex.daily_shift_report_download
+	
+	

@@ -107,6 +107,7 @@ select distinct pcn,period from Plex.GL_Account_Activity_Summary order by pcn,pe
 8. Validate period balance calculations from Plex.account_period_balance_validate  
 -- mgdw.Plex.accounting_balance definition
 
+
 -- Drop table
 
 -- DROP TABLE mgdw.Plex.accounting_balance;

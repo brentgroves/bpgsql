@@ -25,7 +25,7 @@ select *
 --select count(*) from Archive.trial_balance_multi_level_01_02_2022  -- 668,436 (200812-202112) -- I deleted 202112 because this period did not close as of 01-07-2022.
 --into Archive.trial_balance_multi_level_01_02_2022
 from Plex.trial_balance_multi_level  -- 58,856
-where account_no = '10220-000-00000'
+
 where period_display like '%Total%'  -- 4204  
 
 -- 
