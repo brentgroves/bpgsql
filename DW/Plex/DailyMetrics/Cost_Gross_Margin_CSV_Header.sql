@@ -1,0 +1,1 @@
+Customer_Code,Salesperson,Order_No,PO_No,Invoice_No,Part_No,Part_Revision,Customer_Part_No,Customer_Part_Revision,Part_Description,Production_Qty,Sales_Qty,Unit_Price,Revenue,Part_Type,PO_Type,Net_Weight,Customer_Abbreviated_Name,Customer_Currency_Code,Part_Revision_2,Customer_Part_No_2,Customer_Part_Revision_2,Master_No,material,labor,overhead,gross_margin,percent_of_revenue
