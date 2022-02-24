@@ -3,10 +3,11 @@ Customer,Salesperson,Order No,Cust PO,Invoice No,Part No,Part Revision,Customer 
 Unit Price,Revenue,Part_Type,PO_Type,Net_Weight,Customer_Abbreviated_Name,Customer_Currency_Code,Part_Revision,Customer_Part_No,Customer_Part_Revision,
 Master_No,Material Material,Labor Production,Overhead Variable,Gross Margin,Percent of Revenue
 
+drop table Plex.cost_gross_margin_daily_download
 CREATE TABLE mgdw.Plex.cost_gross_margin_daily_download (
 	PCN int NOT NULL,
 	Report_Date datetime NULL,
-	Customer_Code varchar(35) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Customer_Code varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	Salesperson varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	Order_No varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	PO_No varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,  -- labeled as Cust PO
@@ -24,7 +25,7 @@ CREATE TABLE mgdw.Plex.cost_gross_margin_daily_download (
 	PO_Type varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	Net_Weight decimal(19,5) NULL,
 	Customer_Abbreviated_Name varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	Customer_Currency_Code varchar(10) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Customer_Currency_Code varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	Part_Revision_2 varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, -- Labeled as Part Revision, 2 columns have the same name.
 	Customer_Part_No_2 varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, -- Labeled as Customer_Part_No, 2 columns have the same name,
 	Customer_Part_Revision_2 varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL, -- Labeled as Customer_Part_Revision, 2 columns have the same name,

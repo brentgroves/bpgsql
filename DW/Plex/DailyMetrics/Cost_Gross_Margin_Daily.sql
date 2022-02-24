@@ -52,3 +52,45 @@ CREATE TABLE mgdw.Plex.Cost_Gross_Margin_Daily (
 select distinct pcn,Report_Date  from Plex.Cost_Gross_Margin_Daily order by pcn,Report_Date 
 
 select * from Plex.Cost_Gross_Margin_Get
+create view Plex.Cost_Gross_Margin_Daily_View
+as
+select 
+	PCN,
+	Plexus_Customer_Code,
+	DATEADD(dd, 0, DATEDIFF(dd, 0, report_date)) report_date,
+	Customer_Code,
+	Salesperson,
+	Order_No,
+	PO_No,
+	Part_No,
+	Product_Type,
+	Part_Description,
+	Sales_Qty,
+	Sales_Unit,
+	Quantity,
+	Quantity_Unit,
+	Unit_Price,
+	Revenue,
+	Invoice_No,
+	Part_Type,
+	Part_Group,
+	PO_Type,
+	Net_Weight,
+	Total,
+	Customer_Abbreviated_Name,
+	Customer_Currency_Code,
+	Gross_Margin_Key,
+	Customer_Category,
+	Customer_Type,
+	Part_Source,
+	Production_Qty,
+	case 
+	when part_revision is null then ''
+	else part_revision 
+	end revision,
+	Customer_Part_No,
+	Customer_Part_Revision,
+	Sequence_No,
+	Master_No,
+	Cost_Model_Key
+	from Plex.Cost_Gross_Margin_Daily  

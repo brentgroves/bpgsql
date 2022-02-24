@@ -13,7 +13,10 @@ CREATE TABLE Plex.cost_sub_type_breakdown_matrix(
 	revision varchar(8) null
 	
 )
-select * from Plex.cost_sub_type_breakdown_matrix m
+select * 
+select count(*)
+from Plex.cost_sub_type_breakdown_matrix m
+where Revision != ''
 
 -- select distinct m.cost_type from Plex.cost_sub_type_breakdown_matrix m  -- 1559  --join part_description 
 /*
@@ -113,11 +116,77 @@ select * from Plex.cost_sub_type_breakdown_matrix_download;  -- 534  -- join par
 select * from Plex.cost_type_breakdown_matrix_download d -- 534 -- join part_description
 select * from Plex.cost_sub_type_breakdown_matrix_view -- 534
 
--- Does all 3 data sources show the same material cost?       
+-- Does all 3 data sources show the same material cost?   
+-- I downloaded inactive part numbers when I created the 2 download tables.
+-- So disregard these part numbers.    
+select *
+--select count(*)
+from Plex.cost_sub_type_breakdown_matrix_download_view d 
+where d.pcn = 300758  -- 534
+
+select *
+--select count(*)
+from Plex.cost_type_breakdown_matrix_download t 
+where t.pcn = 300758  -- 534
+
+select *
+--select count(*)
+from Plex.cost_sub_type_breakdown_matrix_download_view d 
+inner join  Plex.cost_type_breakdown_matrix_download t 
+on d.pcn = t.pcn 
+and d.part_description  = t.part_description 
+and d.revision = t.revision -- 534
+
+
+
+select *
+--select count(*)
+from Plex.cost_sub_type_breakdown_matrix_download_view d 
+inner join  Plex.cost_type_breakdown_matrix_download t 
+on d.pcn = t.pcn 
+and d.part_description  = t.part_description 
+and d.revision = t.revision -- 534
+left outer join Plex.cost_sub_type_breakdown_matrix_view v -- no pcn info since pivot removed it.
+on v.pcn = d.pcn
+and v.part_no = d.part_description 
+and v.revision = d.revision -- 534
+where d.pcn = 300758  -- 534
+and d.part_description not in ('A82833LH','10009044','A82832RH')  -- these are inactive part numbers 
+--and d.overhead = t.overhead  -- 531
+--and v.overhead = t.overhead  -- 531
+--and v.overhead = d.overhead  -- 531
+--and d.total = t.total  -- 531
+--and v.total = t.total  -- 531
+--and v.total = d.total  -- 531
+--and d.subcontract = t.subcontract  -- 531
+--and v.subcontract = t.subcontract  -- 531
+--and v.subcontract = d.subcontract  -- 531
+--and d.labor = t.labor  -- 531
+--and v.labor = t.labor  -- 531
+--and v.labor = d.labor  -- 531
+--and d.material = t.material  -- 531
+--and v.material = t.material  -- 531
+and v.material = d.material  -- 531
+
+select *
+from Plex.Cost_Sub_Type_Breakdown_Matrix m
+where m.PCN = 300758
+and m.part_description in ('A82833LH','10009044','A82832RH')
+
+'A82833LH'	'D'
+'10009044'	'G'
+'A82832RH'	'D'
+	10009044	G
+2	A82832RH	D
+3	A82833LH	D
+
+
 select v.*
 select count(*) cnt 
 --into Scratch.missing_parts
 from Plex.cost_sub_type_breakdown_matrix_view v -- no pcn info since pivot removed it.
+where v.pcn = 300758  -- 531
+
 inner join Plex.cost_sub_type_breakdown_matrix_download_view d 
 on v.pcn = d.pcn
 and v.part_no = d.part_description 
