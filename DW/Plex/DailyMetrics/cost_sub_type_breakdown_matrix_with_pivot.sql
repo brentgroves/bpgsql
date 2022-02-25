@@ -129,10 +129,15 @@ from
 	
 ) r 
 	where revision is not null 
-
+	
+	
+select * 
+from Plex.Cost_Sub_Type_Breakdown_Matrix
+where Part_Description like '%RFA%'
 select *
 --select distinct pcn,cost_model_key,cost_date
 from  Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+--where m.part_no = '%RFA%'
 where m.cost_date = 'Feb 22 2022  4:17AM'
 
 -- Do we have all the PCN in the Cost_Sub_Type_Breakdown_Matrix 

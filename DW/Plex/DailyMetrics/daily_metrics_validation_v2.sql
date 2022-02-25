@@ -9,9 +9,9 @@ DW table to validate the Plex daily_shift_report_get web service.
 /*
  * Days to validate: 2022-02-15 to 2022-02-21
  */
-select distinct pcn,Report_Date  from Plex.daily_shift_report 
+select distinct pcn,Report_Date  from Plex.daily_shift_report_view 
 where pcn = 300758
-order by pcn, Report_Date 
+order by pcn, Report_Date -- 2022-02-08 to 2022-02-23
 
 Does the web service get the same number of records as the Plex report download? Yes, 2022_02_22 14:52
 select count(*) from Plex.daily_shift_report_download  -- 86

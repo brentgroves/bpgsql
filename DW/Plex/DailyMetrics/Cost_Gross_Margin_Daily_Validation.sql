@@ -1,6 +1,8 @@
 
 Are there the correct number of records?
 
+select distinct pcn,Report_Date  from Plex.Cost_Gross_Margin_Daily_View  order by pcn,Report_Date 
+
 select distinct pcn,Report_Date  
 select count(*)
 from Plex.Cost_Gross_Margin_Daily_View g 
@@ -8,9 +10,10 @@ where g.PCN = 300758 and g.Report_Date = '2022-02-15'  -- 30
 order by pcn,Report_Date 
 
 select distinct pcn,report_date 
-select count(*)
+--select count(*)
 from Plex.cost_gross_margin_daily_download d 
 where d.PCN = 300758 and d.Report_Date = '2022-02-15' -- 30
+order by pcn,Report_Date
 
 Do the columns we need in the Daily Metrics 
 have the same values as in the daily shift report CSV download?
@@ -41,8 +44,8 @@ and g.revision=d.part_revision
 where g.PCN = 300758 and g.Report_Date = '2022-02-15'  -- 30
 --and g.sales_qty = d.sales_qty -- 30
 --and g.quantity = d.production_qty -- 30
+--and (g.quantity != d.production_qty)  ---0
 --and g.unit_price = d.unit_price -- 23
 and (((g.unit_price - d.unit_price) < -0.01) or ((g.unit_price - d.unit_price) > 0.01)) -- 0
---and (g.quantity != d.production_qty)  ---0
 order by g.pcn,g.Report_Date 
 
