@@ -10,7 +10,7 @@ as
 	select pcn,report_date,part_no,
 	revision,
 	max(operation_no) max_operation_no
-	from Plex.daily_shift_report_get_view g 
+	from Plex.daily_shift_report_view g 
 	group by g.pcn,g.report_date,g.part_no,g.revision  --182
 	--having part_no = 'H2GC 5K652 AB'
 	
@@ -20,7 +20,7 @@ as
 (
 	select m.max_operation_no,g.* 
 	from max_operation_no m 
-	join Plex.daily_shift_report_get_view g -- add all workcenters for that operation
+	join Plex.daily_shift_report_view g -- add all workcenters for that operation
 	on m.pcn = g.pcn
 	and m.report_date = g.report_date 
 	and m.part_no = g.part_no 
@@ -46,7 +46,7 @@ as
 	select o.pcn,o.report_date,g.part_name,
 	o.part_no,o.revision,o.operation_no,sum(g.quantity_produced) quantity_produced 
 	from part_last_operation o -- primary key for result set 
-	join Plex.daily_shift_report_get_view g -- add all the workcenters 
+	join Plex.daily_shift_report_view g -- add all the workcenters 
 	on o.pcn = g.pcn
 	and o.report_date = g.report_date 
 	and o.part_no = g.part_no 
@@ -63,7 +63,7 @@ as
 	sum(parts_scrapped) parts_scrapped,
 	sum(earned_hours) earned_hours,
 	sum(actual_hours) actual_hours
-	from Plex.daily_shift_report_get_view g 
+	from Plex.daily_shift_report_view g 
 	group by g.pcn,g.report_date,g.part_no,g.revision  
 	--having part_no = 'H2GC 5K652 AB'
 ),

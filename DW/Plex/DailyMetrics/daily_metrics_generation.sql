@@ -25,6 +25,7 @@ Definitions
 Plex.Daily_Shift_Report -- The ETL script copies the Plex daily_shift_report_get web service data into this table.
 Plex.Cost_Gross_Margin_Daily -- The ETL script copies the Plex cost_gross_margin_get web service data into this table.
 Plex.Cost_Sub_Type_Breakdown_Matrix -- The ETL script copies the Plex cost_sub_type_breakdown_matrix web service data into this table.
+Plex.part_final_production_operation_view --  Use to help calculate the Gross Volume produced.
 
 Testing Only:
 Plex.gross_margin_report -- The ETL script copies the Plex cost_gross_margin_get web service data into this table.

@@ -66,4 +66,40 @@ Quantity Produced
 Labor Hours Earned
 Labor Hours Actual
 
+/*
+ * Do we know the final production operation for all needed parts?
+ */
+
+select distinct pcn from Plex.daily_shift_report_view  
+select distinct pcn,report_date  from Plex.daily_shift_report_view  order by pcn,report_date 
+select distinct pcn,report_date  from Plex.daily_shift_report  order by pcn,report_date 
+
+select count(*)
+from 
+(
+	select distinct pcn,part_no,revision from Plex.daily_shift_report_view  
+	
+)s -- 380
+
+select * 
+--select count(*)
+from Plex.part_final_production_operation_view f  -- 1,079
+
+with daily_shift_report_part_list 
+as 
+(
+	select distinct pcn, part_key,part_no,revision from Plex.daily_shift_report_view g 
+)
+select p.Plexus_Customer_Code,s.part_no,s.revision
+--select count(*) cnt 
+from daily_shift_report_part_list s 
+left outer join Plex.part_final_production_operation_view f 
+on s.pcn = f.pcn 
+and s.part_key = f.part_key 
+inner join  Plex.Enterprise_PCNs_Get p 
+on s.pcn = p.PCN 
+where f.pcn is null -- 51
+
+
+
 
