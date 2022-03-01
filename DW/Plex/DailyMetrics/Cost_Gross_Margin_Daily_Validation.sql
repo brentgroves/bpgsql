@@ -1,6 +1,7 @@
 
 Are there the correct number of records?
 
+
 select distinct pcn,Report_Date  from Plex.Cost_Gross_Margin_Daily_View  order by pcn,Report_Date 
 
 select distinct pcn,Report_Date  

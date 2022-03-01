@@ -54,6 +54,7 @@ CREATE TABLE mgdw.Plex.Daily_Shift_Report (
 
 select * from Plex.Daily_Shift_Report dsr 
 
+--drop view Plex.daily_shift_report_view
 create view Plex.daily_shift_report_view
 as 
 select 
@@ -65,12 +66,28 @@ case
 when part_revision is null then ''
 else part_revision 
 end revision,
-operation_no,operation_code,downtime_hours,planned_production_hours,
-parts_produced,parts_scrapped,scrap_rate,utilization,efficiency,oee,
-earned_hours,actual_hours,labor_efficiency,
+operation_no,operation_code,
+downtime_hours,planned_production_hours,
+parts_produced,
+case 
+when parts_scrapped is null then 0
+else Parts_Scrapped
+end parts_scrapped,
+scrap_rate,utilization,efficiency,oee,
+case 
+when earned_hours is null then 0 
+else earned_hours
+end earned_hours,
+case 
+when actual_hours is null then 0 
+else actual_hours 
+end actual_hours,
+labor_efficiency,
 earned_machine_hours,actual_machine_hours,
 part_operation_key,quantity_produced,workcenter_rate,labor_rate,crew_size,
 department_unassigned_hours,child_part_count,operators,note,accounting_job_nos
 --select count(*) 
-from Plex.daily_shift_report;
+from Plex.daily_shift_report
+where part_no not like 'MO%'; -- no multi out parts 
+
 

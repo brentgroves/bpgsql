@@ -67,8 +67,22 @@ Labor Hours Earned
 Labor Hours Actual
 
 /*
- * Do we know the final production operation for all needed parts?
+ * Do we know the shippable part operation for all needed parts?
+Thank you guys for finding the shippable part operations for the Daily Metrics, column 15, Volume produced calc.
+Out of all the daily shift report entries that have been transfered to the DW we are only missing 4.
+/*
+Mobex Global Aluminum Fruitport, MI 5246
+Mobex Global Albion 501-0994-05 8
+Mobex Global Albion 51215T6N A000 00-
+Mobex Global Albion 51210T6N A000 00-
+*/
+4 that we don't know the shippable part operation for.
+I will keep track of these and ask about them at our next meeting.
+
  */
+select * 
+--select count(*)
+from Plex.part_operation_shippable_view
 
 select distinct pcn from Plex.daily_shift_report_view  
 select distinct pcn,report_date  from Plex.daily_shift_report_view  order by pcn,report_date 
@@ -79,26 +93,73 @@ from
 (
 	select distinct pcn,part_no,revision from Plex.daily_shift_report_view  
 	
-)s -- 380
+)s -- 386
 
 select * 
 --select count(*)
-from Plex.part_final_production_operation_view f  -- 1,079
+from Plex.part_operation_shippable_view  -- 1,662
+
+select count(*)
+from 
+(
+	select distinct pcn,report_date,part_key,part_no,revision from Plex.daily_shift_report_view  
+	
+)s -- 3,383
+
+/*
+ * How many daily shift report records are there with a shippable operation?
+ */
+select count(*) 
+from 
+(
+select ep.Plexus_Customer_Code,ds.part_no,ds.revision,sh.operation_no shippable_operation
+-- select *
+--select count(*) cnt 
+from Plex.daily_shift_report_view ds --
+left outer join Plex.part_operation_shippable_view sh 
+on ds.pcn = sh.pcn 
+and ds.part_key = sh.part_key 
+and ds.operation_no = sh.operation_no 
+inner join  Plex.Enterprise_PCNs_Get ep
+on ds.pcn = ep.PCN 
+where sh.pcn is not null 
+and ds.report_date  between '2022-02-08' AND '2022-02-27' -- date range FOR TESTING ONLY
+--where sh.pcn is null -- 30
+)s -- 3017
+
 
 with daily_shift_report_part_list 
 as 
 (
-	select distinct pcn, part_key,part_no,revision from Plex.daily_shift_report_view g 
+	select distinct pcn, part_key,part_no,revision from Plex.daily_shift_report_view g --
 )
-select p.Plexus_Customer_Code,s.part_no,s.revision
+--select count(*) from daily_shift_report_part_list  -- 344 -- no multi-out parts.
+
+select count(*) 
+from 
+(
+select ep.Plexus_Customer_Code,ds.part_no,ds.revision,sh.operation_no shippable_operation
 --select count(*) cnt 
-from daily_shift_report_part_list s 
-left outer join Plex.part_final_production_operation_view f 
-on s.pcn = f.pcn 
-and s.part_key = f.part_key 
-inner join  Plex.Enterprise_PCNs_Get p 
-on s.pcn = p.PCN 
-where f.pcn is null -- 51
+from daily_shift_report_part_list ds 
+left outer join Plex.part_operation_shippable_view sh 
+on ds.pcn = sh.pcn 
+and ds.part_key = sh.part_key 
+inner join  Plex.Enterprise_PCNs_Get ep
+on ds.pcn = ep.PCN 
+where sh.pcn is not null 
+--where sh.pcn is null -- 30
+)s -- 340
+
+
+/*
+Mobex Global Aluminum Fruitport, MI	5246	
+Mobex Global Albion	501-0994-05	8
+Mobex Global Albion	51215T6N A000	00-
+Mobex Global Albion	51210T6N A000	00-
+ */
+select * from Plex.Part_Operation po 
+where po.Part_No in ('5246','501-0994-05','51215T6N A000','51210T6N')
+
 
 
 

@@ -50,7 +50,8 @@ CREATE TABLE mgdw.Plex.Cost_Gross_Margin_Daily (
 
 	 
 select distinct pcn,Report_Date  from Plex.Cost_Gross_Margin_Daily order by pcn,Report_Date 
-
+select * from Plex.Cost_Gross_Margin_Daily 
+select * from Plex.Cost_Gross_Margin_Daily_View  order by pcn,Report_Date 
 select * from Plex.Cost_Gross_Margin_Get
 create view Plex.Cost_Gross_Margin_Daily_View
 as
