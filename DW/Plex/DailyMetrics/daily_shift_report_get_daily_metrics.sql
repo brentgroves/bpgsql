@@ -29,7 +29,7 @@ as
 	sum(actual_hours) actual_hours-- view changes null to 0
 	from Plex.daily_shift_report_view ds 
 	group by ds.pcn,ds.report_date,ds.part_key,ds.part_no,ds.revision 
-	having ds.report_date  between '2022-02-08' AND '2022-02-27' -- date range FOR TESTING ONLY
+	--having ds.report_date  between '2022-02-08' AND '2022-02-27' -- date range FOR TESTING ONLY
 
 	--having part_no = 'H2GC 5K652 AB'
 ),
@@ -48,7 +48,7 @@ as
 	and ds.operation_no = so.operation_no 
 --	where so.pcn is null  -- 4,352
 	where so.pcn is not null -- 3017
-	and ds.report_date  between '2022-02-08' AND '2022-02-27' -- date range FOR TESTING ONLY
+	--and ds.report_date  between '2022-02-08' AND '2022-02-27' -- date range FOR TESTING ONLY
 ),
 --select count(*) 
 --from shippable_operation_only so 
@@ -72,11 +72,34 @@ as
 --select * 
 --select count(*)
 --from shippable_quantity_produced  -- 2,522
+daily_shift_report_part_list 
+as 
+(
+	select distinct pcn, part_key from Plex.daily_shift_report_view g --
+),
+no_shippable_part_operation 
+as 
+( 
+	select ds.pcn,ds.part_key
+	--select count(*) cnt 
+	from daily_shift_report_part_list ds 
+	left outer join Plex.part_operation_shippable_view sh 
+	on ds.pcn = sh.pcn 
+	and ds.part_key = sh.part_key 
+	--where sh.pcn is not null 
+	where sh.pcn is null -- 30
+),
+--select * from no_shippable_part_operation 
+
 daily_shift_report_sums 
 as 
 (
-	-- calcs involving last op sums 
+	
 	select ao.pcn,ao.report_date,ao.part_key,ao.part_no,ao.revision,
+	case 
+	when ns.part_key is null then 0
+	else 1
+	end valid,
 	case 
 	when so.quantity_produced is null then 0 
 	else so.quantity_produced  
@@ -89,24 +112,34 @@ as
 	ao.earned_hours,-- view changes null to 0
 	ao.actual_hours-- view changes null to 0
 	from all_operation_sum ao  
+	left outer join no_shippable_part_operation ns -- we do not have/know the shippable operation for some parts 
+	on ao.pcn = ns.pcn 
+	and ao.part_key = ns.part_key 
 	left outer join shippable_quantity_produced so -- not all pcn,report_date,part_key combos have shippable parts.
 	on ao.pcn=so.pcn 
 	and ao.report_date = so.report_date 
 	and ao.part_key = so.part_key 
+	
 	--where so.pcn is null  -- 861
 	--where so.pcn is not null  -- 2,522
 	
 )
+
 select * 
 --select count(*)
 from daily_shift_report_sums  -- 3,383
+--where valid =1
 
 select * 
 --select count(*)
 from Plex.daily_shift_report_get_daily_metrics_view  -- 3,383
-
+where valid = 1
+where part_no = '51210T6N A000'  -- 1 out of 5 records have all values.  I think this is inactive. Revision 01 01 has 2 entries and 1 has values.
+and report_date = '2022-02-14 00:00:00.000'
+--where Part_No in ('5246','501-0994-05','51215T6N A000','51210T6N')
+order by part_no 
 /* 
- * What daily shift report part number are we missing from this view?
+ * What daily shift report part number are we missing from this view?  None
  */
 
 select * 
@@ -122,7 +155,9 @@ and ds.part_key = dm.part_key
 where dm.pcn is not null --7,369
 --where dm.pcn is null -- 0
 
-
+/*
+ * Are the parts with the missing shippable part operation data on the report
+ */
 
 
 

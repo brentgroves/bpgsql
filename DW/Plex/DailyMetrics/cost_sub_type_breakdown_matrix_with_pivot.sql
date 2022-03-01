@@ -51,6 +51,7 @@ select
 pcn,
 cost_model_key,
 cost_date,
+part_key,
 part_no,
 case 
 when revision is null then ''
@@ -73,8 +74,9 @@ from
 --	replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.') SecondHalf
 	-- first replace is only needed if dots are in the original data.
 	-- last replace is needed only because there are dots in the revision and maybe the part NO 
-	replace(reverse(parsename(replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.'),1)),'+','.') part_no,
-	replace(reverse(parsename(replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.'),2)),'+','.') revision, 
+	replace(reverse(parsename(replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.'),1)),'+','.') part_key,
+	replace(reverse(parsename(replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.'),2)),'+','.') part_no,
+	replace(reverse(parsename(replace(reverse(reverse(parsename(REPLACE(REVERSE(replace(pcn_model_date_part_revision,'.','+')),'|','.'),4))),'&','.'),3)),'+','.') revision, 
 	
 	case 
 	when material is null then 0
@@ -108,8 +110,8 @@ from
 		FROM 
 		   ( 
 		   		select 
-	--	   		CONCAT(m.pcn,'|',m.cost_date,'|',m.part_description,'|',m.revision) pcn_model_date_part_revision,  -- This will be the primary key
-		   		CONCAT(m.pcn,'|',m.cost_date,'|',m.cost_model_key,'|',m.part_description,'&',m.revision) pcn_model_date_part_revision,  -- This will be the primary key
+		   		CONCAT(m.pcn,'|',m.cost_date,'|',m.cost_model_key,'|',m.part_key,'&',m.part_description,'&',m.revision) pcn_model_date_part_revision,  -- This will be the primary key
+		   --		CONCAT(m.pcn,'|',m.cost_date,'|',m.cost_model_key,'|',m.part_description,'&',m.revision) pcn_model_date_part_revision,  -- This will be the primary key
 	--	   		CONCAT(m.pcn,'|',m.cost_model_key,'|',m.cost_date,'|',m.part_description,'|',m.revision) pcn_model_date_part_revision,  -- This will be the primary key
 		   		m.cost_type,m.cost  
 		--   		m.part_description+m.revision,m.cost_type,m.cost  -- strange results maybe trucation occurring

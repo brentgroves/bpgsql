@@ -152,15 +152,88 @@ where sh.pcn is not null
 
 
 /*
-Mobex Global Aluminum Fruitport, MI	5246	
-Mobex Global Albion	501-0994-05	8
-Mobex Global Albion	51215T6N A000	00-
-Mobex Global Albion	51210T6N A000	00-
+Mobex Global Aluminum Fruitport, MI	5246 -- everything equals zero.	
+Mobex Global Albion	501-0994-05	8 -- downtime_hours, planned_production_hours both = 3.16667
+Mobex Global Albion	51215T6N A000	00- --5 records everything equals zero,  I think this is inactive.  Revision 01 01 has 4 entries with values for the same operation.
+Mobex Global Albion	51210T6N A000	00- -- 1 out of 5 records have all values.  I think this is inactive. Revision 01 01 has 2 entries and 1 has values.
  */
 select * from Plex.Part_Operation po 
 where po.Part_No in ('5246','501-0994-05','51215T6N A000','51210T6N')
 
+/*
+ * What kind of activity is showing up on the daily shift report for these parts?
+ */
+select *
+from Plex.daily_shift_report_view 
+--where part_no = '5246'  -- everything equals zero.
+--where part_no = '501-0994-05 Rev 8'  -- downtime_hours, planned_production_hours both = 3.16667
+--where part_no = '51215T6N A000'  '00-' --5 records everything equals zero,  I think this is inactive.  Revision 01 01 has 4 entries with values for the same operation.
+where part_no = '51210T6N A000'  -- 1 out of 5 records have all values.  I think this is inactive. Revision 01 01 has 2 entries and 1 has values.
+and report_date = '2022-02-14 00:00:00.000'
+/* 
+ * What daily shift report part number are we missing from daily_shift_report_get_daily_metrics_view?  None
+ */
 
+select * 
+select count(*)
+from 
+(
+	select pcn,report_date,part_key,part_no,revision from Plex.daily_shift_report_view ds 
+) ds
+left outer join Plex.daily_shift_report_get_daily_metrics_view dm   -- 3,383
+on ds.pcn = dm.pcn 
+and ds.report_date = dm.report_date 
+and ds.part_key = dm.part_key 
+where dm.pcn is not null --7,369
+--where dm.pcn is null -- 0
+
+/*
+ * Are the parts with the missing shippable part operation data on the report? Yes
+ * Do they have the same data as the daily shift report?  No. but we added a valid column 
+ * to identify parts that we do not know the shippable operation for.
+ */
+select * 
+from Plex.daily_shift_report_get_daily_metrics_view dm 
+where part_no = '51210T6N A000'  -- 1 out of 5 records have all values.  I think this is inactive. Revision 01 01 has 2 entries and 1 has values.
+and report_date = '2022-02-14 00:00:00.000'
+
+--where dm.Part_No in ('5246','501-0994-05','51215T6N A000','51210T6N A000')
+--and dm.revision != '01 01'
+order by part_no 
+
+/*
+ * Does Plex.daily_shift_report_get_daily_metrics_view have the same number of parts as the
+ * daily shfit report?
+ */
+select count(*)
+from 
+(
+	select distinct pcn,report_date, part_key from Plex.daily_shift_report_view 
+)s --3,575
+select count(*)
+from 
+(
+	select distinct pcn,report_date,part_key  from Plex.daily_shift_report_get_daily_metrics_view 
+)s -- 3,575
+
+
+/*
+ * Is there a Plex.cost_sub_type_breakdown_matrix material cost record for each part number in the daily shift report? 
+ */
+select distinct ep.Plexus_Customer_Code,dm.part_no,dm.revision  
+--ct.material,dm.* 
+-- select *
+from Plex.daily_shift_report_get_daily_metrics_view dm
+left outer join 
+(
+	select pcn,part_key,material  from Plex.cost_sub_type_breakdown_matrix_pivot_view 
+)ct 
+on dm.pcn = ct.pcn 
+and dm.part_key = ct.part_key 
+inner join  Plex.Enterprise_PCNs_Get ep
+on dm.pcn = ep.PCN 
+where ct.pcn is null -- 24
+order by dm.pcn,dm.part_no  
 
 
 
