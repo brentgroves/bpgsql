@@ -7,6 +7,9 @@
 
 -- DROP TABLE mgdw.Plex.Cost_Gross_Margin_Daily;
 
+-- use our part numbers 
+price from shipper. 
+
 CREATE TABLE mgdw.Plex.Cost_Gross_Margin_Daily (
 	PCN int NOT NULL,
 	Plexus_Customer_Code varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -48,7 +51,6 @@ CREATE TABLE mgdw.Plex.Cost_Gross_Margin_Daily (
 	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 100  ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
 	 ON [PRIMARY ] ;
 
-	 
 select distinct pcn,Report_Date  from Plex.Cost_Gross_Margin_Daily order by pcn,Report_Date 
 select * from Plex.Cost_Gross_Margin_Daily 
 select * from Plex.Cost_Gross_Margin_Daily_View  order by pcn,Report_Date 

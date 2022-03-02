@@ -1,3 +1,6 @@
+/*
+ * Do we know the shippable part operation for all needed parts?
+ */
 
 Are there the correct number of records?
 

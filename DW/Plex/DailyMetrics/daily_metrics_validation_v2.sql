@@ -235,5 +235,54 @@ on dm.pcn = ep.PCN
 where ct.pcn is null -- 24
 order by dm.pcn,dm.part_no  
 
+/*
+ * What is the primary_key?
+ * Or what is on the information line of the gross margin report to the left of the cost and quantity data. 
+ * 
+ * 
+ */
+	
+-- Customer	Salesperson	Order No	Cust PO	Invoice No	Part No	Customer Part No	Description
+select * 
+select Plexus_Customer_Code,report_date,Part_No,Customer_Part_No,Sales_Qty,Unit_Price,gm.PO_No
+--,gm.Order_No
+from Plex.Cost_Gross_Margin_Daily_View gm
+order by gm.pcn,gm.report_date, Part_No 
+
+/*
+ * Is it possible to join sales_qty and price to the parts in the daily shift report?
+ * 
+ */
+a
+This data set has all L
+
+/*
+ * Can we detect parts sold with different prices?
+ */
+with all_po
+as 
+(
+	select Plexus_Customer_Code,report_date,Part_No,Customer_Part_No,Sales_Qty,Unit_Price,gm.PO_No
+	from Plex.Cost_Gross_Margin_Daily_View gm
+),
+--select * from all_po 
+daily_part_po_count 
+as 
+( 
+	select ap.Plexus_Customer_Code,ap.report_date,ap.Part_No,count(*) po_count
+	from all_po ap 
+	group by ap.Plexus_Customer_Code,ap.report_date,ap.Part_No
+)
+select * from daily_part_po_count 
+where Part_No like '%100998%'
+where po_count > 1
+ 
+--,gm.Order_No
+
+
+order by gm.pcn,gm.report_date, Part_No 
+
+
+
 
 
