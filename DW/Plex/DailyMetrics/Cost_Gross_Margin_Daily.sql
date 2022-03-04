@@ -112,6 +112,7 @@ as
 		from Plex.Cost_Gross_Margin_Daily 
 
 -- drop view Plex.Cost_Gross_Margin_Daily_View
+--select * from Plex.Cost_Gross_Margin_Daily_View
 create view Plex.Cost_Gross_Margin_Daily_View
 as
 with all_po
@@ -130,7 +131,8 @@ as
 	count(distinct Unit_Price) price_count,
 	count(*) po_count,
 	min(Unit_Price) min_price,
-	max(Unit_Price) max_price
+	max(Unit_Price) max_price,
+	max(ap.valid) max_valid -- most important issue.
 	from all_po ap 
 	group by ap.pcn,ap.Plexus_Customer_Code,ap.report_date,ap.Part_No,ap.revision
 
@@ -194,7 +196,8 @@ select pa.pcn,pa.plexus_customer_code,pa.report_date,pa.part_no,pa.revision,
 case 
 when pl.price_list is null then ''
 else pl.price_list 
-end price_list 
+end price_list,
+pa.max_valid valid_13916
 from part_aggregate pa  
 left outer join price_list pl 
 on pa.pcn = pl.pcn 
@@ -202,7 +205,10 @@ and pa.report_date = pl.report_date
 and pa.part_no = pl.part_no 
 and pa.revision = pl.revision 
 
-order by mp.pcn,mp.report_date,mp.part_no,mp.revision 
+select * from Plex.Cost_Gross_Margin_Daily_View gm
+order by valid_13916 desc 
+order by gm.pcn,gm.report_date,gm.part_no,gm.revision 
+
 --	where Sales_Qty  < 0
 	where Unit_Price is null -- 74
 --	where Part_No != '' -- 67 in 2 weeks we have data 
