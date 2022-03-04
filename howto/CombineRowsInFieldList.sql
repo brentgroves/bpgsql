@@ -1,6 +1,49 @@
 --https://stackoverflow.com/questions/194852/how-to-concatenate-text-from-multiple-rows-into-a-single-text-string-in-sql-serv
 --https://stackoverflow.com/questions/6899/how-to-create-a-sql-server-function-to-join-multiple-rows-from-a-subquery-into
 --https://docs.microsoft.com/en-us/sql/relational-databases/xml/for-xml-sql-server?view=sql-server-2017
+If there is a table called STUDENTS
+
+SubjectID       StudentName
+----------      -------------
+1               Mary
+1               John
+1               Sam
+2               Alaina
+2               Edward
+Result I expected was:
+
+SubjectID       StudentName
+----------      -------------
+1               Mary, John, Sam
+2               Alaina, Edward
+I used the following T-SQL:
+
+SELECT Main.SubjectID,
+       LEFT(Main.Students,Len(Main.Students)-1) As "Students"
+FROM
+    (
+        SELECT DISTINCT ST2.SubjectID, 
+            (
+                SELECT ST1.StudentName + ',' AS [text()]
+                FROM dbo.Students ST1
+                WHERE ST1.SubjectID = ST2.SubjectID
+                ORDER BY ST1.SubjectID
+                FOR XML PATH (''), TYPE
+            ).value('text()[1]','nvarchar(max)') [Students]
+        FROM dbo.Students ST2
+    ) [Main]
+You can do the same thing in a more compact way if you can concat the commas at the beginning and use substring to skip the first one so you don't need to do a sub-query:
+
+SELECT DISTINCT ST2.SubjectID, 
+    SUBSTRING(
+        (
+            SELECT ','+ST1.StudentName  AS [text()]
+            FROM dbo.Students ST1
+            WHERE ST1.SubjectID = ST2.SubjectID
+            ORDER BY ST1.SubjectID
+            FOR XML PATH (''), TYPE
+        ).value('text()[1]','nvarchar(max)'), 2, 1000) [Students]
+FROM dbo.Students ST2
 
 	select 
 	Vendor,
