@@ -1,3 +1,35 @@
+-- mgdw.Plex.Part_Operation definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.Part_Operation;
+
+CREATE TABLE mgdw.Plex.Part_Operation (
+	PCN int NOT NULL,
+	Part_Operation_Key int NOT NULL,
+	Part_Key int NOT NULL,
+	Part_No nvarchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Revision nvarchar(8) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Part_No_Revision nvarchar(118) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Part_Description nvarchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Operation_No int NOT NULL,
+	Description nvarchar(1500) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Operation_Code nvarchar(30) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Net_Weight decimal(19,5) NOT NULL,
+	Standard_Container_Type nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Note nvarchar(500) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	Suboperation int NOT NULL,
+	Standard_Quantity decimal(19,5) NOT NULL,
+	Part_Op_Type nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Standard int NOT NULL,
+	Grade nvarchar(40) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	Shippable int NOT NULL,
+	Minimum_Quantity decimal(19,5) NOT NULL
+);
+ CREATE CLUSTERED INDEX IX_Part_Operation ON Plex.Part_Operation (  PCN ASC  , Part_Operation_Key ASC  )  
+	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 100  ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
+	 ON [PRIMARY ] ;
+	
 /*
 123681 Southfield
 295932 FruitPort
@@ -6,6 +38,12 @@
 306766 Edon
 310507 Avilla
 	*/
+/*
+ * Do we need a view to clean up null values
+ */	
+SELECT * from Plex.Part_Operation po 	
+WHERE revision IS NULL -- 0
+
 select count(*) cnt 
 from 
 (

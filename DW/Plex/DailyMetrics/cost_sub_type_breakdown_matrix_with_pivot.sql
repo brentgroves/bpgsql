@@ -135,10 +135,41 @@ from
 	
 select * 
 from Plex.Cost_Sub_Type_Breakdown_Matrix
+
 where Part_Description like '%RFA%'
 select *
 --select distinct pcn,cost_model_key,cost_date
 from  Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+
+
+select * 
+--select count(*)
+from Plex.daily_shift_report_get_view ds -- 3,336
+left outer join  Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+on ds.pcn = m.pcn 
+and ds.part_key = m.part_key -- 3400
+
+/*
+ * Are there duplicate pcn,part_key in the breakdown matrix?
+ */
+select pcn,part_key,count(*) part_key_count 
+from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+group by pcn,part_key 
+having count(*) > 1
+
+select *
+from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+where part_key in 
+(
+select part_key 
+from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+group by pcn,part_key 
+having count(*) > 1
+)
+order by pcn,part_key
+
+
+
 --where m.part_no = '%RFA%'
 where m.cost_date = 'Feb 22 2022  4:17AM'
 

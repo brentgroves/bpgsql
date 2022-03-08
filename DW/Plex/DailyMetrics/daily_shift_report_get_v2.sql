@@ -52,7 +52,34 @@ CREATE TABLE mgdw.Plex.Daily_Shift_Report (
 	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 100  ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
 	 ON [PRIMARY ] ;
 
-select * from Plex.Daily_Shift_Report dsr 
+select * 
+select count(*)
+--select distinct pcn,Report_Date 
+from Plex.Daily_Shift_Report dsr
+from Plex.Part_Operation po 
+
+order by pcn,Report_Date 
+--where pcn=300758
+--where Labor_Rate != 0  -- 6,266
+where Labor_Rate = 0  -- 3,966
+
+3,966 / 6,266
+select * 
+--select count(*)
+from Plex.daily_shift_report_get_view ds
+where part_no = 'H2GC 5K652 AB'
+order by report_date desc 
+and report_date = '2022-03-04'
+inner join Plex.part_operation_shippable_view po 
+on ds.pcn = po.PCN  
+and ds.part_key = po.Part_key 
+where Shippable = 1
+and Labor_Rate != 0  -- 2,028
+and Labor_Rate = 0  -- 1,273
+
+
+select * from Plex.daily_shift_report_view dsrgv 
+
 
 --drop view Plex.daily_shift_report_view
 create view Plex.daily_shift_report_view
@@ -88,6 +115,5 @@ part_operation_key,quantity_produced,workcenter_rate,labor_rate,crew_size,
 department_unassigned_hours,child_part_count,operators,note,accounting_job_nos
 --select count(*) 
 from Plex.daily_shift_report
-where part_no not like 'MO%'; -- no multi out parts 
 
 

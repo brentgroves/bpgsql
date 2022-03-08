@@ -108,9 +108,10 @@ as
 		when Sales_Qty <= 0 then 15 
 		else 0
 		end valid
+		select *
 		--select count(*)
 		from Plex.Cost_Gross_Margin_Daily 
-
+		where Sales_Qty 		
 -- drop view Plex.Cost_Gross_Margin_Daily_View
 --select * from Plex.Cost_Gross_Margin_Daily_View
 create view Plex.Cost_Gross_Margin_Daily_View
@@ -128,6 +129,12 @@ part_aggregate
 as 
 ( 
 	select ap.pcn,ap.Plexus_Customer_Code,ap.report_date,ap.Part_No,ap.revision,
+	sum(ap.sales_qty) shipped,
+	sum(ap.sales_qty*ap.unit_price) total_sales,  -- see validation tab of daily_metrics validation spreadsheet.
+	sum(ap.sales_qty*ap.unit_price) --total_sales,  -- see validation tab of daily_metrics validation spreadsheet.
+	/
+	sum(ap.sales_qty) -- shipped,
+	sell_price,		
 	count(distinct Unit_Price) price_count,
 	count(*) po_count,
 	min(Unit_Price) min_price,
@@ -193,6 +200,9 @@ as
 )
 --select * from price_list 
 select pa.pcn,pa.plexus_customer_code,pa.report_date,pa.part_no,pa.revision,
+shipped,
+sell_price,
+total_sales, 
 case 
 when pl.price_list is null then ''
 else pl.price_list 
@@ -204,6 +214,7 @@ on pa.pcn = pl.pcn
 and pa.report_date = pl.report_date 
 and pa.part_no = pl.part_no 
 and pa.revision = pl.revision 
+
 
 select * from Plex.Cost_Gross_Margin_Daily_View gm
 order by valid_13916 desc 

@@ -391,31 +391,65 @@ and ap.part_no = mp.part_no
 and ap.revision = mp.revision 
 order by mp.pcn,mp.report_date,mp.part_no,mp.revision 
 
-select 
-
-select *
---select count(*) 
-from multiple_price_count  
---where price_count >1  -- 110
---where price_count =2 -- 99
---where price_count =3 -- 10
---where price_count = 4 -- 1
-
-
-labor rate = parts per hour 
-
-Mobex Global Albion	2022-02-15 00:00:00.000	10115487	H	108.00000	190.8148100
-Mobex Global Albion	2022-02-15 00:00:00.000	10115487	H	36.00000	190.8147200
-Mobex Global Albion	2022-02-21 00:00:00.000	H2GC 5K652 AB		936.00000	62.5413000
-Mobex Global Albion	2022-02-21 00:00:00.000	H2GC 5K652 AB		66.00000	62.5413600
-
--- truncate table Plex.gross_margin_report gmr 
+/*
+Greg initially annotated the report specification spreadsheet with daily labor report for the source to get the labor rate, column id 75. 
+Do we have a labor rate for each part on the daily shift report?
+~62% out of the approximately 1 months' worth of data from all PCN records for the 
+daily shift report contains a 0 in the labor rate field for shippable part operations. 
+So, this might not be the best place to get the rate. 
+ * What percentage of the 
+ */
 select * 
---select * from Archive.gross_margin_report 
---into Archive.gross_margin_report 
-from Plex.gross_margin_report gmr 
-where part_no =e 'H2GC 5K652 AB'
-SELECT * FROM Plex.Daily_Metrics_Report_View
+--select count(*)
+from Plex.daily_shift_report_get_view ds
+inner join Plex.part_operation_shippable_view po 
+on ds.pcn = po.PCN  
+and ds.part_key = po.Part_key 
+where Shippable = 1
+and Labor_Rate != 0  -- 2,028
+and Labor_Rate = 0  -- 1,273
+
+/*
+ * Do we have a labor rate for each part on the cost type breakdown matrix?
+ */
+
+with max_part_cost_date 
+as 
+(
+	-- multiple pcn,part_key entry filter
+	select pcn,part_key,max(cost_date) cost_date 
+	from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+	group by pcn,part_key 
+
+),
+cost_matrix 
+as
+(
+	select m.*
+	from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View m
+	inner join max_part_cost_date mp 
+	on m.pcn = mp.pcn 
+	and m.part_key = mp.part_key 
+	and m.cost_date = mp.cost_date 
+)
+select ds.plexus_customer_code,ds.part_no,ds.part_name,ds.operation_code,ds.operation_no,m.labor,ds.quantity_produced 
+--po.Operation_No,po.shippable  
+--select count(*)
+from Plex.daily_shift_report_get_view ds -- 3,336
+--select * from Plex.part_operation_shippable_view po
+inner join Plex.part_operation_shippable_view po 
+on ds.pcn =po.PCN 
+and ds.part_key =po.Part_Key 
+and ds.operation_no = po.Operation_No 
+left outer join cost_matrix m 
+on ds.pcn = m.pcn 
+and ds.part_key = m.part_key -- 3,336
+--where m.pcn is null -- 39 
+--where m.labor > 0 -- 3,087
+where m.labor = 0 -- 210 
+and po.Shippable = 1
+and ds.quantity_produced !=0
+
 
 
 
