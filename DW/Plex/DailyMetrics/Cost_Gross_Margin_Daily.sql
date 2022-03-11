@@ -73,11 +73,14 @@ as
 		Part_No,
 		Product_Type,
 		Part_Description,
-		Sales_Qty,
+		Sales_Qty, -- no nulls detected
 		Sales_Unit,
 		Quantity,
 		Quantity_Unit,
-		Unit_Price,
+		case 
+		when Unit_Price is null then 0
+		else Unit_Price
+		end Unit_Price,
 		Revenue,
 		Invoice_No,
 		Part_Type,
@@ -108,10 +111,22 @@ as
 		when Sales_Qty <= 0 then 15 
 		else 0
 		end valid
-		select *
+		--select *
 		--select count(*)
 		from Plex.Cost_Gross_Margin_Daily 
-		where Sales_Qty 		
+/*
+ * Should we do any more cleanup in the above view?
+ */		
+		select *
+		-- select count(*)
+		from Plex.Cost_Gross_Margin_Daily 
+		--where Sales_Qty is null -- 0 
+--		where Unit_Price is null  -- 106
+/*
+ * Should we create a Plex.gross_margin_report_data_daily_metrics_criteria_view 
+ * criteria view?  Not at this point. First let us try highlighting issue that are 
+ * detected, so that they can be addressed if need be.
+ */		
 -- drop view Plex.Cost_Gross_Margin_Daily_View
 --select * from Plex.Cost_Gross_Margin_Daily_View
 create view Plex.Cost_Gross_Margin_Daily_View
@@ -119,6 +134,7 @@ as
 with all_po
 as 
 (
+	-- This is not needed.
 	select gm.*
 	--select count(*)
 	from Plex.Cost_Gross_Margin_View gm 
@@ -130,11 +146,16 @@ as
 ( 
 	select ap.pcn,ap.Plexus_Customer_Code,ap.report_date,ap.Part_No,ap.revision,
 	sum(ap.sales_qty) shipped,
-	sum(ap.sales_qty*ap.unit_price) total_sales,  -- see validation tab of daily_metrics validation spreadsheet.
-	sum(ap.sales_qty*ap.unit_price) --total_sales,  -- see validation tab of daily_metrics validation spreadsheet.
+	sum(ap.sales_qty*ap.unit_price) sales,  -- see validation tab of daily_metrics validation spreadsheet.
+	-- https://www.wikihow.com/Calculate-Weighted-Average
+	-- number is unit_price 
+	-- wieghting factor is sales_qty
+	-- sum of numnber * weighting factor / sum of all weights 
+	 
+	sum(ap.unit_price*ap.sales_qty) --sales,  -- see validation tab of daily_metrics validation spreadsheet.
 	/
 	sum(ap.sales_qty) -- shipped,
-	sell_price,		
+	sell_price,	
 	count(distinct Unit_Price) price_count,
 	count(*) po_count,
 	min(Unit_Price) min_price,
@@ -177,7 +198,8 @@ as
 	left(main.price_list,len(main.price_list)-1) as price_list 
 	from 
 	(
-	
+		-- create a list of po sales_qty and unit_price that are used to compute the sell price weighted average.
+		
 		select distinct pd2.pcn,pd2.Plexus_Customer_Code,pd2.report_date,pd2.part_no,pd2.revision, 
 			(
 				select 
@@ -200,14 +222,14 @@ as
 )
 --select * from price_list 
 select pa.pcn,pa.plexus_customer_code,pa.report_date,pa.part_no,pa.revision,
-shipped,
+shipped, -- column id#30
 sell_price,
-total_sales, 
+sales, 
 case 
 when pl.price_list is null then ''
 else pl.price_list 
 end price_list,
-pa.max_valid valid_13916
+pa.max_valid valid
 from part_aggregate pa  
 left outer join price_list pl 
 on pa.pcn = pl.pcn 
@@ -217,7 +239,7 @@ and pa.revision = pl.revision
 
 
 select * from Plex.Cost_Gross_Margin_Daily_View gm
-order by valid_13916 desc 
+order by valid desc 
 order by gm.pcn,gm.report_date,gm.part_no,gm.revision 
 
 --	where Sales_Qty  < 0

@@ -138,6 +138,7 @@ select *
 from daily_shift_report_sums  
 --where valid =1
 
+
 select * 
 --select count(*)
 from Plex.daily_shift_report_daily_metrics_view 

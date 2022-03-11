@@ -7,6 +7,44 @@ can be generated from Plex report download button. Import this data set into the
 DW table to validate the Plex daily_shift_report_get web service.
 
 /*
+ * How many distinct part numbers on the dsr or gm report do not have a labor rate in the cost model?
+ */
+-- select count(*)	from Plex.daily_shift_report_daily_metrics_view ds -- 4,946
+-- select count(*)	from Plex.daily_shift_report_data_daily_metrics_criteria_view ds -- 4,449
+
+--select * from Plex.daily_shift_report_data_daily_metrics_criteria_view
+select count(*) cnt
+from 
+(
+	select distinct pcn,part_key
+	from 
+	(
+		select ct.labor,ds.* 
+		--select count(*)
+		from Plex.daily_shift_report_data_daily_metrics_criteria_view ds -- 4,449
+		-- select * from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View ct
+		-- select distinct pcn,cost_model_key from Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View ct
+		left outer join  Plex.Cost_Sub_Type_Breakdown_Matrix_Pivot_View ct
+		on ds.pcn = ct.pcn 
+		and ds.part_key = ct.part_key -- 4,449
+		where ct.labor < 10 ds.pcn = 300758
+		--where ct.labor between 10 and 50
+		--where ds.part_no = '10037203'
+		--where (ct.pcn is null) or (ct.labor = 0) -- 259
+		--where ct.pcn is not null -- 4,445
+		--and ct.labor != 0 -- 4,190
+	--	where ct.pcn is null -- 4
+	--	where ct.labor = 0 -- 255
+	)s 
+)r 
+select * from Plex.Cost_Sub_Type_Breakdown_Matrix 
+select * from Plex.Daily_Shift_Report dsr 
+where part_no like 'R541475%'
+where ct.pcn is null -- 15
+R541475
+
+
+/*
  * Days to validate: 2022-02-15 to 2022-02-21
  */
 select distinct pcn,Report_Date  from Plex.daily_shift_report_view 
