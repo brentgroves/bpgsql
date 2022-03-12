@@ -32,7 +32,7 @@ as
 (  -- these sums are for all operations not just the final one.
 	select pcn,report_date,part_key,part_no,
 	revision,
-	sum(parts_scrapped) parts_scrapped, -- view changes null to 0
+	sum(parts_scrapped) parts_scrapped, -- Column ID: 10, view changes null to 0
 	sum(earned_hours) earned_hours,-- view changes null to 0
 	sum(actual_hours) actual_hours-- view changes null to 0
 	from Plex.daily_shift_report_daily_metrics_filter_view ds 
@@ -73,7 +73,8 @@ as
 (
 	select so.pcn,so.report_date,
 	so.part_name,
-	so.part_key,so.part_no,so.revision,so.operation_no,sum(so.quantity_produced) quantity_produced 
+	so.part_key,so.part_no,so.revision,so.operation_no,
+	sum(so.quantity_produced) quantity_produced -- Column Id: 5
 	from shippable_operation_only so -- primary key for result set 
 	group by so.pcn,so.report_date,so.part_name,so.part_key, so.part_no,so.revision,so.operation_no  
 ),
