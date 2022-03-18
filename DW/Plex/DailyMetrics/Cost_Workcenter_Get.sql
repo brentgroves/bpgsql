@@ -1,3 +1,45 @@
+--select * from Plex.Cost_Workcenter_Get cwg 
+create table Plex.Cost_Workcenter_Get 
+(
+	Cost_Model int null,
+  	Workcenter_Key int null,
+  	Workcenter_Code varchar(50) null,
+  	Name varchar(100) null,
+  	Part_Key int null,
+  	Part_Operation_Key int null,
+  	Operation_Key int null,
+  	Part_No int null,
+  	Revision varchar(8) null,
+  	Operation_No int null,
+  	Operation_Code varchar(30) null,
+  	Direct_Labor_Cost decimal(18,3) null, -- Checked data type in Plex
+  	Direct_Labor_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	Variable_Cost decimal(19,5) null, -- Checked data type in Plex
+  	Variable_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	Overhead_Cost decimal(19,5) null, -- Checked data type in Plex
+  	Overhead_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+	Setup_Time decimal(18,2) null,
+  	Setup_Time_Override decimal(9,2) null,
+  	Standard_Production_Rate decimal(19,9) null,
+  	Standard_Production_Rate_Override decimal(18,5) null,
+  	
+  	Crew_Size decimal(9,2) null, -- could not find this in schema
+ 	Crew_Size_Override decimal (9,2) null,
+  	Workcenter_Group varchar(50) null,
+  	WC_Group_Direct_Labor_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	WC_Group_Variable_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	WC_Group_Overhead_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+
+  	Part_Op_Variable_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	Part_Op_Overhead_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+  	Part_Op_Direct_Labor_Cost_Override decimal(18,5) null, -- Checked data type in Plex
+	Setup_Cost	decimal(19,5) null,
+  	Setup_Cost_Override decimal(18,5) null,
+  	WC_Group_Setup_Cost_Override decimal(18,5) null
+)
+
+select * from Plex.Cost_Workcenter_Get    
+
 CREATE PROCEDURE [dbo].[Cost_Workcenter_Get]
 (
   @PCN INT,

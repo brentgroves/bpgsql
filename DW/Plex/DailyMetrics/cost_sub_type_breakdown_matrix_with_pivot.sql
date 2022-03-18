@@ -3,7 +3,7 @@
 -- mgdw.Plex.Cost_Sub_Type_Breakdown_Matrix definition
 
 -- Drop table
-
+-- select distinct pcn from Plex.Cost_Sub_Type_Breakdown_Matrix
 -- DROP TABLE mgdw.Plex.Cost_Sub_Type_Breakdown_Matrix;
 /*
  * WRONG INDEX

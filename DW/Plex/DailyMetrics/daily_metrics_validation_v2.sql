@@ -37,13 +37,54 @@ from
 	--	where ct.labor = 0 -- 255
 	)s 
 )r 
+-- 
 select * from Plex.Cost_Sub_Type_Breakdown_Matrix 
-select * from Plex.Daily_Shift_Report dsr 
+where part_description like 'R541475%'
+--select * from Plex.Daily_Shift_Report dsr 
 where part_no like 'R541475%'
 where ct.pcn is null -- 15
 R541475
+/*
+ * Find a part that has multiple Workcenters producing the same part on a single day.
+ */
 
+with dsr
+as
+(
+	select *
+	--select count(*) 
+	from Plex.daily_shift_report_view  
+	where pcn = 300758 and report_date = '2022-02-21'  -- 86
+),
+multi_wc 
+as 
+(
+	select part_key,operation_no,count(*) workcenter_cnt  
+	from dsr 
+	group by part_key,operation_no 
+	having count(*) > 1
+),
+--select * from multi_wc 
+dsr_info 
+as 
+(
+	select d.* 
+	from dsr d 
+	join multi_wc m -- filter 
+	on d.part_key = m.part_key 
+	and d.operation_no = m.operation_no 
+	
+)
+select * from dsr_info 
 
+/*
+ * What are the 2 Workcenters for 10035420	Front Carrier, part_key 2795848?, wc=(61019,61020)
+ * What are the 2 Workcenter name? wc=61019=CNC 102 Front Carrier, 61020=CNC 317 Front Carrier
+ * 
+ */
+
+select * 
+from Plex
 /*
  * Days to validate: 2022-02-15 to 2022-02-21
  */
