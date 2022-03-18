@@ -32,20 +32,74 @@ where w.Direct_Labor_Cost is null -- 0
 /*
  * How do compute the workcenter labor cost  
  */
-select w.Direct_Labor_Cost,d.actual_hours,
-w.Direct_Labor_Cost * d.actual_hours direct_labor, -- Column id#80
-w.valid,d.*
---select count(*)
-from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
-join Plex.workcenter_view w 
-on d.pcn = w.PCN 
-and d.workcenter_key = w.Workcenter_Key -- 14,038
-where w.Direct_Labor_Cost =0 -- 5
-where w.Direct_Labor_Cost is null -- 0
+workcenter_labor 
+as 
+(
+	select 
+	w.Direct_Labor_Cost,w.valid,
+	w.Direct_Labor_Cost * d.actual_hours workcenter_labor, 
+	d.*
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	--where w.Direct_Labor_Cost =0 -- 5
+	--where w.Direct_Labor_Cost is null -- 0
+),
+
+/*
+ * What is total daily direcect labor cost per part  
+ */
+
+with direct_labor 
+as 
+(
+	select 
+	d.pcn,d.report_date,d.part_key,
+	sum(w.Direct_Labor_Cost * d.actual_hours) direct_labor -- Column id#80
+	
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
+	--where w.Direct_Labor_Cost =0 -- 5
+	--where w.Direct_Labor_Cost is null -- 0
+)
+select * from direct_labor 
+
+/*
+ * What is the weighted average of direct labor cost?  
+ * This only needs to be calculated if there is a diff.
+ */
+
+with diff_direct_labor_cost 
+as 
+(
+	select d.pcn,d.report_date,d.part_key, 
+	min(w.Direct_Labor_Cost) min_direct_labor_cost,max(w.Direct_Labor_Cost) max_direct_labor_cost,
+	max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) diff_direct_labor_cost,
+	case 
+	when min(w.Direct_Labor_Cost) = 0 then 1 
+	else 0 
+	end min_zero
+
+	--count(distinct w.Direct_Labor_Cost) count_diff_direct_labor_cost
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
+	having max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) > 0.009
+),
 /*
  * How many workcenters for the same part and the same day have different labor cost per hour values?
  */
-create view Plex.labor_cost_ten_percent_diff
+--drop view Plex.labor_cost_diff_vied
+create view Plex.labor_cost_diff_view
 as
 with diff_direct_labor_cost 
 as 
@@ -99,15 +153,123 @@ as
 )
 select *
 --select count(*) 
-from percent_diff_direct_labor_cost where percent_diff_direct_labor_cost > .1 -- 1,183
+from percent_diff_direct_labor_cost 
 
+select *
+from Plex.labor_cost_diff_view
+where percent_diff_direct_labor_cost > .1 -- 1,183
+
+select * from Plex.labor_cost_ten_percent_diff
 select count(*) from no_diff_direct_labor_cost -- 5,033
 
 select count(*)
 from count_diff_direct_labor_cost -- 1,467
 /*
- * How do we calculate the labor rate
+ * How do we calculate the labor rate?
+ * By taking a weighted average of labor cost per hour.
+ * In this case the weights don't add to one
+ * and the variable is labor cost per hour and its weight is labor hours.
  */
+-- drop view view Plex.labor_rate_weighted_average 
+create view Plex.labor_rate_weighted_average 
+as 
+/*
+ * If there are differnt labor cost for a day we must
+ * do a weighted average to compute the direct labor cost
+ */
+with diff_direct_labor_cost 
+as 
+(
+	select d.pcn,d.report_date,d.part_key, 
+	min(w.Direct_Labor_Cost) min_direct_labor_cost,max(w.Direct_Labor_Cost) max_direct_labor_cost,
+	max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) diff_direct_labor_cost,
+	case 
+	when min(w.Direct_Labor_Cost) = 0 then 1 
+	else 0 
+	end min_zero
+
+	--count(distinct w.Direct_Labor_Cost) count_diff_direct_labor_cost
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
+	having max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) > 0.009
+),
+--select count(*) from diff_direct_labor_cost -- 1,399
+
+labor_sums 
+as 
+(
+
+	-- sum (variable * weight) / sum(variable)
+	select 
+	d.pcn,d.report_date,d.part_key,
+	sum(w.Direct_Labor_Cost*d.actual_hours) sum_rate_x_hours,
+	sum(w.Direct_Labor_Cost) sum_rate,
+	case 
+	when sum(w.Direct_Labor_Cost) = 0 then 1
+	else 0
+	end zero_rate
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
+	
+),
+no_diff_direct_labor_cost 
+as 
+(
+	select d.pcn,d.report_date,d.part_key, 
+	min(w.Direct_Labor_Cost) min_direct_labor_cost,max(w.Direct_Labor_Cost) max_direct_labor_cost,
+	max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) diff_direct_labor_cost
+
+	--count(distinct w.Direct_Labor_Cost) count_diff_direct_labor_cost
+	--select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
+	join Plex.workcenter_view w 
+	on d.pcn = w.PCN 
+	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
+	having max(w.Direct_Labor_Cost) - min(w.Direct_Labor_Cost) < 0.01
+),
+
+labor_rate_weighted_average  
+as 
+(
+
+	-- sum (variable * weight) / sum(variable)
+	select 
+	s.pcn,
+	s.report_date,
+	s.part_key,
+	case 
+	when s.zero_rate = 0 then 
+	s.sum_rate_x_hours 
+	/
+	s.sum_rate 
+	else 0
+	end labor_rate_weighted_average 
+	--select count(*)
+	from labor_sums s
+),
+--select * from labor_rate_weighted_average 
+labor_rate 
+as 
+(
+	select 
+	wa.pcn,
+	wa.
+	from labor_rate_weighted_average wa 
+	left outer join diff_direct_labor_cost dl 
+	on wa.pcn = dl.pcn 
+	and wa.report_date = dl.report_date 
+	and wa.part_key = dl.part_key 
+	
+)
 
 /*
  * How many records should there be in Plex.daily_shift_report_get_daily_metrics_pcn_view? 3,218
@@ -124,7 +286,7 @@ select distinct pcn,report_date,part_no,revision from  Plex.daily_shift_report_v
 --drop view Plex.daily_shift_report_daily_metrics_view
 create view Plex.daily_shift_report_daily_metrics_view
 as 
-with dsr_sum 
+with all_operation_sum 
 as 
 (  -- these sums are for all operations not just the final one.
 	select pcn,report_date,part_key,part_no,
@@ -140,21 +302,26 @@ as
 --select * 
 --select count(*)
 --from all_operation_sum -- 3,383
-workcenter_labor 
+/*
+ * What is total daily direcect labor cost per part  
+ */
+direct_labor 
 as 
 (
 	select 
-	w.Direct_Labor_Cost,w.valid,
-	w.Direct_Labor_Cost * d.actual_hours workcenter_labor, -- Column id#80
-	d.*
+	d.pcn,d.report_date,d.part_key,
+	sum(w.Direct_Labor_Cost * d.actual_hours) direct_labor -- Column id#80
+	
 	--select count(*)
 	from Plex.daily_shift_report_daily_metrics_filter_view d -- 14,038
 	join Plex.workcenter_view w 
 	on d.pcn = w.PCN 
 	and d.workcenter_key = w.Workcenter_Key -- 14,038
+	group by d.pcn,d.report_date,d.part_key 
 	--where w.Direct_Labor_Cost =0 -- 5
 	--where w.Direct_Labor_Cost is null -- 0
 ),
+--select * from direct_labor 
 shippable_operation_only
 as 
 (
@@ -229,7 +396,9 @@ as
 	else so.quantity_produced + ao.parts_scrapped 
 	end gross_volume_produced, -- COLUMN ID:_5
 	ao.earned_hours,-- COLUMN ID: 40, view changes null to 0 --	Parts Produced (includes scrap unless setup otherwise) * (Crew Size / Selected Labor Rate)
-	ao.actual_hours-- COLUMN ID: 45, view changes null to 0
+	ao.actual_hours,-- COLUMN ID: 45, view changes null to 0
+	wa.labor_rate_weighted_average labor_rate,-- Column id#75
+	dl.direct_labor -- Column id#80
 	from all_operation_sum ao  
 	left outer join no_shippable_part_operation ns -- we do not have/know the shippable operation for some parts 
 	on ao.pcn = ns.pcn 
@@ -238,6 +407,14 @@ as
 	on ao.pcn=so.pcn 
 	and ao.report_date = so.report_date 
 	and ao.part_key = so.part_key 
+	join Plex.labor_rate_weighted_average wa -- no filtering every key has a weighted average
+	on ao.pcn=wa.pcn 
+	and ao.report_date = wa.report_date 
+	and ao.part_key = wa.part_key 
+	join direct_labor dl -- no filtering every key has a direct_labor value 
+	on ao.pcn=dl.pcn 
+	and ao.report_date=dl.report_date 
+	and ao.part_key = dl.part_key 
 	
 	--where so.pcn is null  -- 861
 	--where so.pcn is not null  -- 2,522
@@ -246,7 +423,7 @@ as
 
 select * 
 --select count(*)
-from daily_shift_report_sums  
+from daily_shift_report_sums  -- 6,432
 --where valid =1
 
 
