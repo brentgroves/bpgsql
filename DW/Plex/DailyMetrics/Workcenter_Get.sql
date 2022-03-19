@@ -67,29 +67,75 @@ where Direct_Labor_Cost is null -- 0
 
 select * from Plex.Daily_Shift_Report_view dsr 
 -- join on Workcenter_Key,Part_Key,Part_Operation_Key 
-Create view Plex.workcenter_no_labor_rate
+
+Plex.workcenter_no_labor_rate
+-- drop view Plex.daily_shift_report_workcenter_no_labor_rate
+Create view Plex.daily_shift_report_workcenter_no_labor_rate
 as 
-with workcenter 
+with dsr_workcenter 
 as 
 (
 	select w.valid,w.Direct_Labor_Cost,ds.* 
 --	select count(*)
-	from Plex.Daily_Shift_Report_view ds -- 13,616
-	left outer join Plex.Workcenter_view w 
+--	select w.*
+	from Plex.daily_shift_report_daily_metrics_filter_view ds  -- 14,408
+	join Plex.Workcenter_view w -- every daily shift report record has a workcenter 
 	on ds.pcn = w.PCN 
-	and ds.workcenter_key = w.Workcenter_Key 
+	and ds.workcenter_key = w.Workcenter_Key -- 14,408
 	--where w.PCN is null  -- 0
 ),
 no_labor_rate
 as 
 (
 	select *
-	from workcenter  
+	from dsr_workcenter  
 	where valid = 50
 )
 select * 
 --select count(*)
-from no_labor_rate -- 220
+from no_labor_rate -- 5
+
+select * from Plex.daily_shift_report_workcenter_no_labor_rate
+-- drop view Plex.daily_metrics_workcenter_no_labor_rate
+Create view Plex.daily_metrics_workcenter_no_labor_rate
+as 
+with dsr_workcenter 
+as 
+(
+	select w.pcn,w.workcenter_key,w.valid 
+--	select count(*)
+	from Plex.daily_shift_report_daily_metrics_filter_view ds  -- 14,408
+	join Plex.Workcenter_view w -- every daily shift report record has a workcenter 
+	on ds.pcn = w.PCN 
+	and ds.workcenter_key = w.Workcenter_Key -- 14,408
+),
+workcenter_no_labor_rate  
+as 
+(
+	select distinct w.pcn,w.workcenter_key 
+--	select count(*)
+	from dsr_workcenter dw 
+	join Plex.Workcenter_view w -- every daily shift report record has a workcenter 
+	on dw.pcn = w.PCN 
+	and dw.workcenter_key = w.Workcenter_Key -- 14,408
+	group by w.pcn,w.workcenter_key,w.valid  
+	having w.valid = 50
+	--where w.PCN is null  -- 0
+)
+select * 
+--select count(*)
+from workcenter_no_labor_rate -- 5
+
+select * from Plex.daily_metrics_workcenter_no_labor_rate
+select * from Plex.daily_shift_report_workcenter_no_labor_rate
+
+-- verify 
+select w.* 
+from Plex.daily_shift_report_daily_metrics_filter_view dw  -- 14,408
+join Plex.Workcenter_view w -- every daily shift report record has a workcenter 
+on dw.pcn = w.PCN 
+and dw.workcenter_key = w.Workcenter_Key -- 14,408
+where valid = 50
 
 -- mgdw.Plex.Workcenter definition
 
