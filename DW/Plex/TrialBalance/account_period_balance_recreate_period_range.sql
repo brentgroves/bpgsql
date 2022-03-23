@@ -1,3 +1,5 @@
+select * from Plex.account_period_balance 
+
 -- drop procedure Plex.account_period_balance_recreate_period_range
 create procedure Plex.account_period_balance_recreate_period_range
 as 
@@ -154,6 +156,7 @@ begin
 	    0 balance,
 	    0 ytd_balance
 	    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363/4,595
+	    -- select distinct pcn,period from Plex.account_period_balance b order by pcn,period 
 	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202101  -- 4,595
 		from Plex.accounting_account a   
 		left outer join Plex.account_period_balance b 
@@ -387,6 +390,55 @@ select * from Plex.account_period_balance apb where period = 202111
 declare @pcn int;
 set @pcn = 123681;
 
+exec Report.trial_balance 202202,202202
+SELECT @@ROWCOUNT;
+exec Report.trial_balance 202201,202202
+SELECT @@ROWCOUNT;
+CREATE PROCEDURE Report.trial_balance
+@start_period int,
+@end_period int 
+AS 
+begin
+
+select 
+--b.period,
+b.period_display,
+a.category_type,
+-- don't use legacy category type even though it is on the real TB report. I think it will be less confusing 
+-- for the Southfield PCN which hass missing accounts.
+-- b.category_type_legacy category_type,  
+/*
+ * The Plex TB report uses the category type of the category linked to the account via the  category_account view. 
+ * I believe Plex now mostly uses the account category located directly on the accounting_v_account view so I used 
+ * this column instead of the one linked via the account_category view. 
+ */
+a.category_name_legacy category_name,
+a.sub_category_name_legacy sub_category_name,
+a.account_no,
+--a.account_no [no],
+a.account_name,
+b.balance current_debit_credit,
+b.ytd_balance ytd_debit_credit
+--select *
+--select count(*)
+--select distinct pcn,period from Plex.account_period_balance b order by pcn,period -- 123,681 (202101 to 202111)
+--Yinto Archive.account_period_balance_03_22_2022 -- 115,374
+from Plex.account_period_balance b -- 43,620
+--where b.pcn = @pcn  -- 50,545
+inner join Plex.accounting_account a -- 43,620
+on b.pcn=a.pcn 
+and b.account_no=a.account_no 
+where b.pcn = 123681  -- 50,545,55,140
+AND b.period BETWEEN @start_period AND @end_period
+order by b.period_display,a.account_no 
+--where a.category_type != a.category_type_legacy 
+--where b.period_display is not NULL -- 40,940
+--where b.period_display is NULL -- 40,940?
+--where a.account_no = '10220-000-00000' 
+END 
+
+select * from ssis.ScriptComplete sc 
+
 select 
 --b.period,
 b.period_display,
@@ -413,10 +465,13 @@ from Plex.account_period_balance b -- 43,620
 inner join Plex.accounting_account a -- 43,620
 on b.pcn=a.pcn 
 and b.account_no=a.account_no 
-where b.pcn = 123681  -- 50,545,55,140
-order by b.period_display,a.account_no 
+where b.pcn = 123681  -- 50,545,55,140,64,330
+--AND b.period = 202201  -- 4,595
+--AND b.period = 202202  -- 4,595
+and a.account_no = '12400-000-0000'
+--and a.account_no='11010-000-0000'
+--and a.account_no = '10220-000-00000' 
+order by a.account_no,b.period 
 --where a.category_type != a.category_type_legacy 
 --where b.period_display is not NULL -- 40,940
 --where b.period_display is NULL -- 40,940
---where a.account_no = '10220-000-00000' 
-

@@ -36,6 +36,7 @@ select * from Plex.accounting_balance_update_period_range
  * Make backup
  */
 select *
+--into Archive.account_period_balance_2022_03_21 -- 107,133
 --into Archive.account_period_balance_2022_02_16 -- 98,892
 --select count(*)
 from Plex.account_period_balance
@@ -65,7 +66,9 @@ select distinct pcn,period from Plex.account_period_balance  order by pcn,period
 
 select *
 --into Archive.accounting_balance_01_03_2022
-from Plex.accounting_balance
+select distinct pcn,period 
+from Plex.accounting_balance 
+order by pcn,period 
 
 
 

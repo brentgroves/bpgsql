@@ -230,7 +230,14 @@ as
 	
 ),
 --select count(*) from weighted_average_sums -- 1,434
---where valid = 50  --5
+percent_diff_direct_labor_cost
+as 
+(	
+	select pcn,report_date,part_key,51 valid 
+	from Plex.labor_cost_diff_view
+	where percent_diff_direct_labor_cost > .1 -- 1,214
+),
+--select count(*) from percent_diff_direct_labor_cost --1,214
 labor_rate_weighted_average  
 as 
 (
@@ -247,13 +254,22 @@ as
 	s.sum_rate 
 	else 0
 	end labor_rate,
-	valid 
+	case 
+	when s.valid > 0 then s.valid 
+	when pd.valid > 0 then pd.valid 
+	else 0
+	end valid 
 	--select count(*)
 	from weighted_average_sums s
+	left outer join percent_diff_direct_labor_cost pd 
+	on s.pcn=pd.pcn 
+	and s.report_date = pd.report_date 
+	and s.part_key = pd.part_key 
+
 ),
 --select count(*) from labor_rate_weighted_average -- 1,434
---where valid = 50
-
+--where valid = 51 -- 1,209
+--where valid = 50 -- 5
 /*
  * If there are not any part labor cost differences for a day 
  * we can use the preferred workcenter to identify the labor rate.
@@ -276,14 +292,15 @@ as
 	--d.pcn,d.report_date,d.part_key, 
 	on d.pcn = w.PCN 
 	and d.preferred_workcenter_key = w.Workcenter_Key 
-	
 )
 --select count(*) from labor_rate_preferred_workcenter -- 5,167
---where valid = 50 
+--where valid = 50 --0
 select * from labor_rate_preferred_workcenter
 union 
 select * from labor_rate_weighted_average 
 
-select count(*)
+select labor_rate 
+--select count(*)
 from Plex.daily_shift_report_daily_metrics_labor_rate_view  -- 5,167+1,434=6,601
-where valid = 50
+--where valid = 51  -- 1,209
+where valid = 50  -- 5

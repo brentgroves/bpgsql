@@ -172,6 +172,7 @@ where valid =50  --5
 select * 
 --select count(*)
 from Plex.daily_shift_report_daily_metrics_view 
+where report_date between '2022-02-08 00:00:00.000' and '2022-02-18 00:00:00.000'
 --where pcn = 300757
 --where valid = 0  --4,745
 --where valid = 41  --12

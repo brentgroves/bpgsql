@@ -9,6 +9,10 @@ CREATE TABLE mgdw.Plex.accounting_balance_update_period_range (
 );
 select * from Plex.accounting_balance_update_period_range
 -- delete from Plex.accounting_balance_update_period_range
---CREATE USER campfire FROM EXTERNAL PROVIDER;
+
+
+--update Plex.accounting_balance_update_period_range
+set period_start = 202103,
+period_end = 202202
 
 
