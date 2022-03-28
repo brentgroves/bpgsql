@@ -17,7 +17,7 @@ values (100,'Trial Balance')
 CREATE TABLE mgdw.ETL.script (
 	script_key int NOT NULL,
 	name varchar(500) NOT NULL,
-	frequency_key int not null,
+	schedule_key int not null,
 	PRIMARY KEY (script_key)
 );
 -- truncate TABLE mgdw.ETL.script;
@@ -66,18 +66,18 @@ values
 (113,113,null,null,0)
 select * from ETL.script_history
 -- drop table ETL.frequency 
-create table ETL.frequency 
+create table ETL.schedule 
 (
-	frequency_key int not null,
-	frequency_no int not null,
-	frequency varchar(50) not null
+	schedule_key int not null,
+	schedule_no int not null,
+	schedule varchar(50) not null
 )
-insert into ETL.frequency 
+insert into ETL.schedule 
 values (100,1,'Daily'),
 (101,2,'Weekly'),
 (102,3,'Monthly'),
 (103,4,'Yearly')
-select * from ETL.frequency 
+select * from ETL.schedule 
 -- DROP TABLE mgdw.ETL.report_script;
 CREATE TABLE mgdw.ETL.report_script (
 	report_key int NOT NULL,
@@ -86,8 +86,16 @@ CREATE TABLE mgdw.ETL.report_script (
 );
 -- truncate table ETL.report_script 
 insert into ETL.report_script  
-values (100,100)
-,(100,101)
+values 
+--(100,100)
+--,(100,101)
+(101,102),--,'CostGrossMarginDaily',100),
+(101,103),--'CostModelsGet',100),
+(101,104),--'CostSubTypeBreakdownMatrix',100),
+(101,107),--'DailyShiftReportGet',100),
+(101,109),--'PartOperationGet',100),
+(101,113)--,'WorkcentersGet',100)
+
 select * from ETL.report_script
 
 /*
@@ -105,7 +113,7 @@ ETL.script_end(script_key): To be ran when the script ends.
 ETL.script_status(report_key):  procedures as I'm working on the TrialBalance automation process. 
 select * from ETL.script
  */
-exec ETL.script_start 101
+exec ETL.script_start 113
 -- drop procedure ETL.script_start 
 create procedure ETL.script_start 
 (
@@ -124,7 +132,7 @@ end
 select * from ETL.script_history  
 order by script_key, start_time desc
 
-exec ETL.script_end 101 
+exec ETL.script_end 113 
 -- drop procedure ETL.script_end 
 create procedure ETL.script_end 
 (
@@ -148,7 +156,7 @@ begin
 	where script_history_key = @script_history_key 
 end
 select * from ETL.script_history order by script_key,start_time desc    
-exec ETL.report_script_status 101
+exec ETL.report_script_status 100
 -- drop procedure ETL.report_script_status 
 create procedure ETL.report_script_status 
 (
@@ -160,21 +168,13 @@ begin
 	-- set @reportkey = 100; 
 	declare @not_done int;
 	declare @script_history_count int;
-	
+	declare @report_script_count int;
 	declare @prev_day_midnight datetime;
 	-- see howto/date_calc.sql 
 	set @prev_day_midnight = DATEADD(dd, DATEDIFF(dd, 0, GETDATE()) - 1, 0);
 	--select @prev_day_midnight; 
 	declare @report_key int;
-	set @report_key = 100;
-	/*
-	DECLARE @LOCAL_TABLEVARIABLE TABLE
-	(column_1 DATATYPE, 
-	 column_2 DATATYPE, 
-	 column_N DATATYPE
-	)
-	select * from ETL.script_history
-	*/
+	set @report_key = 101;
 	declare @script_history table 
 	( 
 		row_number int,
@@ -210,7 +210,7 @@ begin
 		select * from script_history_with_row where row_number = 1
 	)
 	insert into @script_history 
-	select * from script_history; 
+	select * from script_history;
 	--select * from @script_history 
 	with script_daily 
 	as 
@@ -231,24 +231,17 @@ begin
 	(end_time <= @prev_day_midnight) or  
 	(done =0)); 
 
-	with script_history_count 
-	as 
-	( 
-		select count(*) script_history_count from @script_history 
-	)
-	select * from script_history_count 
-	report_script_count 
-	as 
-	( 
-		select count(*) report_script_count 
-		from ETL.report_script rs 
-		join ETL.script s 
-		on rs.script_key=s.script_key 
-		where rs.report_key = @report_key 
-	)
-	select * from report_script_count 
-	
-	if @not_done > 0 or @script_history_count = 0
+	select @script_history_count=count(*) from @script_history; 
+	--select * from script_history_count 
+	select @report_script_count=count(*)  
+	from ETL.report_script rs 
+	join ETL.script s 
+	on rs.script_key=s.script_key 
+	where rs.report_key = @report_key; 
+	--select @report_script_count report_script_count 
+	if ( @not_done > 0 or 
+		 @script_history_count < @report_script_count
+		) 
 	begin
 		select 1 status
 	end
