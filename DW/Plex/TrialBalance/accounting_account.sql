@@ -43,7 +43,9 @@ CREATE TABLE mgdw.Plex.accounting_account (
 		select r.pcn,r.account_no 
 		from Plex.Reset_YTD_balance_yearly r
 		where r.pcn = 123681
-		order by r.pcn,r.account_no 
+		order by r.pcn,r.account_no
+SELECT count(*)
+from Plex.accounting_account a 	-- 19,176	
 /*
  * What are the new accounts?
  */		

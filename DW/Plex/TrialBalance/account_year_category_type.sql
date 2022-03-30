@@ -15,9 +15,9 @@ select pcn,account_no,2021,category_type,revenue_or_expense
 --select distinct pcn,[year]
 --select count(*)  
 --into Archive.accounting_account_year_category_type_01_07_2021 -- 8726
-from Plex.accounting_account_year_category_type 
-where pcn = 123681  -- 4363,8726
-and [year] = 2020 -- 4363/4,595
+from Plex.accounting_account_year_category_type -- 24,723
+where pcn = 123681  -- 13,785
+and [year] = 2022 -- 4,595
 
 /*
  * Insert prev year account category records from current years values
