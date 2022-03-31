@@ -17,6 +17,24 @@ values (100,'Trial Balance')
 ,(101,'Daily Metrics')
 -- select * from ETL.report
 
+select 
+r.Name report,
+s.name script_name,
+sc.schedule. 
+from DataSource.datasource d 
+join ETL.report_script rs 
+on d.
+join ETL.script s 
+on rs.script_key=s.script_key 
+join ETL.Report r 
+on rs.Report_Key = r.Report_Key 
+--join ETL.script_history h 
+--on s.script_key = h.script_key 
+join ETL.schedule sc  
+on s.schedule_key = sc.schedule_key  
+join DataSource.source_control_repo sr
+on 
+where rs.report_key = 100 
 
 
 -- DROP TABLE mgdw.ETL.script;
@@ -87,21 +105,6 @@ set @script_key = 114;
 --	insert into ETL.script_history
 select @script_key,getdate(),null,0
 
-values 
-(114,null,null,0),
-(101,101,null,null,0),
-(102,102,null,null,0),
-(103,103,null,null,0),
-(104,104,null,null,0),
-(105,105,null,null,0),
-(106,106,null,null,0),
-(107,107,null,null,0),
-(108,108,null,null,0),
-(109,109,null,null,0),
-(110,110,null,null,0),
-(111,111,null,null,0),
-(112,112,null,null,0),
-(113,113,null,null,0)
 select * from ETL.script_history
 where script_key = 114
 
@@ -293,12 +296,13 @@ begin
 end
 select * from ETL.script 
 
--- drop table ETL.frequency 
+-- drop table ETL.schedule 
 create table ETL.schedule 
 (
 	schedule_key int not null,
 	schedule_no int not null,
 	schedule varchar(50) not null
+	CONSTRAINT PK_schedule PRIMARY KEY (schedule_key)
 )
 insert into ETL.schedule 
 values (100,1,'Daily'),
@@ -306,5 +310,41 @@ values (100,1,'Daily'),
 (102,3,'Monthly'),
 (103,4,'Yearly')
 select * from ETL.schedule 
+
+
+-- drop table ETL.source_control_repo  
+create table ETL.source_control_repo  
+(
+	source_control_repo_key int,
+	source_control_project_key int not null,
+	name varchar(100) not null,
+	CONSTRAINT PK_source_control_repo PRIMARY KEY (source_control_repo_key,source_control_project_key)
+)
+select r.name repo,p.name source_control_project  
+from ETL.source_control_repo r 
+join ETL.source_control_project p 
+on r.source_control_project_key = p.source_control_project_key 
+insert into ETL.source_control_repo  
+values
+(6,1,'AccountingPeriod'),
+(5,1,'AccountingBalanceUpdatePeriodRange'),
+(4,1,'AccountingYearCategoryType'),
+(1,1,'AccountingAccount'),
+(2,2,'MobexSQL'),
+(3,1,'PlexETLScripts')
+
+-- drop table ETL.source_control_project
+create table ETL.source_control_project 
+(
+	source_control_project_key int,
+	name varchar(100) not null,
+	CONSTRAINT PK_source_control_project PRIMARY KEY (source_control_project_key)
+)
+select * from ETL.source_control_project
+insert into ETL.source_control_project 
+values 
+(1,'PlexETLScripts'),
+(2,'MobexSQL')
+
 
  
