@@ -1,40 +1,6 @@
 Create Schema ETL
 
 
--- mgdw.ETL.Report definition
--- Drop table
--- DROP TABLE mgdw.ETL.Report;
-
-CREATE TABLE mgdw.ETL.Report (
-	Report_Key int NOT NULL,
-	Name varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	CONSTRAINT PK_Report PRIMARY KEY (Report_Key)
-);
-
--- truncate table ETL.report
-insert into ETL.report 
-values (100,'Trial Balance')
-,(101,'Daily Metrics')
--- select * from ETL.report
-
-select 
-r.Name report,
-s.name script_name,
-sc.schedule. 
-from DataSource.datasource d 
-join ETL.report_script rs 
-on d.
-join ETL.script s 
-on rs.script_key=s.script_key 
-join ETL.Report r 
-on rs.Report_Key = r.Report_Key 
---join ETL.script_history h 
---on s.script_key = h.script_key 
-join ETL.schedule sc  
-on s.schedule_key = sc.schedule_key  
-join DataSource.source_control_repo sr
-on 
-where rs.report_key = 100 
 
 
 -- DROP TABLE mgdw.ETL.script;
@@ -49,31 +15,31 @@ CREATE TABLE mgdw.ETL.script (
 -- truncate TABLE mgdw.ETL.script;
 insert into ETL.script 
 values 
-(5,2,'AccountingPeriod',100,6),
-(4,2,'AccountingBalanceUpdatePeriodRange',100,5),
-(3,2,'AccountingYearCategoryType.dtsx',100,4),
-(1,2,'AccountingAccount.dtsx',100,1),
-(2,1,'Invoke-WorkcentersGet.ps1',100,3),
+(5,2,'AccountingPeriod',1,6),
+(4,2,'AccountingBalanceUpdatePeriodRange',1,5),
+(3,2,'AccountingYearCategoryType.dtsx',1,4),
+(1,2,'AccountingAccount.dtsx',1,1),
+(2,1,'Invoke-WorkcentersGet.ps1',1,3),
 
 --/* already inserted
-(102,1,'CostGrossMarginDaily',100,3),
-(103,1,'CostModelsGet',100,3),
-(104,1,'CostSubTypeBreakdownMatrix',100,3),
-(105,1,'CustomerOrdersGet',100,3),
-(106,1,'CustomerPartsGet',100,3),
-(107,1,'DailyShiftReportGet',100,3),
-(108,1,'ItemUsageSummaryGet',100,3),
-(109,1,'PartOperationGet',100,3),
-(110,1,'ReleasesGetDailyDue',100,3),
-(111,1,'ReportShippingRevenue',100,3),
-(112,1,'ShippersHistoryGet',100,3),
-(113,1,'WorkcentersGet',100,3)
+(102,1,'CostGrossMarginDaily',1,3),
+(103,1,'CostModelsGet',1,3),
+(104,1,'CostSubTypeBreakdownMatrix',1,3),
+(105,1,'CustomerOrdersGet',1,3),
+(106,1,'CustomerPartsGet',1,3),
+(107,1,'DailyShiftReportGet',1,3),
+(108,1,'ItemUsageSummaryGet',1,3),
+(109,1,'PartOperationGet',1,3),
+(110,1,'ReleasesGetDailyDue',1,3),
+(111,1,'ReportShippingRevenue',1,3),
+(112,1,'ShippersHistoryGet',1,3),
+(113,1,'WorkcentersGet',1,3)
 --*/
-select * from ETL.script
+-- drop table ETL.script_type  
 create table ETL.script_type  
 (
 	script_type_key int,
-	script_type varchar(50) null,
+	name varchar(50) null,
 	CONSTRAINT PK_script_type PRIMARY KEY (script_type_key)
 )
 select * from ETL.script_type
@@ -82,11 +48,155 @@ values
 (1,'powershell'),
 (2,'ssis')
 
+-- drop table ETL.schedule 
+create table ETL.schedule 
+(
+	schedule_key int not null,
+	name varchar(100) not null
+	CONSTRAINT PK_schedule PRIMARY KEY (schedule_key)
+)
+insert into ETL.schedule 
+values (1,'Daily'),
+(2,'Weekly'),
+(3,'Monthly'),
+(4,'Yearly')
+-- select * from ETL.schedule s2 
+select 
+s.name script 
+,st.name script_type 
+,sch.name schedule 
+from ETL.script s
+join ETL.script_type st 
+on s.script_type_key = st.script_type_key 
+join ETL.schedule sch 
+on s.schedule_key = sch.schedule_key 
 
--- Drop table
+create table ETL.script_source_dependancy 
+(
+	script_source_dependancy_key int not null,
+	script_key int not null,
+	source_dependancy_key int not null, 
+	CONSTRAINT PK_script_source_dependancy PRIMARY KEY (script_source_dependancy_key)
+)
+insert into ETL.script_source_dependancy 
+values 
+(1,2,4) -- workcenter_get
+
+-- drop table ETL.source_dependancy
+-- truncate table ETL.source_dependancy
+create table ETL.source_dependancy  
+( 
+	source_dependancy_key int not null,
+	source_dependancy_type_key int not null,
+	source_control_repo_key int null,
+	
+	-- Mobex authored procedure columnus
+	system_name varchar(50) null,
+	friendly_name varchar(100) null,
+	-- Plex web service columnus 
+	ws_datasource_name varchar(100) null,
+	ws_datasource_key int null,
+	soap_request varchar(max) null,
+	
+	-- Plex authored procedure columnus
+	plx_procedure varchar(max) null,
+	
+	CONSTRAINT PK_source_dependancy PRIMARY KEY (source_dependancy_key)
+)
+select * from ETL.source_dependancy  
+insert into ETL.source_dependancy  
+values 
+(3,2,2
+,'sproc300758_11728751_1999565','accounting_balance_update_period_range_dw_import'
+,null,null,null
+,null
+),
+(2,2,2
+,'sproc300758_11728751_1999909','accounting_year_category_type_dw_import'
+,null,null,null
+,null
+),
+(1,2,2
+,'sproc300758_11728751_1978024','accounting_account_DW_Import'
+,null,null,null
+,null 
+),
+(4,1,8
+,null,null
+,'Workcenter_Get',4031,
+'<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:dat="http://www.plexus-online.com/DataSource">
+   <soap:Header />
+   <soap:Body>
+      <dat:ExecuteDataSource>
+         <dat:ExecuteDataSourceRequest>
+            <dat:DataSourceKey>4031</dat:DataSourceKey>
+            <dat:InputParameters>
+               <dat:InputParameter>
+                  <dat:Value>$Active</dat:Value>
+                  <dat:Name>Active</dat:Name>
+               </dat:InputParameter >
+            </dat:InputParameters>
+         </dat:ExecuteDataSourceRequest>
+      </dat:ExecuteDataSource>
+   </soap:Body>
+</soap:Envelope>
+'
+,null
+)
+
+select 
+s.name script 
+,script_proj.name script_proj  
+,script_repo.name script_repo 
+,st.name script_type 
+,sch.name schedule 
+,sd.system_name,sd.friendly_name 
+,sd.ws_datasource_name
+,dependancy_proj.name dependancy_proj  
+,dependancy_repo.name dependancy_repo
+-- select count(*)
+from ETL.script s
+join ETL.script_type st 
+on s.script_type_key = st.script_type_key 
+join ETL.schedule sch 
+on s.schedule_key = sch.schedule_key 
+
+left outer join ETL.source_control_repo script_repo  
+on s.source_control_repo_key = script_repo.source_control_repo_key  
+left outer join ETL.source_control_project script_proj 
+on script_repo.source_control_project_key = script_proj.source_control_project_key 
+
+
+left outer join ETL.script_source_dependancy ssd 
+on s.script_key =ssd.script_key 
+left outer join ETL.source_dependancy sd 
+on ssd.source_dependancy_key = sd.source_dependancy_key 
+
+left outer join ETL.source_control_repo dependancy_repo  
+on sd.source_control_repo_key = dependancy_repo.source_control_repo_key  
+left outer join ETL.source_control_project dependancy_proj 
+on dependancy_repo.source_control_project_key = dependancy_proj.source_control_project_key 
+
+
+select r.source_control_repo_key,r.name repo,p.name source_control_project  
+from ETL.source_control_repo r 
+join ETL.source_control_project p 
+on r.source_control_project_key = p.source_control_project_key 
+-- drop table ETL.source_dependancy_type 
+create table ETL.source_dependancy_type  
+( 
+	source_dependancy_type_key int not null,
+	name varchar(100) not null,
+)
+select * from ETL.source_dependancy_type 
+insert into ETL.source_dependancy_type 
+values 
+(1,'web service'),
+(2,'Mobex authored procedure'),
+(3,'Plex authored procedure')
+
 
 -- DROP TABLE mgdw.ETL.Script_History;
-
 CREATE TABLE mgdw.ETL.Script_History (
 	Script_History_Key int IDENTITY(1,1) NOT NULL,
 	Script_Key int NOT NULL,
@@ -96,7 +206,7 @@ CREATE TABLE mgdw.ETL.Script_History (
 	Error bit NULL,
 	CONSTRAINT PK__Script_H__FDD5ACE1C3BEE50A PRIMARY KEY (Script_History_Key)
 );
-
+-- select * from ETL.Script_History 
 -- truncate table ETL.script_history
 declare @script_key int; 
 set @script_key = 114;
@@ -109,31 +219,6 @@ select * from ETL.script_history
 where script_key = 114
 
 
--- mgdw.ETL.Report_Script definition
--- Drop table
--- DROP TABLE mgdw.ETL.Report_Script;
-CREATE TABLE mgdw.ETL.Report_Script (
-	Report_Key int NOT NULL,
-	Script_Key int NOT NULL,
-	CONSTRAINT PK_report_script PRIMARY KEY (Report_Key,Script_Key)
-);
--- truncate table ETL.report_script 
-insert into ETL.report_script  
-values 
-(100,5),--'AccountingPeriod',100,6),
-(100,4),--'AccountingBalanceUpdatePeriodRange',100,5),
-(100,3),--'AccountingYearCategoryType.dtsx',100,4),
-(100,1),--'AccountingAccount.dtsx',100,1),
-(100,2),--'Invoke-WorkcentersGet.ps1',100,3),
---/* already inserted
-(101,102),--,'CostGrossMarginDaily',100),
-(101,103),--'CostModelsGet',100),
-(101,104),--'CostSubTypeBreakdownMatrix',100),
-(101,107),--'DailyShiftReportGet',100),
-(101,109),--'PartOperationGet',100),
-(101,113)--,'WorkcentersGet',100)
---*/
-select * from ETL.report_script
 
 /*
 Please call ETL.script_start and ETL.script_end.
@@ -198,121 +283,12 @@ begin
 	where script_history_key = @script_history_key 
 end
 select * from ETL.script_history order by script_key,start_time desc    
-exec ETL.report_script_status 100
--- drop procedure ETL.report_script_status 
-create procedure ETL.report_script_status 
-(
-	@report_key int
-)
-as 
-begin 
-	declare @report_key int; 
-	set @report_key = 100; 
-	declare @not_done_or_error int;
-	declare @script_history_count int;
-	declare @report_script_count int;
-	declare @prev_day_midnight datetime;
-	-- see howto/date_calc.sql 
-	set @prev_day_midnight = DATEADD(dd, DATEDIFF(dd, 0, GETDATE()) - 1, 0);
-	--select @prev_day_midnight; 
-	--declare @report_key int;
-	--set @report_key = 101;
-	declare @script_history table 
-	( 
-		row_number int,
-		schedule_key int,
-		schedule_no int,
-		script_history_key int,
-		script_key int,
-		start_time datetime,
-		end_time datetime,
-		done bit,
-		error bit
-		
-	);
-	with script_history_with_row 
-	as 
-	(
-		select 
-	    ROW_NUMBER() OVER(PARTITION BY h.script_key ORDER BY h.start_time desc) AS row_number,
-		sc.schedule_key,sc.schedule_no, h.*
-		from ETL.report_script rs 
-		join ETL.script s 
-		on rs.script_key=s.script_key 
-		join ETL.script_history h 
-		on s.script_key = h.script_key 
-		join ETL.schedule sc  
-		on s.schedule_key = sc.schedule_key  
-		where rs.report_key = @report_key 
-		--and f.frequency_no = 1
-	),
-	--select * from script_history_with_row
-	script_history 
-	as 
-	(
-		select * from script_history_with_row where row_number = 1
-	)
-	insert into @script_history 
-	select * from script_history;
-	--select * from @script_history 
-	with script_daily 
-	as 
-	(
-		--declare @report_key int;
-		-- set @report_key = 100;
-		select * 
-		from @script_history  
-		where schedule_no = 1
-	)
-	--select * from script_daily 
-	select @not_done_or_error=count(*) 
-	from script_daily
-	where 
-	((start_time is null) or 
-	(end_time is null) or 
-	(end_time < start_time) or 
-	(end_time <= @prev_day_midnight) or  
-	(done =0) or 
-	(error = 1)); 
-	--select @not_done_or_error not_done_or_error; 
-	select @script_history_count=count(*) from @script_history; 
-	--select @script_history_count script_history_count;  
-	select @report_script_count=count(*)  
-	from ETL.report_script rs 
-	join ETL.script s 
-	on rs.script_key=s.script_key 
-	where rs.report_key = @report_key; 
-	--select @report_script_count report_script_count 
-	if ( @not_done_or_error  > 0 or 
-		 @script_history_count < @report_script_count
-		) 
-	begin
-		select 1 status
-	end
-	else 
-	begin
-		select 0 status
-	end 
-end
 select * from ETL.script 
 
--- drop table ETL.schedule 
-create table ETL.schedule 
-(
-	schedule_key int not null,
-	schedule_no int not null,
-	schedule varchar(50) not null
-	CONSTRAINT PK_schedule PRIMARY KEY (schedule_key)
-)
-insert into ETL.schedule 
-values (100,1,'Daily'),
-(101,2,'Weekly'),
-(102,3,'Monthly'),
-(103,4,'Yearly')
-select * from ETL.schedule 
 
 
 -- drop table ETL.source_control_repo  
+-- truncate table ETL.source_control_repo 
 create table ETL.source_control_repo  
 (
 	source_control_repo_key int,
@@ -326,6 +302,8 @@ join ETL.source_control_project p
 on r.source_control_project_key = p.source_control_project_key 
 insert into ETL.source_control_repo  
 values
+(8,3,'PlexSoapUI'),
+(7,3,'PlexSoap'),
 (6,1,'AccountingPeriod'),
 (5,1,'AccountingBalanceUpdatePeriodRange'),
 (4,1,'AccountingYearCategoryType'),
@@ -333,7 +311,9 @@ values
 (2,2,'MobexSQL'),
 (3,1,'PlexETLScripts')
 
+
 -- drop table ETL.source_control_project
+-- truncate table ETL.source_control_project
 create table ETL.source_control_project 
 (
 	source_control_project_key int,
@@ -343,6 +323,7 @@ create table ETL.source_control_project
 select * from ETL.source_control_project
 insert into ETL.source_control_project 
 values 
+(3,'Soap'),
 (1,'PlexETLScripts'),
 (2,'MobexSQL')
 

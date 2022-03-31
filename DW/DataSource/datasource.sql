@@ -127,7 +127,7 @@ values
 select * from Datasource.datasource_script
 select ds.name datasource 
 --dd.name datum_name,
-,s.name script,sch.schedule 
+,s.name script,sch.name schedule 
 ,p.name devop_project
 ,r.name repo
 from DataSource.datasource ds 
