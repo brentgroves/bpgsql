@@ -26,25 +26,23 @@ Notes:
 -- drop table DataSource.base_source
 create table DataSource.base_source
 (
-	base_source_key int primary key,
-	base_source varchar(100) not null,
-	base_source_type_key int not null,
+	base_source_key int not null,
+	datasource_type_key int null,
+	-- SOAP webservice end_point 
+	ds_endpoint_key int null,
+	-- SQL database 
+	ds_database_key int null,
+	CONSTRAINT PK_base_source PRIMARY KEY (base_source_key)
+	
 )
 select * from DataSource.base_source 
 insert into DataSource.base_source 
 values 
-(1,'Plex',1)
+(1,1,1,null), -- Plex SOAP production web service
+(2,2,null,2), -- Plex ODBC production server 
+(3,2,null,1) -- 'Azure SQL Server managed instance'
 
-create table DataSource.base_source_type 
-(
-	base_source_type_key int primary key,
-	base_source_type varchar(100) not null,
-)
-select * from DataSource.base_source_type  
-insert into DataSource.base_source_type  
-values 
-(1,'database'),
-(2,'csv')
+
 
 /*
  * A data source can be a Mobex or Plex procedure, Plex web service,
@@ -57,27 +55,29 @@ create table DataSource.datasource
 	datasource_key int not null,
 	name varchar(100) not null,	
 	base_source_key int not null,
-	datasource_type_key int null,
 	note varchar(max) null,
 	CONSTRAINT PK_datasource PRIMARY KEY (datasource_key)
 )
 -- truncate table DataSource.datasource 
 insert into DataSource.datasource 
 values 
-(5,'AccountingPeriod',1,2,'start and end period dates and fiscal order info. I think period in the distant future get added periodically.'),
-(4,'AccountingBalanceUpdatePeriodRange',1,2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
-(3,'AccountingYearCategoryType',1,2,'It is used to add account category records for each year.  This is needed in YTD calculations which rely on an account being a revenue/expense to determine whether to reset YTD values to 0 for every year. '),
-(1,'AccountingAccount',1,2,'This is used to generate records in account_period_balance. Since the previous 12 months account_period_balance gets regenerated when a new period gets appended if the category type changes or an account gets added or removed the previous 12 months worth of records is affected.'),
-(2,'Workcenter_Get',1,1,'This is where the labor cost per hour comes from.'),
-(102,'CostGrossMarginDaily',1,1,'Contains sales quantity and price data.'),
-(103,'CostModelsGet',1,1,'Used to determine the active cost model.'),
-(104,'CostSubTypeBreakdownMatrix',1,1,'Used to determine the cost model material cost.'),
-(105,'CustomerOrdersGet',1,1,'The customer orders.'),
-(106,'CustomerPartsGet',1,1,'The customer part numbers.'),
-(107,'DailyShiftReportGet',1,1,'Used to determine the parts produced and scrapped per day.'),
-(108,'ItemUsageSummaryGet',1,1,'The item usage summary.'),
-(109,'PartOperationGet',1,1,'Used to determine the shippable part operations.'),
-(113,'WorkcentersGet',1,1,'Used to determine the labor cost per hour.')
+-- Group DW datasources here
+(200,'account_period_balance',3,'Plex.account_period_balance'),
+
+(5,'AccountingPeriod',2,'start and end period dates and fiscal order info. I think period in the distant future get added periodically.'),
+(4,'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
+(3,'AccountingYearCategoryType',2,'It is used to add account category records for each year.  This is needed in YTD calculations which rely on an account being a revenue/expense to determine whether to reset YTD values to 0 for every year. '),
+(1,'AccountingAccount',2,'This is used to generate records in account_period_balance. Since the previous 12 months account_period_balance gets regenerated when a new period gets appended if the category type changes or an account gets added or removed the previous 12 months worth of records is affected.'),
+(2,'Workcenter_Get',1,'This is where the labor cost per hour comes from.'),
+(102,'CostGrossMarginDaily',1,'Contains sales quantity and price data.'),
+(103,'CostModelsGet',1,'Used to determine the active cost model.'),
+(104,'CostSubTypeBreakdownMatrix',1,'Used to determine the cost model material cost.'),
+(105,'CustomerOrdersGet',1,'The customer orders.'),
+(106,'CustomerPartsGet',1,'The customer part numbers.'),
+(107,'DailyShiftReportGet',1,'Used to determine the parts produced and scrapped per day.'),
+(108,'ItemUsageSummaryGet',1,'The item usage summary.'),
+(109,'PartOperationGet',1,'Used to determine the shippable part operations.'),
+(113,'WorkcentersGet',1,'Used to determine the labor cost per hour.')
 
 
 -- drop table DataSource.datasource_datum
@@ -92,7 +92,7 @@ select * from DataSource.datasource_datum
 insert into DataSource.datasource_datum 
 values 
 --(1,2,'labor_cost_per_hour')  -- Workcenter_Get
-
+select * from Plex.
 select ds.name,dd.name 
 from DataSource.datasource ds 
 join DataSource.datasource_datum dd 
@@ -143,37 +143,88 @@ on s.source_control_repo_key = r.source_control_repo_key
 join ETL.source_control_project p 
 on r.source_control_project_key = p.source_control_project_key 
 
--- drop table DataSource.dw_server 
-create table DataSource.dw_server   
+-- drop table DataSource.ds_endpoint 
+create table DataSource.ds_endpoint 
+( 
+	ds_endpoint_key int not null,
+	name varchar(100) not null,
+	definition_url varchar(200) null,
+	soap_action varchar(100) null,
+	operation varchar(50) null,
+	end_point varchar(200) null,
+	username varchar(50) null,
+	note varchar(max) null,
+	CONSTRAINT PK_dw_endpoint PRIMARY KEY (ds_endpoint_key)
+)
+insert into DataSource.ds_endpoint 
+values 
+(1,'Plex production server webservice',
+'https://api.plexonline.com/DataSource?WSDL',
+'http://www.plexus-online.com/DataSource/ExecuteDataSource',
+'ExecuteDataSource',
+'https://api.plexonline.com/DataSource/service.asmx',
+'BuscheAlbionWs2@plex.com',
+'Plex production server webservice'),
+(2,'Plex test server webservice',
+'https://testapi.plexonline.com/DataSource?WSDL',
+'http://www.plexus-online.com/DataSource/ExecuteDataSource',
+'ExecuteDataSource',
+'https://testapi.plexonline.com/DataSource/service.asmx',
+'BuscheAlbionWs2@plex.com',
+'Plex production server webservice')
+
+
+-- drop table DataSource.ds_server 
+create table DataSource.ds_server   
 ( 
 	dw_server_key int not null,
 	name varchar(50) null,
+	host varchar(100) null,
 	port int null,
+	service_data_source varchar(50) null,
+	customer_properties varchar(100) null,
+	encrypted bit not null,
+	username varchar(50) null,
 	note varchar(max) null,
 	CONSTRAINT PK_dw_server PRIMARY KEY (dw_server_key)
 )
 
-select * from DataSource.dw_server    
-insert into DataSource.dw_server    
+select * from DataSource.ds_server   
+-- truncate table DataSource.ds_server 
+insert into DataSource.ds_server    
 values 
---(1,'mgsqlmi.public.48d444e7f69b.database.windows.net',3342,'Azure SQL Managed Instance')
-(2,'mgsqlsrv.database.windows.net',null,'Azure SQL Server')
-
+(1,'Azure SQL Server managed instance',
+'mgsqlmi.public.48d444e7f69b.database.windows.net',3342,
+null,null,0,'mgadmin',
+'Azure SQL Managed Instance'),
+(2,'Azure SQL server',
+'mgsqlsrv.database.windows.net',null,
+null,null,0,'mgadmin',
+'Azure SQL Server'),
+(3,'Plex ODBC production server',
+'odbc.plex.com',19995,
+'ReportDataSource','CompanyCode=BPG-IN;enableutf8=false',1,'mg.odbcalbion',
+'Plex ODBC production server'),
+(4,'Plex ODBC test server',
+'test.odbc.plex.com',19995,
+'ReportDataSource','CompanyCode=BPG-IN;enableutf8=false',1,'mg.odbcalbion',
+'Plex ODBC test server')
 
 -- drop table DataSource.dw_database
-create table DataSource.dw_database  
+create table DataSource.ds_database  
 ( 
-	dw_database_key int not null,
-	dw_server_key int not null,
+	ds_database_key int not null,
+	ds_server_key int not null,
 	name varchar(50) null,
 	note varchar(max) null,
-	CONSTRAINT PK_dw_database PRIMARY KEY (dw_database_key)
+	CONSTRAINT PK_ds_database PRIMARY KEY (ds_database_key)
 )
 
-select * from DataSource.dw_database   
-insert into DataSource.dw_database   
+select * from DataSource.ds_database   
+insert into DataSource.ds_database   
 values 
-(1,1,'mgdw','Mobex Global data warehouse')
+--(1,1,'mgdw','Mobex Global data warehouse'),
+--(2,3,'plex','Plex ERP')
 
 -- drop table DataSource.dw_schema
 create table DataSource.dw_schema  
@@ -218,7 +269,7 @@ create table DataSource.dw_column
 insert into DataSource.dw_column  
 values 
 (1,1,'Direct_Labor_Cost','Direct Labor Cost' )--,
-
+-- select * from Plex.accounting_period ap 
 select dws.name dw_schema,dwt.name dw_table,dwc.name dw_column 
 from DataSource.dw_schema dws
 join DataSource.dw_table dwt 
@@ -465,7 +516,7 @@ values
 
 
 
-
+-- truncate table DataSource.datasource_type
 create table DataSource.datasource_type 
 ( 
 	datasource_type_key int primary key,
@@ -475,7 +526,10 @@ select * from DataSource.datasource_type
 insert into DataSource.datasource_type 
 values 
 (1,'web_service'),
-(2,'mobex_procedure')
+(2,'stored procedure'),
+(3,'view'),
+(4,'table'),
+(5,'csv')
 
 create table DataSource.dw_schema  
 ( 

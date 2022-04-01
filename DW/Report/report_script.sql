@@ -4,7 +4,8 @@
 
 CREATE TABLE Report.report (
 	report_key int NOT NULL,
-	name varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	name varchar(100) NULL,
+	datasource_key varchar(100) null,
 	CONSTRAINT PK_report PRIMARY KEY (report_key)
 );
 
@@ -13,6 +14,26 @@ insert into Report.report
 values (100,'Trial Balance')
 ,(101,'Daily Metrics')
 -- select * from Report.report
+
+/*
+ * What datasources do we use in this report?
+ */
+create table Report.report_datasource 
+( 
+	report_datasource_key int not null,
+	report_key int not null,
+	datasource_key int not null,
+	CONSTRAINT PK_report_datasource PRIMARY KEY (report_datasource_key)
+)
+select * from Report.report_datasource
+insert into Report.report_datasource 
+values 
+/*
+(1,100,5),--'AccountingPeriod'
+(2,100,1),--'AccountingAccount'
+(3,100,3),--,'AccountingYearCategoryType'
+(4,100,4)--'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
+*/
 -- drop table Report.report_column 
 CREATE TABLE Report.report_column (
 	report_column_key int NOT NULL,
@@ -31,8 +52,6 @@ select r.name report
 from Report.report r 
 join Report.report_column rc 
 on r.report_key = rc.report_key 
-
-
 
 select r.name report
 ,rc.name dw_column
@@ -71,6 +90,114 @@ join DataSource.dw_table dwt
 on dws.dw_schema_key = dwt.dw_schema_key 
 join DataSource.dw_column dwc 
 on dwt.dw_table_key = dwc.dw_table_key 
+
+select r.name report
+,rc.name dw_column
+from Report.report r 
+join Report.report_column rc 
+on r.report_key = rc.report_key 
+
+exec Report.report_script_status 100
+-- drop procedure ETL.report_script_status 
+create procedure Report.report_script_status 
+(
+	@report_key int
+)
+as 
+begin 
+	declare @report_key int; 
+	set @report_key = 100; 
+	declare @not_done_or_error int;
+	declare @script_history_count int;
+	declare @report_script_count int;
+	declare @prev_day_midnight datetime;
+	-- see howto/date_calc.sql 
+	set @prev_day_midnight = DATEADD(dd, DATEDIFF(dd, 0, GETDATE()) - 1, 0);
+	--select @prev_day_midnight; 
+	--declare @report_key int;
+	--set @report_key = 101;
+	declare @script_history table 
+	( 
+		row_number int,
+		schedule_key int,
+		schedule_no int,
+		script_history_key int,
+		script_key int,
+		start_time datetime,
+		end_time datetime,
+		done bit,
+		error bit
+		
+	);
+
+	with script_history_with_row 
+	as 
+	(
+		select 
+	    ROW_NUMBER() OVER(PARTITION BY h.script_key ORDER BY h.start_time desc) AS row_number,
+		sc.schedule_key, h.*
+		select s.* 
+		--select count(*)
+		from Report.report_datasource rd 
+		join DataSource.datasource_script dss 
+		on rd.datasource_key = dss.datasource_key 
+		join ETL.script s 
+		on dss.script_key=s.script_key 
+		join ETL.script_history h 
+		on s.script_key = h.script_key 
+		join ETL.schedule sc  
+		on s.schedule_key = sc.schedule_key  
+		where rs.report_key = @report_key 
+		--and f.frequency_no = 1
+	),
+	--select * from ETL.script_history_with_row
+	script_history 
+	as 
+	(
+		select * from script_history_with_row where row_number = 1
+	)
+	insert into @script_history 
+	select * from script_history;
+	--select * from @script_history 
+	with script_daily 
+	as 
+	(
+		--declare @report_key int;
+		-- set @report_key = 100;
+		select * 
+		from @script_history  
+		where schedule_no = 1
+	)
+	--select * from script_daily 
+	select @not_done_or_error=count(*) 
+	from script_daily
+	where 
+	((start_time is null) or 
+	(end_time is null) or 
+	(end_time < start_time) or 
+	(end_time <= @prev_day_midnight) or  
+	(done =0) or 
+	(error = 1)); 
+	--select @not_done_or_error not_done_or_error; 
+	select @script_history_count=count(*) from @script_history; 
+	--select @script_history_count script_history_count;  
+	select @report_script_count=count(*)  
+	from ETL.report_script rs 
+	join ETL.script s 
+	on rs.script_key=s.script_key 
+	where rs.report_key = @report_key; 
+	--select @report_script_count report_script_count 
+	if ( @not_done_or_error  > 0 or 
+		 @script_history_count < @report_script_count
+		) 
+	begin
+		select 1 status
+	end
+	else 
+	begin
+		select 0 status
+	end 
+end
 
 
 /*

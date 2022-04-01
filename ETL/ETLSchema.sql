@@ -15,25 +15,36 @@ CREATE TABLE mgdw.ETL.script (
 -- truncate TABLE mgdw.ETL.script;
 insert into ETL.script 
 values 
+(6,2,'AccountingBalanceAppendPeriodRange',1,9),
 (5,2,'AccountingPeriod',1,6),
 (4,2,'AccountingBalanceUpdatePeriodRange',1,5),
 (3,2,'AccountingYearCategoryType.dtsx',1,4),
 (1,2,'AccountingAccount.dtsx',1,1),
-(2,1,'Invoke-WorkcentersGet.ps1',1,3),
+select * from ETL.Script_History 
+where script_key = 4 
+order by start_time  
+
 
 --/* already inserted
-(102,1,'CostGrossMarginDaily',1,3),
-(103,1,'CostModelsGet',1,3),
-(104,1,'CostSubTypeBreakdownMatrix',1,3),
-(105,1,'CustomerOrdersGet',1,3),
-(106,1,'CustomerPartsGet',1,3),
-(107,1,'DailyShiftReportGet',1,3),
-(108,1,'ItemUsageSummaryGet',1,3),
-(109,1,'PartOperationGet',1,3),
-(110,1,'ReleasesGetDailyDue',1,3),
-(111,1,'ReportShippingRevenue',1,3),
-(112,1,'ShippersHistoryGet',1,3),
-(113,1,'WorkcentersGet',1,3)
+(102,1,'Invoke-CostGrossMarginDaily',1,3),
+(103,1,'Invoke-CostModelsGet',1,3),
+(104,1,'Invoke-CostSubTypeBreakdownMatrix',1,3),
+(105,1,'Invoke-CustomerOrdersGet',1,3),
+(106,1,'Invoke-CustomerPartsGet',1,3),
+(107,1,'Invoke-DailyShiftReportGet',1,3),
+(108,1,'Invoke-ItemUsageSummaryGet',1,3),
+(109,1,'Invoke-PartOperationGet',1,3),
+(110,1,'Invoke-ReleasesGetDailyDue',1,3),
+(111,1,'Invoke-ReportShippingRevenue',1,3),
+(112,1,'Invoke-ShippersHistoryGet',1,3),
+(113,1,'Invoke-WorkcentersGet',1,3),
+(114,1,'Invoke-GetReleasesOverdue',1,3)
+select distinct script_key from ETL.Script 
+select distinct script_key from ETL.Script_History sh 
+select * 
+from ETL.Script_History sh 
+where script_key = 104
+
 --*/
 -- drop table ETL.script_type  
 create table ETL.script_type  
@@ -235,7 +246,7 @@ ETL.script_end(script_key): To be ran when the script ends.
 ETL.script_status(report_key):  procedures as I'm working on the TrialBalance automation process. 
 select * from ETL.script
  */
-exec ETL.script_start 114
+exec ETL.script_start 4
 -- drop procedure ETL.script_start 
 create procedure ETL.script_start 
 (
@@ -244,20 +255,19 @@ create procedure ETL.script_start
 as 
 begin 
 	--declare @script_key int; 
-	--set @script_key = 114;
-	--(113,113,null,null,0)
+	--set @script_key = 4;
 	insert into ETL.script_history
-	select @script_key,getdate(),null,0,null
+	select @script_key,getdate(),null,0,null,null
 	
 end
 -- truncate table ETL.script_history
 select * from ETL.script_history
 --delete from ETL.Script_History
---where script_history_key = 12 
-where script_key = 114
+--where script_history_key = 44 
+where script_key =4
 order by script_key, start_time desc
-exec ETL.script_start 114
-exec ETL.script_end 114,0 
+exec ETL.script_start 4
+exec ETL.script_end 4,0 
 -- drop procedure ETL.script_end 
 create procedure ETL.script_end 
 (
@@ -267,19 +277,24 @@ create procedure ETL.script_end
 as 
 begin 
 	--declare @script_key int;
-	--set @script_key = 100
+	--set @script_key = 4;
+	--declare @error_bit bit; 
+	--set @error_bit = 0;
 	declare @script_history_key int;
-	
-	select top 1 @script_history_key=script_history_key 
+	declare @cur_time datetime;
+	declare @start_time datetime; 
+	set @cur_time = getdate();
+	select top 1 @script_history_key=script_history_key,@start_time=start_time  
 	from ETL.script_history
 	where script_key = @script_key 
 	and done = 0
 	order by start_time desc 
-	
+  --  select @script_history_key,@start_time,DATEDIFF(ss, @start_time,@cur_time); 	
 	update ETL.script_history  
-	set end_time = getdate(),
+	set end_time = @cur_time,
 	done = 1,
-	error = @error_bit 
+	error = @error_bit,
+	time = DATEDIFF(ss, @start_time,@cur_time)
 	where script_history_key = @script_history_key 
 end
 select * from ETL.script_history order by script_key,start_time desc    
@@ -302,6 +317,7 @@ join ETL.source_control_project p
 on r.source_control_project_key = p.source_control_project_key 
 insert into ETL.source_control_repo  
 values
+(9,1,'AccountingBalanceAppendPeriodRange')
 (8,3,'PlexSoapUI'),
 (7,3,'PlexSoap'),
 (6,1,'AccountingPeriod'),
