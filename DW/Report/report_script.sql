@@ -32,8 +32,48 @@ values
 (1,100,5),--'AccountingPeriod'
 (2,100,1),--'AccountingAccount'
 (3,100,3),--,'AccountingYearCategoryType'
-(4,100,4)--'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
 */
+delete from Report.report_datasource
+where datasource_key = 4
+/*
+ * What non-datasource scripts do we use in this report?
+ */
+-- drop table Report.report_script
+create table Report.report_script  
+( 
+	report_script_key int not null,
+	report_key int not null,
+	script_key int not null,
+	CONSTRAINT PK_report_script PRIMARY KEY (report_script_key)
+)
+select * from Report.report_script 
+insert into Report.report_script  
+values 
+--(1,100,4),--'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
+(2,100,6),--'AccountingBalanceAppendPeriodRange'
+
+		select 
+		--rd.*
+		s.*
+		--select count(*)
+		from Report.report_datasource rd 
+		join DataSource.datasource_script dss 
+		on rd.datasource_key = dss.datasource_key 
+		join ETL.script s 
+		on dss.script_key=s.script_key 
+		join ETL.schedule sc  
+		on s.schedule_key = sc.schedule_key  
+		union 
+		select 
+		s.*
+		--select count(*)
+		from Report.report_script rs 
+		join ETL.script s 
+		on rs.script_key=s.script_key 
+		join ETL.schedule sc  
+		on s.schedule_key = sc.schedule_key  
+		
+
 -- drop table Report.report_column 
 CREATE TABLE Report.report_column (
 	report_column_key int NOT NULL,

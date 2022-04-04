@@ -62,13 +62,11 @@ create table DataSource.datasource
 insert into DataSource.datasource 
 values 
 -- Group DW datasources here
-(200,'account_period_balance',3,'Plex.account_period_balance'),
-
 (5,'AccountingPeriod',2,'start and end period dates and fiscal order info. I think period in the distant future get added periodically.'),
-(4,'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
+-- not a datasource,script only (4,'AccountingBalanceUpdatePeriodRange',2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
 (3,'AccountingYearCategoryType',2,'It is used to add account category records for each year.  This is needed in YTD calculations which rely on an account being a revenue/expense to determine whether to reset YTD values to 0 for every year. '),
 (1,'AccountingAccount',2,'This is used to generate records in account_period_balance. Since the previous 12 months account_period_balance gets regenerated when a new period gets appended if the category type changes or an account gets added or removed the previous 12 months worth of records is affected.'),
-(2,'Workcenter_Get',1,'This is where the labor cost per hour comes from.'),
+
 (102,'CostGrossMarginDaily',1,'Contains sales quantity and price data.'),
 (103,'CostModelsGet',1,'Used to determine the active cost model.'),
 (104,'CostSubTypeBreakdownMatrix',1,'Used to determine the cost model material cost.'),
@@ -79,7 +77,7 @@ values
 (109,'PartOperationGet',1,'Used to determine the shippable part operations.'),
 (113,'WorkcentersGet',1,'Used to determine the labor cost per hour.')
 
-
+-- select * from DataSource.datasource 
 -- drop table DataSource.datasource_datum
 create table Datasource.datasource_datum
 ( 
@@ -109,10 +107,9 @@ insert into DataSource.datasource_script
 values 
 --/* already inserted
 (5,5),--'AccountingPeriod',1,2,'start and end period dates and fiscal order info. I think period in the distant future get added periodically.'),
-(4,4),--'AccountingBalanceUpdatePeriodRange',1,2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
+-- not a datasource (4,4),--'AccountingBalanceUpdatePeriodRange',1,2,'The period range to update the Trial Balance report calculated by a Mobex procedure.'),
 (3,3),--'AccountingYearCategoryType',1,2,'It is used to add account category records for each year.  This is needed in YTD calculations which rely on an account being a revenue/expense to determine whether to reset YTD values to 0 for every year. '),
 (1,1),--'AccountingAccount',1,2,'This is used to generate records in account_period_balance. Since the previous 12 months account_period_balance gets regenerated when a new period gets appended if the category type changes or an account gets added or removed the previous 12 months worth of records is affected.'),
-(2,2),--'Workcenter_Get',1,1,'This is where the labor cost per hour comes from.'),
 (102,102),--'CostGrossMarginDaily',1,1,'Contains sales quantity and price data.'),
 (103,103),--'CostModelsGet',1,1,'Used to determine the active cost model.'),
 (104,104),--'CostSubTypeBreakdownMatrix',1,1,'Used to determine the cost model material cost.'),
@@ -125,6 +122,8 @@ values
 
 --*/ 
 select * from Datasource.datasource_script
+-- delete from Datasource.datasource_script
+where datasource_key = 2
 select ds.name datasource 
 --dd.name datum_name,
 ,s.name script,sch.name schedule 

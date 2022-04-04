@@ -157,7 +157,7 @@ begin
 	    0 ytd_balance
 	    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363/4,595
 	    -- select distinct pcn,period from Plex.account_period_balance b order by pcn,period 
-	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202101  -- 4,595
+	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202103  -- 4,595
 		from Plex.accounting_account a   
 		left outer join Plex.account_period_balance b 
 		on a.pcn=b.pcn 

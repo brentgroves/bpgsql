@@ -15,16 +15,19 @@ CREATE TABLE mgdw.ETL.script (
 -- truncate TABLE mgdw.ETL.script;
 insert into ETL.script 
 values 
+-- select * from ETL.Script where name like '%RecreatePer%'
+(117,2,'AccountingPeriodBalanceRecreatePeriodRange',1,11)
+(116,2,'AccountingPeriodBalanceDeletePeriodRange',1,10),
 (6,2,'AccountingBalanceAppendPeriodRange',1,9),
 (5,2,'AccountingPeriod',1,6),
 (4,2,'AccountingBalanceUpdatePeriodRange',1,5),
 (3,2,'AccountingYearCategoryType.dtsx',1,4),
 (1,2,'AccountingAccount.dtsx',1,1),
 select * from ETL.Script_History 
-where script_key = 4 
+where script_key = 117
 order by start_time  
-
-
+SELECT @@version;
+select * from ETL.script s 
 --/* already inserted
 (102,1,'Invoke-CostGrossMarginDaily',1,3),
 (103,1,'Invoke-CostModelsGet',1,3),
@@ -227,7 +230,7 @@ set @script_key = 114;
 select @script_key,getdate(),null,0
 
 select * from ETL.script_history
-where script_key = 114
+where script_key = 6
 
 
 
@@ -317,6 +320,8 @@ join ETL.source_control_project p
 on r.source_control_project_key = p.source_control_project_key 
 insert into ETL.source_control_repo  
 values
+(11,1,'AccountingPeriodBalanceRecreatePeriodRange')
+(10,1,'AccountingPeriodBalanceDeletePeriodRange')
 (9,1,'AccountingBalanceAppendPeriodRange')
 (8,3,'PlexSoapUI'),
 (7,3,'PlexSoap'),
