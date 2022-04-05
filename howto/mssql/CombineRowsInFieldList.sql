@@ -1,6 +1,24 @@
 --https://stackoverflow.com/questions/194852/how-to-concatenate-text-from-multiple-rows-into-a-single-text-string-in-sql-serv
 --https://stackoverflow.com/questions/6899/how-to-create-a-sql-server-function-to-join-multiple-rows-from-a-subquery-into
 --https://docs.microsoft.com/en-us/sql/relational-databases/xml/for-xml-sql-server?view=sql-server-2017
+select dep.goal_key,
+      LEFT(dep.depend_list,Len(dep.depend_list)-1) As "depend_list"
+from 
+(
+  select g.goal_key,
+  ( 
+  	select g2.name + ',' as [text()]
+  	from Goals.goal_dependancy gd
+  	join Goals.goal g2
+  	on gd.goal_dependancy_key=g2.goal_key
+  	where g.goal_key = gd.goal_key
+  	for xml path (''),TYPE 
+  ).value('text()[1]','nvarchar(max)') [depend_list]
+  from Goals.goal g
+--  where g.goal_key in (6,7)
+) dep  
+
+
 If there is a table called STUDENTS
 
 SubjectID       StudentName
