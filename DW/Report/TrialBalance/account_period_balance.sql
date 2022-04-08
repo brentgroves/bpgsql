@@ -27,3 +27,8 @@ where s.pcn = 123681
 and s.account_no = '39100-000-0000'
 ORDER BY pcn,period
 and s.period between 202101 and 202201  -- 2,462/2,718/2,975
+
+SELECT DISTINCT pcn, period 
+FROM Plex.account_period_balance
+
+ORDER BY pcn, period

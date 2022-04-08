@@ -40,13 +40,31 @@ CREATE TABLE Plex.GL_Account_Activity_Summary
 	'' sub_category_name, -- Albion does has all blanks.
 	0 subtotal_after, -- Albion has all zeros. select distinct(subtotal_after) from Plex.Account_Balances_by_Periods b where b.pcn = 300758
 	'' subtotal_name -- Albion has all zeros.
-
+select * from Plex.accounting_period
+where period between 202202 and 202204 and pcn = 123681
  */
 /*
  * Make a backup
  */
+select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
+-- select distinct pcn,period
+--select count(*)
+--select *
+--into Archive.GL_Account_Activity_Summary_04_08_2022 --39,356
+--into Archive.GL_Account_Activity_Summary_04_07_2022 --38,876
+--into Archive.GL_Account_Activity_Summary_01_27_2022 38,377
+from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377/38,634
+left outer join Archive.GL_Account_Activity_Summary_04_08_2022 a --39,356
+on s.pcn = a.pcn
+and s.period = a.period 
+and s.account_no = a.account_no
+where s.period = 202203  --250
+--and s.debit != a.debit  -- 3
+and s.credit != a.credit  -- 1
+
+
 select *
-into Archive.GL_Account_Activity_Summary_04_07_2022  -- 38,876
+--into Archive.GL_Account_Activity_Summary_04_07_2022  -- 38,876
 --into Archive.GL_Account_Activity_Summary_01_07_2022  -- 38,208
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
 
@@ -54,9 +72,12 @@ select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
 -- select distinct pcn,period
 --select count(*)
 --select *
+--into Archive.GL_Account_Activity_Summary_04_08_2022 --39,356
 --into Archive.GL_Account_Activity_Summary_04_07_2022 --38,876
 --into Archive.GL_Account_Activity_Summary_01_27_2022 38,377
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377/38,634
+where s.period = 202203  --250
+--where s.period = 202202  --229
 --where s.period = 202111  --87/256
 order by pcn,period
 
