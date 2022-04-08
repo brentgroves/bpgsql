@@ -177,7 +177,7 @@ and b.account_no=a.account_no -- 43,630 /170,863
 --select distinct pcn,period from Plex.trial_balance_multi_level d order by pcn,period 
 --select * from Plex.trial_balance_multi_level d where pcn=123681 and period=202112 -- all 0 since imported in november
 --select * 
---into Archive.trial_balance_multi_level_01_27_2022 -- 666,232
+--into Archive.trial_balance_multi_level_04_07_2022 -- 672640
 --from Plex.trial_balance_multi_level d 
 
 left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display

@@ -58,11 +58,13 @@ from Plex.Account_Balances_by_Periods
 --delete from Plex.Account_Balances_by_Periods
 where period in (999999,0)  --4204/4,206
 update Plex.Account_Balances_by_Periods
-set pcn = 123681 where pcn is null
+set pcn = 123681 where pcn is null -- 4204
 
 select count(*)
 from Plex.Account_Balances_by_Periods 
-where pcn=123681 and period=202201  -- 4204
+where pcn=123681 and period=202203  -- 4204
+--where pcn=123681 and period=202202  -- 4204
+--where pcn=123681 and period=202201  -- 4204
 --where pcn=123681 and period=202112  -- 4204
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201811  -- 4204

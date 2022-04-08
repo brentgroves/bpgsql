@@ -330,7 +330,7 @@ insert into DataSource.datasource_datum_column_issue
 values 
 (1,1,'no labor cost','no labor cost','Plex.workcenter_no_labor_rate',4,0,null,1,'red'),
 (2,1,'Greater than 10% difference in labor cost per hour','Greater than 10% difference in labor cost per hour','Plex.labor_cost_percent_diff',4,0,null,1,'red')
-
+select name from DataSource.datasource_datum_column_issue 
 select ds.name,dd.name datum_name
 ,dwc.name dw_column
 ,ddci.name dw_issue,ddci.highlight_color 

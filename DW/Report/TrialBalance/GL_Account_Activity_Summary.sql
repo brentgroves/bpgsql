@@ -46,6 +46,7 @@ CREATE TABLE Plex.GL_Account_Activity_Summary
  * Make a backup
  */
 select *
+into Archive.GL_Account_Activity_Summary_04_07_2022  -- 38,876
 --into Archive.GL_Account_Activity_Summary_01_07_2022  -- 38,208
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)
 
@@ -53,6 +54,7 @@ select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
 -- select distinct pcn,period
 --select count(*)
 --select *
+--into Archive.GL_Account_Activity_Summary_04_07_2022 --38,876
 --into Archive.GL_Account_Activity_Summary_01_27_2022 38,377
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377/38,634
 --where s.period = 202111  --87/256
