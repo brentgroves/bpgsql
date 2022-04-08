@@ -122,6 +122,16 @@ values
 ,52
 ,1
 )
+,(14 
+,'Fastest cycle time'
+,4
+,'Needed for production count estimates and locating any CNC that are running slower.'
+,'Jason Conwell,Cliff Burkhart'
+,1
+,52
+,60
+)
+
 ,(7 
 ,'Tool and pallet change time data collection'
 ,4
