@@ -1,10 +1,38 @@
+/*
+Good afternoon, Kevin
+
+I think an IS goals schema could be used to manage and report on 
+goals that may not be practical by using the ADP software alone. 
+
+If individuals help to maintain their own goal list we could all be 
+more aware of an involved in the goal setting process.
+
+In addition to what is required by Mobex we could be collecting additional 
+data such as how long it takes us to complete each step in the reporting 
+process.
+
+Maintaining and updating a simple goal schema is not hard and 
+it could be updated as much as needed so that we are collecting the 
+data we want to report on.
+
+I think an added benefit is that, if we are more aware of our goals 
+maybe we could be discussing updates to them throughout the year.
+
+If we get this going maybe next April the goal setting process 
+would become so natural to us that it would be trivial to 
+meet any Mobex deadlines.
+ 
+
+
+
+If it is ok with you we could list the goals we know
+about now and continue to update this list throughout the year.
+
+Jeff was saying we can update this list through out the year.
+
+ */
 create schema Goals
-Name 
-Parent 
-Description  
-Reason 
-Plan 
-Due 
+
 
 create table Goals.goal_dependancy 
 ( 
@@ -32,10 +60,48 @@ values
 (2,'in progress','IP'),
 (3,'done','DN')
 
+-- drop table Goals.goal_type 
+create table Goals.goal_type 
+(  
+	goal_type_key int not null,
+	name varchar(100),
+	CONSTRAINT PK_goal_type_key PRIMARY KEY (goal_type_key)
+)
+insert into Goals.goal_type 
+values
+(1,'report'),
+(2,'data collection')
+
+-- drop table Goals.step 
+create table Goals.step 
+(  
+	step_key int not null,
+	name varchar(100),
+	CONSTRAINT PK_step_key PRIMARY KEY (step_key)
+)
+insert into Goals.step 
+values
+(1,'get requirements'),
+(2,'find data sources')
+
+-- drop table Goals.goal_type_step
+create table Goals.goal_type_step 
+(  
+	goal_type_step_key int not null,
+	goal_type_key int not null,
+	goal_step_key int not null,
+	CONSTRAINT PK_goal_type_step_key PRIMARY KEY (goal_type_step_key)
+)
+insert into Goals.goal_type_step 
+values
+(1,1,1),
+(2,1,2)
+
 -- drop table Goals.goal 
 create table Goals.goal 
 (
 	goal_key int not null,
+	goal_type_key int not null,
 	name varchar(100) not null,
 	parent_goal_key int null,
 	reason varchar(max) null,
@@ -213,6 +279,7 @@ values
 	team varchar(250) null,
 	work_week_start int null,
 
+select * from Goals.goal_view	
 --drop view Goals.goal_view
 create view Goals.goal_view
 as 

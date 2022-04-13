@@ -149,7 +149,7 @@ set @pcn= 123681;
 declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
-set @period_end = 202201;
+set @period_end = 202203;
 /*
 select b.pcn,b.account_no,
 b.period,
@@ -166,20 +166,21 @@ p.ytd_debit-p.ytd_credit PP_ytd_balance,
 
 */
 --b.balance -d.current_debit_credit  diff
+declare @pcn int;
+set @pcn= 123681;
+declare @period_start int;
+set @period_start = 202101;
+declare @period_end int;
+set @period_end = 202203;
+
 -- select *
 select count(*) 
 from Plex.account_period_balance b -- 766,413
+--where b.period between 202101 and 202203
+--and b.pcn = 123681 -- 4595*15=45950+22975 = 68925
 inner join Plex.accounting_account a 
 on b.pcn=a.pcn 
 and b.account_no=a.account_no -- 766,413
---from Plex.account_period_balance_view b -- 43,620  -- This view made the query non-responsive
---inner join Plex.trial_balance_multi_level d -- 42,040, 43,620 - 42,040 = 1,580 account periods do not show up on TB CSV download. TB download does not show the plex period for a multi period month, you must link to period_display
---select distinct pcn,period from Plex.trial_balance_multi_level d order by pcn,period 
---select * from Plex.trial_balance_multi_level d where pcn=123681 and period=202112 -- all 0 since imported in november
---select * 
---into Archive.trial_balance_multi_level_04_07_2022 -- 672640
---from Plex.trial_balance_multi_level d 
-
 left outer join Plex.trial_balance_multi_level d -- TB download does not show the plex period for a multi period month, you must link to period_display
 on b.pcn=d.pcn
 and b.account_no = d.account_no
@@ -213,13 +214,14 @@ and b.account_no=s.account_no
 and b.period=s.period  
 --where b.pcn=@pcn and b.period=202201 and b.account_no = '73100-000-0000'
 --DEBUG ONLY where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_no like '4%' and b.period = 202201 and b.credit  > 0
---where b.pcn=@pcn and b.period between @period_start and @period_end  -- 59,735/2021-01 to 2022-01 -- 55,140/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 54,652/2021-01 to 2022-01 -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
---where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end  -- 68,925/2021-01 to 2022-03
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 63,060/2021-01 to 2022-03
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 47/2021-01 to 2022-03 --42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  --3,697/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit --3,518/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2022-01 -- 0/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != s.credit -- 1/2021-01 to 2022-01 
