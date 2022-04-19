@@ -17,8 +17,8 @@ create table Plex.trial_balance_multi_level
 )
 select distinct pcn,period 
 from Plex.trial_balance_multi_level order by pcn,period  
-select count(*) from Plex.trial_balance_multi_level  -- 668,436/664,232
-where period = 202111
+select count(*) from Plex.trial_balance_multi_level  -- 681,048
+where period = 202203
 
 select * 
 -- select count(*)

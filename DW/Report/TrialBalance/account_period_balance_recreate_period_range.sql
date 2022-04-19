@@ -391,9 +391,12 @@ declare @pcn int;
 set @pcn = 123681;
 
 exec Report.trial_balance 202202,202202
-SELECT @@ROWCOUNT;
+SELECT @@ROWCOUNT;  -- 4,595
 exec Report.trial_balance 202201,202202
-SELECT @@ROWCOUNT;
+SELECT @@ROWCOUNT;   -- 9,190
+exec Report.trial_balance 202201,202203
+SELECT @@ROWCOUNT;   -- 9,190 + 4,595 =13,785
+
 CREATE PROCEDURE Report.trial_balance
 @start_period int,
 @end_period int 

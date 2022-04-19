@@ -32,3 +32,5 @@ SELECT DISTINCT pcn, period
 FROM Plex.account_period_balance
 
 ORDER BY pcn, period
+
+
