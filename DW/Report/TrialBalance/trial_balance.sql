@@ -41,3 +41,19 @@ order by b.period_display,a.account_no
 --where b.period_display is NULL -- 40,940
 --where a.account_no = '10220-000-00000' 
 END;
+
+Create table Scratch.trial_balance 
+(  
+period_display varchar(7),
+category_type varchar(10),
+category_name varchar(50),
+sub_category_name varchar(50),
+account_no varchar(20),
+account_name varchar(110),
+balance decimal(19,5),
+ytd_balance decimal(19,5)
+);
+
+exec Report.trial_balance 202203,202203
+
+select category_type, sum(balance) balance, sum(ytd_balance) from Scratch.trial_balance group by category_type 
