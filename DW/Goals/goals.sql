@@ -76,13 +76,55 @@ values
 create table Goals.step 
 (  
 	step_key int not null,
+	order_no int,
 	name varchar(100),
+	hours int,
+	step_status_key int,
 	CONSTRAINT PK_step_key PRIMARY KEY (step_key)
 )
 insert into Goals.step 
 values
-(1,'get requirements'),
-(2,'find data sources')
+(1,1,'get requirements',1,1),
+(2,2,'find data sources',1,1),
+(3,3,'create ETL scripts',1,1),
+(4,4,'identify issues with data sources',1,1),
+(5,5,'transform data in data sources to get desired values',1,1),
+(6,6,'join the values to get result set',1,1),
+(7,7,'customer review of the result set',1,1)
+select * from Goals.step
+-- drop table Goals.step_status 
+create table Goals.step_status 
+(  
+	step_status_key int not null,
+	name varchar(100),
+	abbreviation varchar(50),
+	CONSTRAINT PK_step_status PRIMARY KEY (step_status_key)
+)
+insert into Goals.step_status 
+values
+(1,'not started','NS'),
+(2,'in progress','IP'),
+(3,'done','DN')
+select * from Goals.step_status 
+
+-- drop table Goals.goal_step
+create table Goals.goal_step 
+(  
+	goal_step_key int not null,
+	goal_key int not null,
+	step_key int not null,
+	CONSTRAINT PK_goal_step_key PRIMARY KEY (goal_step_key)
+)
+insert into Goals.goal_step 
+values
+(1,2,1),
+(2,2,2),
+(3,2,3),
+(4,2,4),
+(5,2,5),
+(6,2,6),
+(7,2,7)
+
 
 -- drop table Goals.goal_type_step
 create table Goals.goal_type_step 
@@ -116,6 +158,7 @@ create table Goals.goal
 insert into Goals.goal 
 values
 (14
+,1
 ,'Fastest cycle time'
 ,4
 ,'Needed for production count estimates and locating any CNC that are running slower.'
@@ -126,6 +169,7 @@ values
 ,1
 )
 ,(13
+,3
 ,'Update MSC Vending Machine with Plex Tooling module data.'
 ,8
 ,'In oder to link Plex job information to tooling cost.'
@@ -136,6 +180,7 @@ values
 ,1
 )
 ,(12
+,3
 ,'Setup JupyterHub'
 ,11
 ,'These notebooks will combine text and dynamic output of SQL procedures to' +
@@ -148,6 +193,7 @@ values
 )
 
 ,(11
+,3
 ,'Setup a two VM Ubuntu 20.04 Kubernetes Cluster'
 ,10
 ,'This will be used for the tooling data collection app and the Jupyter Notebook server.'
@@ -158,6 +204,7 @@ values
 ,1
 )
 ,(10
+,3
 ,'IS VM Setup'
 ,null
 ,'Several VM will be needed to perform IS computing tasks.'
@@ -168,6 +215,7 @@ values
 ,1
 )
 ,(9  
+,3
 ,'Initial Plex module setup'
 ,null
 ,'Work needs to be done to add additional functionality to Plex.'
@@ -178,6 +226,7 @@ values
 ,1
 )
 ,(8
+,3
 ,'Plex Tooling module'
 ,9 
 ,'Before collecting CNC information pertaining to tooling it is desirable to ' + 
@@ -188,17 +237,8 @@ values
 ,52
 ,1
 )
-,(14 
-,'Fastest cycle time'
-,4
-,'Needed for production count estimates and locating any CNC that are running slower.'
-,'Jason Conwell,Cliff Burkhart'
-,1
-,52
-,60
-)
-
 ,(7 
+,3
 ,'Tool and pallet change time data collection'
 ,4
 ,'Need to collect tool and pallet change times to report CNC maintenance issues.'
@@ -209,6 +249,7 @@ values
 ,1
 )
 ,(6 
+,3
 ,'Tooling cut time data collection'
 ,4
 ,'Need to collect tooling cut time data to report which tools are taking the most amount of time.'
@@ -219,6 +260,7 @@ values
 ,1
 )
 ,(5 
+,3
 ,'Tool life data collection'
 ,4
 ,'Need to collect tool life data to report CNC or operator tooling issues.'
@@ -229,6 +271,7 @@ values
 ,1
 )
 ,(4
+,3
 ,'Create IIOT data collection applications for Mobex reporting.'
 ,null 
 ,'Some information is more easily gathered directly from the CNC as opposed concerning In addition to It is desirable to '
@@ -239,10 +282,11 @@ values
 ,1
 )
 ,(3
-,'Validate Trial Balance report data sources'
+,3
+,'Trial Balance report'
 ,1 
-,'The Plex ERP system contains a huge amount of information and data can get entered wrong. ' +
-'So it is recommended that checks are made to ensure the information we are reporting is accurate.'
+,'The Plex Trial Balance report no longer works correctly for our older PCN, Southfield. ' +
+'It does not include all accounts. Make a new report that includes all accounts.'
 ,'Greg Philips'
 ,1
 ,15
@@ -250,7 +294,8 @@ values
 ,1
 )
 ,(2
-,'Validate Daily Metrics report data sources'
+,1
+,'Daily Metrics report'
 ,1 
 ,'The Plex ERP system contains a huge amount of information and data can get entered wrong.' + 
 'So it is recommended that checks are made to ensure the information we are reporting is accurate.'
@@ -261,6 +306,7 @@ values
 ,1
 )
 ,(1 
+,3
 ,'Examine Plex data sources for issues.'
 ,null
 ,'The Plex ERP system contains a huge amount of information and data can get entered wrong. ' +
@@ -311,6 +357,10 @@ as
 	g.goal_key, 
 	g.priority, 
 	g.name, 
+	st.order_no,
+	st.name step,
+	st.hours, 
+	ss.name step_status,
 	gp.goal_key parent_goal_key,
 	case 
 	when gp.goal_key is null then ''
@@ -322,7 +372,7 @@ as
 	g.work_week_start,
 	g.work_week_end,
 	s.name status,
-	s.abbreviation 
+	s.abbreviation
 	from Goals.goal g
 	left outer join Goals.goal gp 
 	on g.parent_goal_key = gp.goal_key 
@@ -330,6 +380,13 @@ as
 	on g.goal_key = gd.goal_key 
 	left outer join Goals.status s 
 	on g.status_key = s.status_key 
+	left outer join Goals.goal_step gs 
+	on g.goal_key=gs.goal_key
+	left outer join Goals.step st 
+	on gs.step_key = st.step_key 
+	left outer join Goals.step_status ss 
+	on st.step_status_key = ss.step_status_key 
+	
 )
 select * from goal 	
 	
@@ -341,6 +398,10 @@ begin
 	select 
 	priority, 
 	name goal,
+	step,
+	order_no,
+	hours,
+	step_status,
 	parent_goal parent_goal,
 	v.depend_list,
 	reason,
