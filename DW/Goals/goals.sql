@@ -1,4 +1,6 @@
 /*
+What info to track:
+
 Good afternoon, Kevin
 
 I think an IS goals schema could be used to manage and report on 
