@@ -2,15 +2,35 @@
  * Definitions
  */
 select distinct pcn,(year)  from Plex.accounting_account_year_category_type aayct 
-select count(*) from Plex.accounting_account_year_category_type aayct  -- 24,723
+select count(*) from Plex.accounting_account_year_category_type aayct  -- 24,767, 24,723
+WHERE year = 2022 -- 8,285
+select * from Plex.accounting_account_year_category_type aayct  -- 24,767, 24,723
+
 select distinct pcn,account_no from Plex.accounting_account aa order by pcn,account_no 
-select count(*) from Plex.accounting_account  -- 19,176
+select count(*) from Plex.accounting_account  -- 19,286,19,176
+select * from Plex.accounting_account  -- 19,286,19,176
+where account_no like '73250%' --22 73250 
+
+--select * from Plex.accounting_account  -- 19,286,19,176
+where pcn = 123681 -- 4,617
 select distinct pcn,period from Plex.accounting_period ap 
 select count(*) from Plex.accounting_period ap -- 1418
-select * from Plex.accounting_balance_update_period_range -- 202104/202203
-select count(*) from Plex.accounting_balance ab -- 46,926
-select distinct pcn,period from Plex.accounting_balance ab order by pcn,period  --, 200812 to 202203
-select count(*) from Plex.account_period_balance apb -- 123,615
+select * from Plex.accounting_balance_update_period_range -- 202105/202204
+select count(*) from Plex.accounting_balance ab -- 47,546 / 46,926
+select * from Plex.accounting_balance ab -- 46,926
+where account_no like '73250%' --22 73250 
+select * from Plex.account_period_balance ab -- 46,926
+where account_no like '73250-000%' --22 73250 
+and pcn = 123681 
+order by period 
+select distinct pcn,period from Plex.accounting_balance ab order by pcn,period  --, 200812 to 202204
+select count(*) from Plex.account_period_balance apb -- 131,900, 123,615
+select * from Plex.accounting_account  -- 19,286,19,176
+where account_no like '73250%' --22 73250 
+select * from Plex.account_period_balance apb -- 131,900, 123,615
+where account_no like '73250%' --22 73250 
+and pcn = 123681 order by account_no 
+select distinct pcn,period from Archive.account_period_balance_05_12_2022 order by pcn,period  --, 200812 to 202204
 select distinct pcn,period from Plex.account_period_balance order by pcn,period -- 202101 to 202203
 select * from Plex.account_period_balance 
 Accounting_account: AccountingAccount ETL Script 
