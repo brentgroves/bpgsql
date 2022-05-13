@@ -72,6 +72,7 @@ select *
 -- select count(*) from Archive.accounting_account_pre_additions_01_07
 --into Archive.accounting_account_pre_additions_01_07
 from Plex.accounting_account aa -- 18,015, 
+WHERE account_no like '73250%' --0 
 where pcn = 123681 -- 4,362/4,595 -- one more has been added since 12/15
 and category_type in ('Revenue','Expense') -- 3,723
 and left(account_no,1) < '4'  -- 22

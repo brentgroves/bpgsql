@@ -23,8 +23,8 @@ select * from Plex.account_period_balance ab -- 46,926
 where account_no like '73250-000%' --22 73250 
 and pcn = 123681 
 order by period 
-select distinct pcn,period from Plex.accounting_balance ab order by pcn,period  --, 200812 to 202204
-select count(*) from Plex.account_period_balance apb -- 131,900, 123,615
+select distinct pcn,period from Plex.accounting_balance ab where order by pcn,period  --, 200812 to 202204
+select count(*) from Plex.account_period_balance apb -- 132,428,123,659,131,900, 123,615
 select * from Plex.accounting_account  -- 19,286,19,176
 where account_no like '73250%' --22 73250 
 select * from Plex.account_period_balance apb -- 131,900, 123,615
@@ -187,6 +187,11 @@ from Plex.accounting_period ap
 where pcn=@pcn
 and period between 202101 and 202203
 order by period 
+select *
+from Plex.accounting_period ap 
+where pcn=123681
+and period between 202101 and 202204
+order by period 
 
 /*
  * Does the values in this view match with the CSV download and the TB PP?
@@ -216,12 +221,12 @@ set @pcn= 123681;
 declare @period_start int;
 set @period_start = 202101;
 declare @period_end int;
-set @period_end = 202203;
+set @period_end = 202204;
 
- SElect 
-b.*,b.ytd_credit,p.Ytd_Credit,  b.ytd_debit,p.Ytd_Debit--p.Current_Debit 
---b.*, b.balance,d.current_debit_credit
---select count(*) 
+--SElect 
+--b.*,b.ytd_credit,p.Ytd_Credit,  b.ytd_debit,p.Ytd_Debit--p.Current_Debit 
+--,b.balance,d.current_debit_credit
+select count(*) 
 from Plex.account_period_balance b -- 123,615
 --where b.period between 202101 and 202203
 --and b.pcn = 123681 -- 4595*15=45950+22975 = 68925
@@ -261,56 +266,56 @@ and b.account_no=s.account_no
 and b.period=s.period  
 --where b.pcn=@pcn and b.period=202201 and b.account_no = '73100-000-0000'
 --DEBUG ONLY where b.pcn=@pcn and b.period between @period_start and @period_end and b.account_no like '4%' and b.period = 202201 and b.credit  > 0
---where b.pcn=@pcn and b.period between @period_start and @period_end  -- 68,925/2021-01 to 2022-03
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 63,060/2021-01 to 2022-03
---where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  -- 47/2021-01 to 2022-03 --42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
+--where b.pcn=@pcn and b.period between @period_start and @period_end  -- 73,806/2021-01 to 2022-04/68,925/2021-01 to 2022-03 -- 69,189
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is not null -- 67,264/2021-01 to 2022-04, 63,060/2021-01 to 2022-03
+--where b.pcn=@pcn and b.period between @period_start and @period_end and p.pcn is null and s.pcn is not null  --53/2021-01 to 2022-04 --5/2021-01 to 2022-03 -- 47/2021-01 to 2022-03 --42/2021-01 to 2022-01 -- 38/2021-01 to 2021-12  account periods with activity not on the TB report.
 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  --3,696/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit --3,696/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and s.pcn is not null  --3,953/2021-01 to 2022-04 --3,696/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit=s.debit --3,953/2021-01 to 2022-04 --3,696/2021-01 to 2022-03 --3,446/2021-01 to 2022-02-- 3,217/2021-01 to 2022-01 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (s.debit != b.debit) -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit -- 3,696/2021-01 to 2022-03 -- 2,975/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != s.credit -- 0/2021-01 to 2022-03 
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = s.credit --3,953/2021-01 to 2022-04 -- 3,696/2021-01 to 2022-03 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != s.credit -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 
 --select b.credit, * from Plex.accounting_balance b where pcn= 123681 and period = 202201 and account_no = '39100-000-0000'
 --39100-000-0000 - Retained Earnings -Year End Close Credit	1,826,771.83, 2022-01 was last updated on 2/11/2022 4:45:00 PM
 -- but this Year End Close transaction has a date of 2/18/2022 9:30:50 AM
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  -- 3,696/2021-01 to 2022-03 -- 2,975/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =s.balance  --3,953/2021-01 to 2022-04 -- 3,696/2021-01 to 2022-03 -- 2,975/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance !=s.balance -- 0
 
-where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  --63,028/2021-01 to 2022-03 --50,423/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 32/2021-01 to 2022-03 -- 25/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance = d.current_debit_credit  --67,228/2021-01 to 2022-04 --63,028/2021-01 to 2022-03 --50,423/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 36/2021-01 to 2022-04 -- 32/2021-01 to 2022-03 -- 25/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
 --where a.account_no = '22500-000-0000' and b.period=202203
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 63,060/2021-01 to 2022-03 --50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/2021-01 to 2022-03 --0/0 
-
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 63,060/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 67,264/2021-01 to 2022-04 -- 63,060/2021-01 to 2022-03 --50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 --0/0 
+-- failed on 49300-000-0000
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit = p.current_debit  -- 67,264/2021-01 to 2022-04-- 63,060/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.debit != p.current_debit  -- 0/2021-01 to 2022-01 -- 0 
 --22600-000-0000, 22900-000-0000 signs are reversed
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)   -- 63,056/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance = p.Current_Debit - p.Current_Credit)  -- 67,264/2021-01 to 2022-04 -- 63,056/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance != p.Current_Debit - p.Current_Credit)   -- 0/2021-01 to 2022-01 --0/2021-01 to 2021-12
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 63,057/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 3/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 67,260/2021-01 to 2022-04-- 63,057/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12--
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 4/2021-01 to 2022-04 -- 3/2021-01 to 2021-12
 -- ISSUE: 1 ACCOUNT IS NOT THE SAME
 -- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
 -- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
 -- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  --63,053/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 3/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = p.ytd_debit  -- 67,260/2021-01 to 2022-04--63,053/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit != p.ytd_debit  -- 4/2021-01 to 2022-04 -- 3/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
 -- ISSUE: 1 ACCOUNT IS NOT THE SAME
 -- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
 -- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
 -- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
---WHere b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  --62,861/2021-01 to 2022-01 -- 50,286/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  --199/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01 or ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) < -0.01)   -- 0/2021-01 to 2022-03 
+--WHere b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit = (p.ytd_debit-p.ytd_credit))  --67,056/2021-01 to 2022-04 --62,861/2021-01 to 2022-01 -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (d.ytd_debit_credit != (p.ytd_debit-p.ytd_credit))  --208/2021-01 to 2022-04 --199/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) > 0.01 or ((p.ytd_debit-p.ytd_credit) - d.ytd_debit_credit) < -0.01)   -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 
 
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- 62,860/2021-01 to 2022-03 -- 50,286/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 200/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
---where b.pcn=@pcn and b.period between @period_start and @period_end and ((b.ytd_balance - d.ytd_debit_credit) > 0.01 or (b.ytd_balance - d.ytd_debit_credit) < -0.01) -- 3/2021-01 to 2022-03
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance = d.ytd_debit_credit) -- --67,052/2021-01 to 2022-04 67,052/2021-01 to 2022-03-- 62,860/2021-01 to 2022-03 -- 50,286/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and (b.ytd_balance != d.ytd_debit_credit) -- 212/2021-01 to 2022-04-- 200/2021-01 to 2022-01 -- 162/2021-01 to 2021-12
+--where b.pcn=@pcn and b.period between @period_start and @period_end and ((b.ytd_balance - d.ytd_debit_credit) > 0.01 or (b.ytd_balance - d.ytd_debit_credit) < -0.01) -- 4/2021-01 to 2022-04-- 3/2021-01 to 2022-03
 -- ISSUE: 1 ACCOUNT IS NOT THE SAME
 -- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
 -- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability

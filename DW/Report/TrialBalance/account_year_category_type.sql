@@ -28,3 +28,21 @@ and [year] = 2022 -- 4,595
 
 --delete from Plex.accounting_account_year_category_type 
 --where [year] < 2022
+
+-- mgdw.Plex.accounting_account_year_category_type definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.accounting_account_year_category_type;
+
+CREATE TABLE mgdw.Plex.accounting_account_year_category_type (
+	id int IDENTITY(1,1) NOT NULL,
+	pcn int NULL,
+	account_no varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[year] int NULL,
+	category_type varchar(10) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	revenue_or_expense bit NULL,
+	CONSTRAINT PK__accounti__3213E83FF126C7A5 PRIMARY KEY (id),
+	CONSTRAINT UQ__accounti__22DAE7B5B1F76486 UNIQUE (pcn,account_no,[year])
+);
+CREATE UNIQUE NONCLUSTERED INDEX UQ__accounti__22DAE7B5B1F76486 ON mgdw.Plex.accounting_account_year_category_type (pcn, account_no, [year]);

@@ -17,12 +17,13 @@ create table Plex.trial_balance_multi_level
 )
 select distinct pcn,period 
 from Plex.trial_balance_multi_level order by pcn,period  
-select count(*) from Plex.trial_balance_multi_level  -- 681,048
+select count(*) from Plex.trial_balance_multi_level  -- 689,456
 where period = 202203
 
 select * 
 -- select count(*)
 --select count(*) from Archive.trial_balance_multi_level_01_02_2022  -- 668,436 (200812-202112) -- I deleted 202112 because this period did not close as of 01-07-2022.
+--into Archive.trial_balance_multi_level_05_13_2022--685252
 --into Archive.trial_balance_multi_level_01_02_2022
 from Plex.trial_balance_multi_level  -- 58,856
 
@@ -65,9 +66,10 @@ select *
 --select count(*)
 from Plex.trial_balance_multi_level
 --order by pcn,period_display  
-where pcn=123681 and period=202203  -- 4204.
+--where pcn=123681 and period=202204  -- 4204.
+--where pcn=123681 and period=202203  -- 4204.
 --where pcn=123681 and period=202202  -- 4204.
---where pcn=123681 and period=202201  -- 4204.
+where pcn=123681 and period=202201  -- 4204.
 --where pcn=123681 and period=202112  -- 4204.
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201801  -- 4204
@@ -87,7 +89,9 @@ where pcn=123681 and period=202203  -- 4204.
 --where pcn=123681 and period=200902  -- 4204
 --where pcn=123681 and period=200901  -- 4204
 --where pcn=123681 and period=200812  -- 4204
-
+select *
+from Plex.trial_balance_multi_level
+where account_no like '73250%' --22 73250 
 Compare Trial Balance download with Accounting_p_Account_Balances_by_Periods_Get. 
 /*
  * How does trial balance multi level calculate the current_debit_credit and ytd_debit_credit values?

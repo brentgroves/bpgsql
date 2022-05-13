@@ -2,7 +2,7 @@ select * from Plex.accounting_account  -- 19,286,19,176
 where account_no like '73250%' --22 73250 
 select * from Plex.account_period_balance apb -- 131,900, 123,615
 where account_no like '73250%' --22 73250 
-and pcn = 123681 order by account_no 
+and pcn = 123681 order by account_no,period  
 
 select * from Plex.account_period_balance 
 --exec Plex.account_period_balance_recreate_period_range
@@ -14,6 +14,10 @@ begin
 /*
  * Recover from backup
  */
+-- select count(*) from Archive.account_period_balance_05_12_2022  -- 123,659
+-- select * from Archive.account_period_balance_05_12_2022 where pcn = 123681  -- 123,659
+-- select distinct pcn,period from Archive.account_period_balance_05_12_2022 where pcn = 123681 order by pcn,period -- 123,659
+-- select count(*) from Plex.account_period_balance -- 123,659, 33,008
 -- select * from Plex.account_period_balance
 --drop table Plex.account_period_balance 	
 --select *
@@ -108,7 +112,7 @@ select @prev_period=max(b.period)
 --select *
 from Plex.account_period_balance b
 where b.pcn = @pcn
-select @prev_period prev_period 
+--select @prev_period prev_period 
 set @anchor_period = @prev_period;
 
 select @anchor_period_display=p.period_display 
@@ -125,7 +129,10 @@ else
 begin 
 	set @first_period=0;
 end;
---select @pcn pcn,@anchor_period anchor_period,@prev_period prev_period, @period period,@period_start period_start,@period period ,@period_end period_end  
+--/*////////////////////////////////
+set @pcn = 300758
+--*/
+select @pcn pcn,@anchor_period anchor_period,@prev_period prev_period, @period period,@period_start period_start,@period period ,@period_end period_end;  
 /*
 select * from Plex.accounting_account  -- 19,286,19,176
 where account_no like '73250%' --22 73250 
@@ -140,7 +147,7 @@ and pcn = 123681 order by account_no
 
 
 		
-	with year_category_type
+	with account_year_category_type
 	as
 	(
 		select a.*
@@ -151,29 +158,54 @@ and pcn = 123681 order by account_no
 		on a.pcn = y.pcn 
 		and a.account_no =y.account_no
 		where y.[year] = (@prev_period/100) 
-		and a.pcn = 123681
+		and a.pcn = @pcn
 	),
-	--select count(*) from year_category_type  -- 4,595
-	add_year_category_type
+	--select count(*) from account_year_category_type  -- 4,595, albion 3,668
+	add_account_year_category_type
 	as 
 	( 	select a.*
 		from Plex.accounting_account a  
-		left outer join year_category_type y 
+		left outer join account_year_category_type y 
 		on a.pcn = y.pcn 
 		and a.account_no =y.account_no
-		where y.pcn is null 
-		and a.pcn = 123681
+		where y.pcn is null -- there is no account_year_category_type records for the @prev_period year so we must add them.
+		and a.pcn = @pcn
 	)
---	select * from add_year_category_type	-- 22
-		select y.*	
+	select * from add_account_year_category_type	-- 22
+	select y.pcn,y.account_no,y.[year],y.category_type,y.revenue_or_expense	
+	-- select * from Archive.accounting_account_year_category_type_added_05_13
+	--into Archive.accounting_account_year_category_type_added_05_13
+	from Plex.accounting_account_year_category_type y
+	where 
+	y.year = 2022
+	and y.account_no 
+	in 
+	(
+		select account_no
+	--	select y.pcn,y.account_no,y.[year],y.category_type,y.revenue_or_expense	
 		from Plex.accounting_account_year_category_type y
-		where y.[year] = (@prev_period/100)+1 
-		and y.pcn = 123681
+		where y.[year] = (@period_end/100) -- there is no account_year_category_type records for the @prev_period year so we must add them.
+		and y.pcn = @pcn
 		and y.account_no in 
 		( 
-			select account_no from add_year_category_type
+			select account_no from add_account_year_category_type
 		)
+	)
+	
+	select y.*	
+		from Plex.accounting_account_year_category_type y
+		where y.[year] = (@period_end/100) -- there is no account_year_category_type records for the @prev_period year so we must add them.
+		and y.pcn = @pcn
+		and y.account_no in 
+		( 
+			select account_no from add_account_year_category_type
+		)
+select * from Plex.accounting_account_year_category_type y 
+where pcn = 300758
 
+order by id 
+exec [Plex].[accounting_balance_delete_period_range]
+exec [Plex].[account_period_balance_delete_period_range]
 --	select count(*) from add_year_category_type	-- 22
 /*
 --are there any new accounts to add?

@@ -50,10 +50,16 @@ select s.pcn,s.period, s.account_no,s.debit,s.credit,s.net
 -- select distinct pcn,period
 --select count(*)
 --select *
+--into Archive.GL_Account_Activity_Summary_05_13_2022 --39,355
 --into Archive.GL_Account_Activity_Summary_04_08_2022 --39,356
 --into Archive.GL_Account_Activity_Summary_04_07_2022 --38,876
 --into Archive.GL_Account_Activity_Summary_01_27_2022 38,377
 from Plex.GL_Account_Activity_Summary s  --(),(221,202010)  -- 38,208/38,377/38,634
+--where s.period = 202201  --243/242
+--where s.period = 202202  --230
+where s.period = 202203  --251/250
+where s.period = 202204  -- 254
+where s.account_no like '73250%' --0 
 left outer join Archive.GL_Account_Activity_Summary_04_08_2022 a --39,356
 on s.pcn = a.pcn
 and s.period = a.period 
