@@ -9,7 +9,7 @@ select * from Plex.accounting_account_year_category_type aayct  -- 24,767, 24,72
 select distinct pcn,account_no from Plex.accounting_account aa order by pcn,account_no 
 select count(*) from Plex.accounting_account  -- 19,286,19,176
 select * from Plex.accounting_account  -- 19,286,19,176
-where account_no like '73250%' --22 73250 
+where account_no like '73250%' --22 73250
 
 --select * from Plex.accounting_account  -- 19,286,19,176
 where pcn = 123681 -- 4,617
@@ -213,6 +213,62 @@ p.ytd_debit-p.ytd_credit PP_ytd_balance,
 
 */
 
+/*
+ * Are there any accounts that we are not showing in our report?
+ */
+declare @pcn int;
+set @pcn= 123681;
+declare @period_start int;
+set @period_start = 202101;
+declare @period_end int;
+set @period_end = 202204;
+
+select count(*)
+from Plex.trial_balance_multi_level t -- 685,252
+left outer join Plex.account_period_balance b -- 123,615
+on b.pcn=t.pcn
+and b.account_no = t.account_no
+and b.period = t.period -- 688,665
+where t.period between @period_start and @period_end -- 67,264/2021-01 to 2022-04
+and b.pcn is null -- 0
+
+/*
+ * Are there any accounts that we are not showing in our report?
+ */
+declare @pcn int;
+set @pcn= 123681;
+declare @period_start int;
+set @period_start = 202101;
+declare @period_end int;
+set @period_end = 202204;
+
+select count(*)
+from Plex.Account_Balances_by_Periods p -- 43,620
+left outer join Plex.account_period_balance b -- 123,615
+on b.pcn=p.pcn
+and b.account_no = p.[no]
+and b.period = p.period -- 688,665
+where p.period between @period_start and @period_end -- 70,677/2021-01 to 2022-04
+and b.pcn is null -- 0
+
+/*
+ * Are there any accounts that we are not showing in our report?
+ */
+declare @pcn int;
+set @pcn= 123681;
+declare @period_start int;
+set @period_start = 202101;
+declare @period_end int;
+set @period_end = 202204;
+
+select count(*)
+from Plex.GL_Account_Activity_Summary s -- 39,612
+left outer join Plex.account_period_balance b -- 123,615
+on b.pcn=s.pcn
+and b.account_no = s.account_no
+and b.period = s.period -- 39,612
+where s.period between @period_start and @period_end -- 3,953/2021-01 to 2022-04
+and b.pcn is null -- 0
 
 
 --b.balance -d.current_debit_credit  diff
@@ -223,9 +279,13 @@ set @period_start = 202101;
 declare @period_end int;
 set @period_end = 202204;
 
---SElect 
---b.*,b.ytd_credit,p.Ytd_Credit,  b.ytd_debit,p.Ytd_Debit--p.Current_Debit 
---,b.balance,d.current_debit_credit
+/*
+SElect 
+b.period,b.account_no
+,b.ytd_credit our_ytd_credit,p.Ytd_Credit pp_ytd_credit
+,b.ytd_debit our_ytd_debit,p.Ytd_Debit  pp_ytd_debit
+,b.ytd_balance our_ytd_balance, p.Ytd_Debit - p.Ytd_Credit pp_ytd_balance, d.ytd_debit_credit tb_ytd_debit_credit 
+*/
 select count(*) 
 from Plex.account_period_balance b -- 123,615
 --where b.period between 202101 and 202203
@@ -287,6 +347,7 @@ and b.period=s.period
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance != d.current_debit_credit  -- 36/2021-01 to 2022-04 -- 32/2021-01 to 2022-03 -- 25/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and (b.balance - d.current_debit_credit) >  0.01 -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 -- 0/2021-01 to 2021-12
 --where a.account_no = '22500-000-0000' and b.period=202203
+
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit = p.current_credit  -- 67,264/2021-01 to 2022-04 -- 63,060/2021-01 to 2022-03 --50,448/2021-01 to 2021-12
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.credit != p.current_credit  -- 0/2021-01 to 2022-04 -- 0/2021-01 to 2022-03 --0/0 
 -- failed on 49300-000-0000
@@ -299,7 +360,7 @@ and b.period=s.period
 
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = p.ytd_credit  -- 67,260/2021-01 to 2022-04-- 63,057/2021-01 to 2022-03 -- 50,448/2021-01 to 2021-12--
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit != p.ytd_credit  -- 4/2021-01 to 2022-04 -- 3/2021-01 to 2021-12
--- ISSUE: 1 ACCOUNT IS NOT THE SAME
+-- ISSUE: 1 ACCOUNT,73100-000-0000, IS NOT THE SAME
 -- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
 -- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
 -- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
@@ -320,6 +381,7 @@ and b.period=s.period
 -- See issue section at the bottom of this procedure and the Mobex Plex procedure: accounting_year_category_type_issue 
 -- 73100-000-0000 has different category_types in accounting_v_account it is an Expense and in accounting_v_category_type it is a liability
 -- Conclusion: The Plex TB report and Plex authored procedure is wrong to not reset YTD values.
+
 
 /*
  * 'Revenue' or 'Expense' low accounts have no credit/debit values. 

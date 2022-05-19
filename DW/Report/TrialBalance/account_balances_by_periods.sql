@@ -64,9 +64,9 @@ select count(*)
 from Plex.Account_Balances_by_Periods 
 --where pcn=123681 and period=202204  -- 4204
 --and [no] like '73250%' --0 
-where pcn=123681 and period=202203  -- 4204
+--where pcn=123681 and period=202203  -- 4204
 --where pcn=123681 and period=202202  -- 4204
---where pcn=123681 and period=202201  -- 4204
+where pcn=123681 and period=202201  -- 4204
 --where pcn=123681 and period=202112  -- 4204
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201811  -- 4204

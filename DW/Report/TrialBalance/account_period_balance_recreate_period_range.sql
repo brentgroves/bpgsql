@@ -134,7 +134,53 @@ select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_perio
 */
 
 while @id <= @max_id
-begin
+BEGIN
+	/*
+	 * Add new account records to Plex.accounting_account_year_category_type 
+	 * for the @anchor_period's year if not already added.
+	 */
+	with account_year_category_type
+	as
+	(
+		select a.*
+		-- select count(*)
+		from Plex.accounting_account a  
+		--where a.pcn=123681 -- 4,617
+		inner join Plex.accounting_account_year_category_type y
+		on a.pcn = y.pcn 
+		and a.account_no =y.account_no
+		where y.[year] = (@prev_period/100) 
+		and a.pcn = @pcn
+	),
+	--select count(*) from account_year_category_type  -- 4,595
+	add_account_year_category_type
+	as 
+	( 	select a.*
+		from Plex.accounting_account a  
+		left outer join account_year_category_type y 
+		on a.pcn = y.pcn 
+		and a.account_no =y.account_no
+		where y.pcn is null -- there is no account_year_category_type records for the @prev_period year so we must add them.
+		and a.pcn = @pcn
+	)
+	--	select * from add_account_year_category_type	-- 22
+	/*
+	 * backup Plex.accounting_account_year_category_type
+	SELECT * 
+	--INTO Archive.accounting_account_year_category_type -- 24767
+	FROM Plex.accounting_account_year_category_type
+	 */
+	
+	INSERT INTO Plex.accounting_account_year_category_type (pcn,YEAR,category_type,revenue_or_expense)
+		select y.pcn,y.[year],y.category_type,y.revenue_or_expense	
+		from Plex.accounting_account_year_category_type y
+		where y.[year] = (@period_end/100) -- there is no account_year_category_type records for the @prev_period year so we must add them.
+		and y.pcn = @pcn
+		and y.account_no in 
+		( 
+			select account_no from add_account_year_category_type
+		)
+	
     /*
      * Update the anchor period. Add records for new accounts.
      * select * from Plex.account_period_balance_anchor
