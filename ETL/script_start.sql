@@ -11,9 +11,16 @@ begin
 	
 end;
 
-select * from ETL.Script_History sh 
-where Script_Key = 1
+select * from ETL.Script s 
+select * 
+--into Archive.Script_History_06_06
+from ETL.Script_History sh 
+where Script_Key = 5
+and Start_Time > '2022-06-08' 
 order by Script_History_Key desc
+-- delete from ETL.Script_History
+where Script_Key = 1
+and Start_Time > '2022-06-06' 
 
 create procedure ETL.script_end 
 (

@@ -1,0 +1,1 @@
+select * from Plex.Detailed_Production_History dph 
