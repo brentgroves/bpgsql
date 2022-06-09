@@ -31,7 +31,7 @@ select *
 --select distinct pcn,period
 --select distinct Period_Display 
 --delete 
-from Plex.Account_Balances_by_Periods order by period -- 684,461
+from Plex.Account_Balances_by_Periods order by period -- 692,869/ 684,461
 where period between 200812 and 200912
 --where period between 201001 and 201811
 --where period in (200812)  --4204
@@ -49,7 +49,7 @@ select * from Plex.trial_balance_2020_01
  * Make a backup
  */
 select * 
---into Archive.Account_Balances_by_Periods_05_13_2022  -- 671,849/663,441
+into Archive.Account_Balances_by_Periods_06_01_2022  -- 671,849/663,441
 from Plex.Account_Balances_by_Periods
 /* 
  * Must delete final comma in CSV file before running ETL script.
@@ -62,9 +62,10 @@ set pcn = 123681 where pcn is null -- 4204
 
 select count(*)
 from Plex.Account_Balances_by_Periods 
+where pcn=123681 and period=202205  -- 4204
 --where pcn=123681 and period=202204  -- 4204
 --and [no] like '73250%' --0 
-where pcn=123681 and period=202203  -- 4204
+--where pcn=123681 and period=202203  -- 4204
 --where pcn=123681 and period=202202  -- 4204
 --where pcn=123681 and period=202201  -- 4204
 --where pcn=123681 and period=202112  -- 4204

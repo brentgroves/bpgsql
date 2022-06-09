@@ -66,10 +66,11 @@ select *
 --select count(*)
 from Plex.trial_balance_multi_level
 --order by pcn,period_display  
+where pcn=123681 and period=202205  -- 4204.
 --where pcn=123681 and period=202204  -- 4204.
 --where pcn=123681 and period=202203  -- 4204.
 --where pcn=123681 and period=202202  -- 4204.
-where pcn=123681 and period=202201  -- 4204.
+--where pcn=123681 and period=202201  -- 4204.
 --where pcn=123681 and period=202112  -- 4204.
 --where pcn=123681 and period=202111  -- 4204
 --where pcn=123681 and period=201801  -- 4204
