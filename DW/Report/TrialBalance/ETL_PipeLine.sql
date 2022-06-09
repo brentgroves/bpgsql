@@ -1,3 +1,11 @@
+--delete from Plex.accounting_balance_update_period_range where pcn in (123681,300758)
+-- truncate TABLE mgdw.Plex.accounting_balance_update_period_range;
+select * from Plex.accounting_balance_update_period_range
+select * 
+--into Archive.accounting_balance_update_period_range
+from Plex.accounting_balance_update_period_range 
+where pcn in (123681,300758)
+
 -- truncate table Scratch.accounting_account_year_category_type  -- 8,285
 select *
 --select count(*)
@@ -30,6 +38,23 @@ order by Script_History_Key desc
 -- delete from ETL.Script_History
 where Script_Key in (1,3,5)
 and Start_Time > '2022-06-08' 
+
+-- mgdw.Plex.accounting_balance_update_period_range definition
+
+-- Drop table
+
+-- DROP TABLE mgdw.Plex.accounting_balance_update_period_range;
+-- truncate TABLE mgdw.Plex.accounting_balance_update_period_range;
+CREATE TABLE mgdw.Plex.accounting_balance_update_period_range (
+	id int IDENTITY(1,1) NOT NULL,
+	pcn int NULL,
+	period_start int NULL,
+	period_end int NULL,
+	CONSTRAINT PK__accounti__3213E83F2CF7C4AE PRIMARY KEY (id)
+);
+select * from Plex.accounting_balance_update_period_range
+insert into Plex.accounting_balance_update_period_range (pcn,period_start,period_end) 
+      values (123681,202106,202205)
 
 -- mgdw.Plex.accounting_period definition
 
