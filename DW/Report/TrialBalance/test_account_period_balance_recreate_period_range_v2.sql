@@ -1,12 +1,9 @@
-select * from Plex.account_period_balance 
---EXEC Plex.account_period_balance_recreate_period_range
--- drop procedure Plex.account_period_balance_recreate_period_range
-
-
-create procedure Plex.account_period_balance_recreate_period_range
+create procedure Plex.account_period_balance_recreate_period_range_debug_only
 as 
 begin
-
+/*
+ * PYODBC will fail unless SET NO COUNT ON and these print statements are removed!!
+ */
 /*
  * Make a backup
  */
@@ -14,7 +11,21 @@ begin
 --into Archive.account_period_balance_01_07_2022 -- 160,655 
 --from Plex.account_period_balance b order by pcn,period
 -- select count(*) from Archive.account_period_balance_01_26_2022 
-SET NOCOUNT ON;
+	
+/*
+ * Recover from backup
+ */
+-- select count(*) from Archive.account_period_balance_05_12_2022  -- 123,659
+-- select * from Archive.account_period_balance_05_12_2022 where pcn = 123681  -- 123,659
+-- select distinct pcn,period from Archive.account_period_balance_05_12_2022 where pcn = 123681 order by pcn,period -- 123,659
+-- select count(*) from Plex.account_period_balance -- 123,659, 33,008
+-- select * from Plex.account_period_balance
+--drop table Plex.account_period_balance 	
+--select *
+--into Plex.account_period_balance
+--from Archive.account_period_balance_05_12_2022
+	
+
 declare @pcn int;
 declare @period_start int;
 declare @period_end int;
@@ -88,7 +99,7 @@ from Plex.account_period_balance
 select @prev_period=max(b.period)
 from Plex.account_period_balance b
 where b.pcn = @pcn
---select @prev_period prev_period 
+select @prev_period prev_period 
 set @anchor_period = @prev_period;
 
 select @anchor_period_display=p.period_display 
@@ -136,7 +147,7 @@ select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_perio
 */
 
 while @id <= @max_id
-BEGIN
+begin
 	/*
 	 * Add new account records to Plex.accounting_account_year_category_type 
 	 * for the @anchor_period's year if not already added.
@@ -173,8 +184,8 @@ BEGIN
 	FROM Plex.accounting_account_year_category_type
 	 */
 	
-	INSERT INTO Plex.accounting_account_year_category_type (pcn,YEAR,category_type,revenue_or_expense)
-		select y.pcn,y.[year],y.category_type,y.revenue_or_expense	
+	INSERT INTO Plex.accounting_account_year_category_type (pcn,account_no,YEAR,category_type,revenue_or_expense)
+		select y.pcn,y.account_no,(@prev_period/100) year,y.category_type,y.revenue_or_expense	
 		from Plex.accounting_account_year_category_type y
 		where y.[year] = (@period_end/100) -- there is no account_year_category_type records for the @prev_period year so we must add them.
 		and y.pcn = @pcn
@@ -182,8 +193,8 @@ BEGIN
 		( 
 			select account_no from add_account_year_category_type
 		)
-	
-    /*
+
+	/*
      * Update the anchor period. Add records for new accounts.
      * select * from Plex.account_period_balance_anchor
      */
@@ -204,8 +215,7 @@ BEGIN
 	    0 balance,
 	    0 ytd_balance
 	    -- select count(*) from Plex.accounting_account where pcn = 123681  -- 4,363/4,595
-	    -- select distinct pcn,period from Plex.account_period_balance b order by pcn,period 
-	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202103  -- 4,595
+	    -- select count(*) from Plex.account_period_balance b where pcn = 123681 and period = 202101  -- 4,595
 		from Plex.accounting_account a   
 		left outer join Plex.account_period_balance b 
 		on a.pcn=b.pcn 
@@ -216,10 +226,10 @@ BEGIN
 			
     while @period <= @period_end
     begin
-	    -- print '@period=' + cast(@period as varchar(6) )
-	   	-- + ', @first_period=' + cast(@first_period as varchar(1))
-	   	-- + ', @prev_period=' + cast(@prev_period as varchar(6))
-	   	-- + ', @max_fiscal_period=' + cast(@max_fiscal_period as varchar(6));
+	    print '@period=' + cast(@period as varchar(6) )
+	   	+ ', @first_period=' + cast(@first_period as varchar(1))
+	   	+ ', @prev_period=' + cast(@prev_period as varchar(6))
+	   	+ ', @max_fiscal_period=' + cast(@max_fiscal_period as varchar(6));
 	   	-- THERE ARE MANY ACCOUNTS AND BALANCE SNAPSHOTS.
 	   -- MAKE SURE THAT ACCOUNTS WITH NO ACTIVITY STILL SHOW UP ON THE REPORT.
 		with period_balance(pcn,account_no,period,debit,credit,balance)
@@ -332,7 +342,7 @@ BEGIN
 		insert into Plex.account_period_balance
 		select pcn,account_no,period,period_display,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance from account_period_balance;  -- 4,363
 
-		-- print '@cnt=' + cast(@cnt as varchar(4));
+		print '@cnt=' + cast(@cnt as varchar(4));
 		
 		set @prev_period = @period
 		
@@ -399,11 +409,9 @@ BEGIN
 		begin 
 			set @first_period=0;
 		end		
-/*
 		select @pcn pcn,@anchor_period anchor_period,@anchor_period_display anchor_period_display,@prev_period prev_period,@period_start period_start,
 		@first_period first_period,@period_end period_end,@period period,@max_fiscal_period max_fiscal_period,@min_id min_id,@max_id max_id,@id id
-*/
-/*		
+		
 		 print '@pcn=' + cast(@pcn as varchar(6)) 
 		 + ',@period_start=' + cast(@period_start as varchar(6))
 		 + ',@period_end=' + cast(@period_end as varchar(6)) 
@@ -415,117 +423,9 @@ BEGIN
 		 + ',@min_id=' + cast(@min_id as varchar(2))
 		 + ',@max_id=' + cast(@max_id as varchar(2))
 		 + ',@id=' + cast(@id as varchar(2));
-*/
+
 	end	
 	
 	
 end 
-end
-
--- pcn,account_no,period,period_display,debit,ytd_debit,credit,ytd_credit,balance,ytd_balance
---select * from account_period_balance;  -- 4,363
-select count(*) from Plex.account_period_balance b -- 4,595*12=     45950+9190
-where b.pcn=123681 
---and b.period = 202101 -- 4,595
---and b.period = 202112 -- 4,595
-and b.period = 202112 -- 4,595
--- 813-704-1772
--- 
-select * from Plex.account_period_balance apb where period = 202111
--- select distinct pcn,period from Plex.account_period_balance order by pcn,period 
-
-/*
- * Format to be like CSV download
- */
---select * from Plex.accounting_account a where a.account_no = '10220-000-00000' 
-declare @pcn int;
-set @pcn = 123681;
-
-exec Report.trial_balance 202202,202202
-SELECT @@ROWCOUNT;  -- 4,595
-exec Report.trial_balance 202201,202202
-SELECT @@ROWCOUNT;   -- 9,190
-exec Report.trial_balance 202201,202203
-SELECT @@ROWCOUNT;   -- 9,190 + 4,595 =13,785
-
-CREATE PROCEDURE Report.trial_balance
-@start_period int,
-@end_period int 
-AS 
-begin
-
-select 
---b.period,
-b.period_display,
-a.category_type,
--- don't use legacy category type even though it is on the real TB report. I think it will be less confusing 
--- for the Southfield PCN which hass missing accounts.
--- b.category_type_legacy category_type,  
-/*
- * The Plex TB report uses the category type of the category linked to the account via the  category_account view. 
- * I believe Plex now mostly uses the account category located directly on the accounting_v_account view so I used 
- * this column instead of the one linked via the account_category view. 
- */
-a.category_name_legacy category_name,
-a.sub_category_name_legacy sub_category_name,
-a.account_no,
---a.account_no [no],
-a.account_name,
-b.balance current_debit_credit,
-b.ytd_balance ytd_debit_credit
---select *
---select count(*)
---select distinct pcn,period from Plex.account_period_balance b order by pcn,period -- 123,681 (202101 to 202111)
---Yinto Archive.account_period_balance_03_22_2022 -- 115,374
-from Plex.account_period_balance b -- 43,620
---where b.pcn = @pcn  -- 50,545
-inner join Plex.accounting_account a -- 43,620
-on b.pcn=a.pcn 
-and b.account_no=a.account_no 
-where b.pcn = 123681  -- 50,545,55,140
-AND b.period BETWEEN @start_period AND @end_period
-order by b.period_display,a.account_no 
---where a.category_type != a.category_type_legacy 
---where b.period_display is not NULL -- 40,940
---where b.period_display is NULL -- 40,940?
---where a.account_no = '10220-000-00000' 
-END 
-
-select * from ssis.ScriptComplete sc 
-
-select 
---b.period,
-b.period_display,
-a.category_type,
--- don't use legacy category type even though it is on the real TB report. I think it will be less confusing 
--- for the Southfield PCN which hass missing accounts.
--- b.category_type_legacy category_type,  
-/*
- * The Plex TB report uses the category type of the category linked to the account via the  category_account view. 
- * I believe Plex now mostly uses the account category located directly on the accounting_v_account view so I used 
- * this column instead of the one linked via the account_category view. 
- */
-a.category_name_legacy category_name,
-a.sub_category_name_legacy sub_category_name,
-a.account_no,
---a.account_no [no],
-a.account_name,
-b.balance current_debit_credit,
-b.ytd_balance ytd_debit_credit
---select count(*)
---select distinct pcn,period from Plex.account_period_balance b order by pcn,period -- 123,681 (202101 to 202111)
-from Plex.account_period_balance b -- 43,620
---where b.pcn = @pcn  -- 50,545
-inner join Plex.accounting_account a -- 43,620
-on b.pcn=a.pcn 
-and b.account_no=a.account_no 
-where b.pcn = 123681  -- 50,545,55,140,64,330
---AND b.period = 202201  -- 4,595
---AND b.period = 202202  -- 4,595
-and a.account_no = '12400-000-0000'
---and a.account_no='11010-000-0000'
---and a.account_no = '10220-000-00000' 
-order by a.account_no,b.period 
---where a.category_type != a.category_type_legacy 
---where b.period_display is not NULL -- 40,940
---where b.period_display is NULL -- 40,940
+end;

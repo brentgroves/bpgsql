@@ -23,6 +23,8 @@ where period = 202203
 select * 
 -- select count(*)
 --select count(*) from Archive.trial_balance_multi_level_01_02_2022  -- 668,436 (200812-202112) -- I deleted 202112 because this period did not close as of 01-07-2022.
+--into Archive.trial_balance_multi_level_06_11_2022--689456
+
 --into Archive.trial_balance_multi_level_05_13_2022--685252
 --into Archive.trial_balance_multi_level_01_02_2022
 from Plex.trial_balance_multi_level  -- 58,856

@@ -49,7 +49,8 @@ select * from Plex.trial_balance_2020_01
  * Make a backup
  */
 select * 
-into Archive.Account_Balances_by_Periods_06_01_2022  -- 671,849/663,441
+--into Archive.Account_Balances_by_Periods_06_11_2022  -- 692869/671,849/663,441
+--into Archive.Account_Balances_by_Periods_06_01_2022  -- 671,849/663,441
 from Plex.Account_Balances_by_Periods
 /* 
  * Must delete final comma in CSV file before running ETL script.
