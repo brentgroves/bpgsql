@@ -404,7 +404,7 @@ AND b.period=ab.period
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.balance =ab.balance  --78,423/2021-01 to 2022-05
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_credit = ab.ytd_credit  --78,423/2021-01 to 2022-05
 --where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_debit = ab.ytd_debit  --78,423/2021-01 to 2022-05
---where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_balance = ab.ytd_balance --78,423/2021-01 to 2022-05
+where b.pcn=@pcn and b.period between @period_start and @period_end and b.ytd_balance = ab.ytd_balance --78,423/2021-01 to 2022-05
 
 
 select * 
