@@ -1,0 +1,227 @@
+{
+	"folders": {},
+	"connections": {
+		"mssql_jtds_legacy-1790416d522-7e318430b251c8b8": {
+			"provider": "mssql",
+			"driver": "mssql_jtds_legacy",
+			"name": "cribmaster",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "busche-sql",
+				"port": "1433",
+				"database": "cribmaster",
+				"url": "jdbc:jtds:sqlserver://busche-sql/cribmaster",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"msaccess_ucanaccess-1795758cb57-5d69a599e9f7780": {
+			"provider": "generic",
+			"driver": "msaccess_ucanaccess",
+			"name": "ToolBossPlt9aProduction",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"database": "/mnt/toolboss-plt9a/sps.mdb",
+				"url": "jdbc:ucanaccess:///mnt/toolboss-plt9a/sps.mdb",
+				"type": "dev",
+				"auth-model": "native"
+			},
+			"custom-properties": {
+				"database.meta.separate.connection": "false"
+			}
+		},
+		"microsoft-17ad41e7c52-6abb2450eab5362": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "AvillaToolboss",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "172.20.90.37",
+				"port": "1433",
+				"database": "sps",
+				"url": "jdbc:sqlserver://;serverName=172.20.90.37;databaseName=sps",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"mssql_jtds_legacy-17ad4205808-3d77926e0ed43db": {
+			"provider": "mssql",
+			"driver": "mssql_jtds_legacy",
+			"name": "Busche ToolList",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "busche-sql",
+				"port": "1433",
+				"database": "Busche ToolList",
+				"url": "jdbc:jtds:sqlserver://busche-sql/Busche ToolList",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				},
+				"auth-model": "native",
+				"handlers": {}
+			}
+		},
+		"microsoft-17ad42473cc-772996b523cc0f62": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "MSC1-BUSCHE-P6",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "10.1.3.80",
+				"port": "1433",
+				"database": "sps",
+				"url": "jdbc:sqlserver://;serverName=10.1.3.80;databaseName=sps",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"microsoft-17ad4256636-7d1a4d0b65b6a9d2": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "MSC1-AVILLAMTNC",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "172.20.90.51",
+				"port": "1433",
+				"database": "sps",
+				"url": "jdbc:sqlserver://;serverName=172.20.90.51;databaseName=sps",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"microsoft-17ad4263bdd-3498a92dfebe3067": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "MSCEDONHOSTBG",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "10.1.13.96",
+				"port": "1433",
+				"database": "sps",
+				"url": "jdbc:sqlserver://;serverName=10.1.13.96;databaseName=sps",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"microsoft-17aed633265-5573d0587196de3b": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "Kors",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "busche-dtc-sql1",
+				"port": "1433",
+				"database": "Kors",
+				"url": "jdbc:sqlserver://;serverName=busche-dtc-sql1;databaseName=Kors",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"microsoft-17b31cef67c-6cf45456d25e27d8": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "myDW-Kors",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "mgsqlserver.database.windows.net",
+				"port": "1433",
+				"database": "myDW",
+				"url": "jdbc:sqlserver://;serverName=mgsqlserver.database.windows.net;databaseName=myDW",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"azure-17c28bd3cf4-2644ac97a7bc9661": {
+			"provider": "sqlserver",
+			"driver": "azure",
+			"name": "mgsqlsrv",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "mgsqlsrv.database.windows.net",
+				"database": "mgdw",
+				"url": "jdbc:sqlserver://;serverName=mgsqlsrv.database.windows.net;databaseName=mgdw;encrypt=true",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"microsoft-17c28bf271e-111f2b1a2f4708fa": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "mgdw-mgsqlmi",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "mgsqlmi.public.48d444e7f69b.database.windows.net",
+				"port": "3342",
+				"database": "mgdw",
+				"url": "jdbc:sqlserver://;serverName=mgsqlmi.public.48d444e7f69b.database.windows.net;port=3342;databaseName=mgdw",
+				"type": "dev",
+				"provider-properties": {
+					"@dbeaver-authentication@": "SQL_SERVER_PASSWORD",
+					"@dbeaver-show-all-schemas@": "false"
+				}
+			}
+		},
+		"mysql8-180d32d0f79-703df52f49862ac3": {
+			"provider": "mysql",
+			"driver": "mysql8",
+			"name": "Kubenetes",
+			"save-password": true,
+			"read-only": false,
+			"configuration": {
+				"host": "10.1.1.83",
+				"port": "31008",
+				"url": "jdbc:mysql://10.1.1.83:31008/",
+				"type": "dev",
+				"auth-model": "native"
+			}
+		}
+	},
+	"connection-types": {
+		"dev": {
+			"name": "Development",
+			"color": "255,255,255",
+			"description": "Regular development database",
+			"auto-commit": true,
+			"confirm-execute": false,
+			"confirm-data-change": false,
+			"auto-close-transactions": false
+		}
+	}
+}

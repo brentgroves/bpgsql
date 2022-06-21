@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Mobex</name>
+	<comment>General DBeaver project</comment>
+	<projects>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+		<nature>org.jkiss.dbeaver.DBeaverNature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>bpgsql</name>
+			<type>2</type>
+			<location>//home/bgroves@BUSCHE-CNC.COM/srcsql/bpgsql/</location>
+		</link>
+	</linkedResources>
+</projectDescription>
